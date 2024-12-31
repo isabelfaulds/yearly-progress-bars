@@ -120,12 +120,17 @@ resource "aws_cloudfront_distribution" "pbars_cloudfront" {
   depends_on = [aws_acm_certificate.progress_bars_site_cert]
   aliases = ["year-progress-bar.com", "www.year-progress-bar.com"]
 
+# custom origin not s3 origin when it's for s3 website ie s3-us-west-1.amazonaws.com
   origin {
-    domain_name = "year-progress-bar.com.s3.amazonaws.com"
+    domain_name = "year-progress-bar.com.s3-website-us-west-1.amazonaws.com"
     origin_id   = "S3-year-progress-bar"
-    s3_origin_config {
-      origin_access_identity = ""  # Leave empty if you're not using OAI (Origin Access Identity)
-    }
+    custom_origin_config {
+    http_port              = 80
+    https_port             = 443
+    origin_protocol_policy = "http-only"
+    origin_ssl_protocols    = ["TLSv1.2"]
+  }
+
   }
 
   enabled          = true
@@ -188,4 +193,15 @@ resource "aws_route53_record" "www_pbar_domain" {
     zone_id                = aws_cloudfront_distribution.pbars_cloudfront.hosted_zone_id
     evaluate_target_health = false
   }
+}
+
+
+#### S3 Files
+
+# Upload the index.html file to the S3 bucket
+resource "aws_s3_bucket_object" "index_html" {
+  bucket = aws_s3_bucket.pbars_site_bucket.bucket
+  key    = "index.html"
+  source = "frontend/public/index.html"  # Path to the file on your local machine or CI/CD workspace
+  content_type = "text/html"
 }
