@@ -10,7 +10,7 @@
         text-align: center;
         padding: 50px;
         margin: 0;
-        overflow: hidden; /* Prevents scrollbars */
+        /* overflow: hidden; Prevents scrollbars */
         display: flex;
         align-items: center;
         justify-content: center;
@@ -33,6 +33,10 @@
       position: absolute;
       top: 0;
       left: 0;
+    }
+
+    .progress-container {
+      margin-bottom: 60px; 
     }
 
     .content {
@@ -69,17 +73,18 @@
         display: flex; 
         align-items: center;
         justify-content: center;
-        gap: 30px; /* Adds space between elements */
+        gap: 30px;
+        margin-bottom: 100px;
       }
 
     .hourglass {
-        font-size: 2rem; /* Adjust the size of the hourglass */
+        font-size: 2rem; 
       }
 
     title {
-      margin: 0; /* Remove default margin from <h1> */
-      font-size: 1.5rem; /* Adjust font size */
-      text-align: center; /* Center the text */
+      margin-bottom: 10px; 
+      font-size: 1.5rem; 
+      text-align: center; 
       text-shadow: 
         1px 1px 0px white,
         -1px -1px 0px white,
@@ -89,23 +94,62 @@
 
     h3 {
       text-align: center;
+      margin-bottom: 10px;
     }
 
     .subtitle {
       font-size: 18px;
       margin-top: 10px;
+      margin-bottom: 10px;
       text-align: center;
     }
 
-
+/* small screen adjustments */
     @media (max-width: 600px) {
+
+      .header-container {
+        margin-bottom: 30px;
+      }
       .title {
-        font-size: 1rem; /* Adjust title size for small screens */
+        margin: 0;
+        font-size: 1rem; 
       }
 
-      .hourglass {
-        font-size: 1.5rem; /* Adjust hourglass size for small screens */
+      .progress-container {
+        margin-bottom: 5px;
       }
+      .hourglass {
+        font-size: 1.5rem;
+        margin: 0;
+
+      }
+
+      h3 {
+        font-size: 1rem;
+        margin-bottom: 0;
+        line-height: 1;
+
+      }
+
+      .subtitle {
+        font-size: 1rem;
+        margin-bottom: 25px;
+        line-height: 1;
+      }
+
+      br {
+        margin: 0;
+      }
+
+      .progress-bar {
+        height: 20px; /* Reduces the height of the progress bar */
+      }
+
+      .progress {
+        height: 100%; /* Ensures the progress bar still fills the reduced height */
+      }
+
+
     }
   </style>
 </head>
@@ -122,38 +166,41 @@
       <h1 class="title">Year Progress Bar</h1>
       <span id="right-hourglass" class="hourglass">⏳</span>
     </div>
-    <br>
-    <br>
-    <br>
-    <br>
 
-    <h3>Annual</h3>
-    <div class="progress-bar">
-      <div class="progress" id="yearProgress"></div>
+
+    <div class="progress-container">
+      <h3>Annual</h3>
+      <div class="progress-bar">
+        <div class="progress" id="yearProgress"></div>
+      </div>
+      <div class="subtitle" id="yearProgressPercentage">0.00000000%</div>
     </div>
-    <div class="subtitle" id="yearProgressPercentage">0.00000000%</div>
-    <br>
-    <br>
-    <h3> Month</h3>
-    <div class="progress-bar">
-      <div class="progress" id="monthProgress"></div>
+  
+    <div class="progress-container">
+      <h3>Month</h3>
+      <div class="progress-bar">
+        <div class="progress" id="monthProgress"></div>
+      </div>
+      <div class="subtitle" id="monthProgressPercentage">0.00000000%</div>
     </div>
-    <div class="subtitle" id="monthProgressPercentage">0.00000000%</div>
-    <br>
-    <br>
-    <h3> Week</h3>
-    <div class="progress-bar">
-      <div class="progress" id="weekProgress"></div>
+  
+    <div class="progress-container">
+      <h3>Week</h3>
+      <div class="progress-bar">
+        <div class="progress" id="weekProgress"></div>
+      </div>
+      <div class="subtitle" id="weekProgressPercentage">0.00000000%</div>
     </div>
-    <div class="subtitle" id="weekProgressPercentage">0.00000000%</div>
-    <br>
-    <br>
-    <h3> Day</h3>
-    <div class="progress-bar">
-      <div class="progress" id="dayProgress"></div>
+  
+    <div class="progress-container">
+      <h3>Day</h3>
+      <div class="progress-bar">
+        <div class="progress" id="dayProgress"></div>
+      </div>
+      <div class="subtitle" id="dayProgressPercentage">0.00000000%</div>
     </div>
-    <div class="subtitle" id="dayProgressPercentage">0.00000000%</div>
   </div>
+
 
   <script>
     // Function to calculate the progress of the year
