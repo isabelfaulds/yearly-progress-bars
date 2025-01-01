@@ -198,10 +198,17 @@ resource "aws_route53_record" "www_pbar_domain" {
 
 #### S3 Files
 
-# Upload the index.html file to the S3 bucket
 resource "aws_s3_bucket_object" "index_html" {
   bucket = aws_s3_bucket.pbars_site_bucket.bucket
   key    = "index.html"
-  source = "frontend/public/index.html"  # Path to the file on your local machine or CI/CD workspace
+  source = "frontend/public/index.html"
   content_type = "text/html"
+}
+
+resource "aws_s3_bucket_object" "background_image" {
+  bucket = aws_s3_bucket.pbars_site_bucket.bucket
+  key    = "images/blue-gradient-background.svg"
+  source = "frontend/Desktop Shape Frame.svg"  
+  content_type  = "image/svg+xml"
+
 }
