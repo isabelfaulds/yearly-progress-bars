@@ -65,6 +65,28 @@
         -1px 1px 0px white;
     }
 
+    .header-container {
+        display: flex; 
+        align-items: center;
+        justify-content: center;
+        gap: 30px; /* Adds space between elements */
+      }
+
+    .hourglass {
+        font-size: 2rem; /* Adjust the size of the hourglass */
+      }
+
+    title {
+      margin: 0; /* Remove default margin from <h1> */
+      font-size: 1.5rem; /* Adjust font size */
+      text-align: center; /* Center the text */
+      text-shadow: 
+        1px 1px 0px white,
+        -1px -1px 0px white,
+        1px -1px 0px white,
+        -1px 1px 0px white;
+    }
+
     h3 {
       text-align: center;
     }
@@ -73,6 +95,17 @@
       font-size: 18px;
       margin-top: 10px;
       text-align: center;
+    }
+
+
+    @media (max-width: 600px) {
+      .title {
+        font-size: 1rem; /* Adjust title size for small screens */
+      }
+
+      .hourglass {
+        font-size: 1.5rem; /* Adjust hourglass size for small screens */
+      }
     }
   </style>
 </head>
@@ -84,7 +117,11 @@
   </div>
 
   <div class="content">
-    <h1>Year Progress Bar ⏳⌛️</h1>
+    <div class="header-container">
+      <span id="left-hourglass" class="hourglass">⌛️</span>
+      <h1 class="title">Year Progress Bar</h1>
+      <span id="right-hourglass" class="hourglass">⏳</span>
+    </div>
     <br>
     <br>
     <br>
@@ -196,7 +233,20 @@
       // percentage with 8 decimal places
       document.getElementById('dayProgressPercentage').textContent = dayProgress.toFixed(8) + '%';
 
-      console.log('🤩 Have a beautiful ', dayInPST)
+      // Shake the hourglasses a little
+      const secondsPST = new Date(new Date().toLocaleString('en-US', options));
+      const seconds = secondsPST.getSeconds();
+      const rightHourglassElement = document.getElementById('right-hourglass');
+      const leftHourglassElement = document.getElementById('left-hourglass');
+      if (seconds % 10 === 0) {
+        rightHourglassElement.textContent = '⌛️';
+        leftHourglassElement.textContent = '⌛️';
+        console.log('🤩 Have a beautiful ', dayInPST)
+      } else {
+        rightHourglassElement.textContent = '⏳';
+        leftHourglassElement.textContent = '⏳';
+      }
+
 
     }
 
