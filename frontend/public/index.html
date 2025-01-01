@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Year Progress Bar</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 50px;
+        margin: 0;
+        overflow: hidden; /* Prevents scrollbars */
+    }
+
+    .background-container {
+      position: fixed; /* Fix the background image in place */
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden; /* Crop the image to fit the container */
+    }
+
+    .background-image {
+      width: 1920px; /* Set to 1920px width */
+      height: 1080px; /* Set to 1080px height */
+      object-fit: cover; /* Ensure the image covers the container */
+      object-position: center; /* Center the image */
+      position: absolute;
+      top: 0;
+      left: 0;
+      clip-path: inset(10 0 0 0); 
+    }
+
+    .content {
+      position: relative; /* Ensures content stays on top of the background */
+      z-index: 1;
+    }
+
+    .progress-bar {
+      width: 100%;
+      background-color: #f3f3f3;
+      border-radius: 10px;
+      height: 30px;
+    }
+
+    .progress {
+      height: 100%;
+      background-color: #4caf50;
+      border-radius: 10px;
+      transition: width 1s;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="background-container">
+    <img src="https://s3.us-west-1.amazonaws.com/year-progress-bar.com/images/blue-gradient-background.svg" alt="Background" class="background-image">
+  </div>
+
+  <div class="content">
+    <h1>Year Progress Bar ⏳⌛️</h1>
+
+    <div class="progress-bar">
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <div class="subtitle" id="progressPercentage">0.00000000%</div>
+  </div>
+
+  <script>
+    // Function to calculate the progress of the year
+    function calculateYearProgress() {
+      const options = { timeZone: 'America/Los_Angeles' };
+      const nowInPST = new Date(new Date().toLocaleString('en-US', options));
+
+      const now = new Date();
+      const startOfYear = new Date(nowInPST.getFullYear(), 0, 1); // January 1st of current year
+      const endOfYear = new Date(nowInPST.getFullYear() + 1, 0, 1); // December 31st of current year
+
+      const totalYearDuration = endOfYear - startOfYear;
+      const elapsedTime = nowInPST - startOfYear;
+
+      const progress = ((elapsedTime / totalYearDuration) * 100 ) % 100;
+
+      // Update the progress bar width
+      document.getElementById('progress').style.width = progress + '%';
+
+      // Display the percentage with 8 decimal places
+      document.getElementById('progressPercentage').textContent = progress.toFixed(8) + '%';
+    }
+
+    setInterval(calculateYearProgress, 1000);
+
+    window.onload = calculateYearProgress;
+  </script>
+
+</body>
+</html>
