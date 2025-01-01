@@ -12,7 +12,6 @@ S3 website bucket , Route 53 & Cloudfront
 
 ##### Seeing seo
 - track in [search console](https://search.google.com/search-console/welcome?utm_source=about-page) -- needs viewer permissions to access
-- test structured data ie in [search central](https://developers.google.com/search/docs/appearance/structured-data)
 - cname domain verification record for search in route 53 created in tf
 - structured data describing site <type="application/ld+json"> in <head>
 - <title> in <head> contains text for clickable link in search engine results
