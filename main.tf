@@ -221,3 +221,11 @@ resource "aws_s3_bucket_object" "background_image" {
   content_type  = "image/svg+xml"
 
 }
+
+resource "aws_s3_bucket_object" "thumbnail_screenshot" {
+  bucket = aws_s3_bucket.pbars_site_bucket.bucket
+  key    = "frontend/assets/blue-gradient-background.svg"
+  source = "frontend/assets/site-screenshot.png"  
+  content_type  = "image/svg+xml"
+
+}
