@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta property="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta property="og:title" content="Year Progress Bar">
   <meta property="description" content="Year progress bar with month, week, day bars. Visualized with blue gradient.">
   <meta property="og:description" content="Year progress bar with month, week, day bars. Visualized with blue gradient.">
@@ -25,7 +25,7 @@
     body {
         font-family: Arial, sans-serif;
         text-align: center;
-        padding: 50px;
+        padding: 20px;
         margin: 0;
         /* overflow: hidden; Prevents scrollbars */
         display: flex;
@@ -57,50 +57,41 @@
       z-index: 1;
     }
 
-    /* Header */
     .header-container {
         display: flex; 
         align-items: center;
         justify-content: center;
         gap: 30px;
-        margin-bottom: 100px;
-      }
-
-      h1 {
-        font-size: 1.5rem; 
-        text-align: center; 
-        text-shadow: 
-          1px 1px 0px white,
-          -1px -1px 0px white,
-          1px -1px 0px white,
-          -1px 1px 0px white;
-      }
-
-      title {
-        margin-bottom: 10px; 
-        font-size: 1.5rem; 
-        text-align: center; 
-        text-shadow: 
-          1px 1px 0px white,
-          -1px -1px 0px white,
-          1px -1px 0px white,
-          -1px 1px 0px white;
-      }
+        margin-bottom: 80px;
+    }
+    
+    h1 {
+      font-size: 1.5rem; 
+      text-align: center; 
+      text-shadow: 
+        1px 1px 0px white,
+        -1px -1px 0px white,
+        1px -1px 0px white,
+        -1px 1px 0px white;
+    }
 
     .hourglass {
         font-size: 2rem; 
       }
 
-    /* Bars */
-    .progress-container {
-      margin-bottom: 40px; 
+    title {
+      margin-bottom: 10px; 
+      font-size: 1.5rem; 
+      text-align: center; 
+      text-shadow: 
+        1px 1px 0px white,
+        -1px -1px 0px white,
+        1px -1px 0px white,
+        -1px 1px 0px white;
     }
 
-    h3 {
-      text-align: center;
-      margin-bottom: 0px;
-      font-size: 0.9rem;
-
+    .progress-container {
+      margin-bottom: 40px; 
     }
 
     .progress-bar {
@@ -109,8 +100,9 @@
       border-radius: 14px;
       height: 22px;
       border: 3px solid white;
-      margin: 10px auto;
+      margin: 14px auto;
       overflow: hidden;
+
     }
 
     .progress {
@@ -120,14 +112,18 @@
       transition: width 1s;
     }
 
+    h3 {
+      text-align: center;
+      margin-bottom: 0px;
+      font-size: 0.9rem;
+    }
+
     .subtitle {
       font-size: 1rem;
       margin-top: 2px;
       margin-bottom: 10px;
       text-align: center;
     }
-
-
 
 /* small screen adjustments */
     @media (max-width: 600px) {
