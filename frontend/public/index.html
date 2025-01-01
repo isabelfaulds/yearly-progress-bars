@@ -10,27 +10,33 @@
         text-align: center;
         padding: 50px;
         margin: 0;
-        overflow: hidden; /* Prevents scrollbars */
+        /* overflow: hidden; Prevents scrollbars */
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .background-container {
-      position: fixed; /* Fix the background image in place */
+      position: fixed; 
       top: 0;
       left: 0;
       width: 100%;
       height: 100vh;
-      overflow: hidden; /* Crop the image to fit the container */
+      overflow: hidden; 
     }
 
     .background-image {
-      width: 1920px; /* Set to 1920px width */
-      height: 1080px; /* Set to 1080px height */
-      object-fit: cover; /* Ensure the image covers the container */
-      object-position: center; /* Center the image */
+      width: 100%; 
+      height: 100%;
+      object-fit: cover; /*covers the container*/
+      object-position: center;
       position: absolute;
       top: 0;
       left: 0;
-      clip-path: inset(10 0 0 0); 
+    }
+
+    .progress-container {
+      margin-bottom: 60px; 
     }
 
     .content {
@@ -42,20 +48,108 @@
       width: 100%;
       background-color: #f3f3f3;
       border-radius: 10px;
-      height: 30px;
+      height: 28px;
+      border: 3px solid white;
+      margin: 20px auto;
     }
 
     .progress {
       height: 100%;
-      background-color: #4caf50;
+      background-color: #add2ff;
       border-radius: 10px;
       transition: width 1s;
+      
+    }
+
+    h1 {
+      text-shadow: 
+        1px 1px 0px white,
+        -1px -1px 0px white,
+        1px -1px 0px white,
+        -1px 1px 0px white;
+    }
+
+    .header-container {
+        display: flex; 
+        align-items: center;
+        justify-content: center;
+        gap: 30px;
+        margin-bottom: 100px;
+      }
+
+    .hourglass {
+        font-size: 2rem; 
+      }
+
+    title {
+      margin-bottom: 10px; 
+      font-size: 1.5rem; 
+      text-align: center; 
+      text-shadow: 
+        1px 1px 0px white,
+        -1px -1px 0px white,
+        1px -1px 0px white,
+        -1px 1px 0px white;
+    }
+
+    h3 {
+      text-align: center;
+      margin-bottom: 10px;
     }
 
     .subtitle {
       font-size: 18px;
       margin-top: 10px;
+      margin-bottom: 10px;
       text-align: center;
+    }
+
+/* small screen adjustments */
+    @media (max-width: 600px) {
+
+      .header-container {
+        margin-bottom: 30px;
+      }
+      .title {
+        margin: 0;
+        font-size: 1rem; 
+      }
+
+      .progress-container {
+        margin-bottom: 5px;
+      }
+      .hourglass {
+        font-size: 1.5rem;
+        margin: 0;
+
+      }
+
+      h3 {
+        font-size: 1rem;
+        margin-bottom: 0;
+        line-height: 1;
+
+      }
+
+      .subtitle {
+        font-size: 1rem;
+        margin-bottom: 25px;
+        line-height: 1;
+      }
+
+      br {
+        margin: 0;
+      }
+
+      .progress-bar {
+        height: 20px; /* Reduces the height of the progress bar */
+      }
+
+      .progress {
+        height: 100%; /* Ensures the progress bar still fills the reduced height */
+      }
+
+
     }
   </style>
 </head>
@@ -67,35 +161,141 @@
   </div>
 
   <div class="content">
-    <h1>Year Progress Bar ⏳⌛️</h1>
-
-    <div class="progress-bar">
-      <div class="progress" id="progress"></div>
+    <div class="header-container">
+      <span id="left-hourglass" class="hourglass">⌛️</span>
+      <h1 class="title">Year Progress Bar</h1>
+      <span id="right-hourglass" class="hourglass">⏳</span>
     </div>
 
-    <div class="subtitle" id="progressPercentage">0.00000000%</div>
+
+    <div class="progress-container">
+      <h3>Annual</h3>
+      <div class="progress-bar">
+        <div class="progress" id="yearProgress"></div>
+      </div>
+      <div class="subtitle" id="yearProgressPercentage">0.00000000%</div>
+    </div>
+  
+    <div class="progress-container">
+      <h3>Month</h3>
+      <div class="progress-bar">
+        <div class="progress" id="monthProgress"></div>
+      </div>
+      <div class="subtitle" id="monthProgressPercentage">0.00000000%</div>
+    </div>
+  
+    <div class="progress-container">
+      <h3>Week</h3>
+      <div class="progress-bar">
+        <div class="progress" id="weekProgress"></div>
+      </div>
+      <div class="subtitle" id="weekProgressPercentage">0.00000000%</div>
+    </div>
+  
+    <div class="progress-container">
+      <h3>Day</h3>
+      <div class="progress-bar">
+        <div class="progress" id="dayProgress"></div>
+      </div>
+      <div class="subtitle" id="dayProgressPercentage">0.00000000%</div>
+    </div>
   </div>
+
 
   <script>
     // Function to calculate the progress of the year
     function calculateYearProgress() {
-      const options = { timeZone: 'America/Los_Angeles' };
+      const options = { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone };
       const nowInPST = new Date(new Date().toLocaleString('en-US', options));
 
-      const now = new Date();
+      // Year
       const startOfYear = new Date(nowInPST.getFullYear(), 0, 1); // January 1st of current year
       const endOfYear = new Date(nowInPST.getFullYear() + 1, 0, 1); // December 31st of current year
 
       const totalYearDuration = endOfYear - startOfYear;
-      const elapsedTime = nowInPST - startOfYear;
+      const elapsedYearTime = nowInPST - startOfYear;
 
-      const progress = ((elapsedTime / totalYearDuration) * 100 ) % 100;
+      const progress = ((elapsedYearTime / totalYearDuration) * 100 ) % 100;
 
-      // Update the progress bar width
-      document.getElementById('progress').style.width = progress + '%';
+      // progress bar width
+      document.getElementById('yearProgress').style.width = progress + '%';
+      // percentage with 8 decimal places
+      document.getElementById('yearProgressPercentage').textContent = progress.toFixed(8) + '%';
 
-      // Display the percentage with 8 decimal places
-      document.getElementById('progressPercentage').textContent = progress.toFixed(8) + '%';
+
+      // Month
+      const monthdateInPST = new Date(new Date().toLocaleString('en-US', options));
+
+      // Start of the Month
+      const startOfMonth = new Date(monthdateInPST.getFullYear(), monthdateInPST.getMonth(), 1);
+      startOfMonth.setHours(0, 0, 0, 0); // Set time to midnight
+
+      // End of the Month
+      const endOfMonth = new Date(monthdateInPST.getFullYear(), monthdateInPST.getMonth() + 1, 0);
+      endOfMonth.setHours(23, 59, 59, 999); // Set time to the last moment of the day
+
+      const totalMonthDuration = endOfMonth - startOfMonth;
+      const elapsedMonthTime = monthdateInPST - startOfMonth;
+
+      const monthProgress = ((elapsedMonthTime / totalMonthDuration) * 100 ) % 100;
+
+      // progress bar width
+      document.getElementById('monthProgress').style.width = monthProgress + '%';
+      // percentage with 8 decimal places
+      document.getElementById('monthProgressPercentage').textContent = monthProgress.toFixed(8) + '%';
+
+      // Week
+      const weekdayInPST = new Date(new Date().toLocaleString('en-US', options));
+      const startOfWeek = new Date(weekdayInPST);
+      const dayOfWeek = startOfWeek.getDay();
+      startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+      startOfWeek.setHours(0, 0, 0, 0)
+      const endOfWeek = new Date(startOfWeek); // Create a new Date object to avoid modifying startOfWeek
+      endOfWeek.setDate(endOfWeek.getDate() + 6); // Add 6 days to get to Saturday
+      endOfWeek.setHours(23, 59, 59, 999);
+      
+      const totalWeekDuration = endOfWeek - startOfWeek;
+      const elapsedWeekTime = weekdayInPST - startOfWeek;
+
+      const weekProgress = ((elapsedWeekTime / totalWeekDuration) * 100 ) % 100;
+
+
+      // progress bar width
+      document.getElementById('weekProgress').style.width = weekProgress + '%';
+      // percentage with 8 decimal places
+      document.getElementById('weekProgressPercentage').textContent = weekProgress.toFixed(8) + '%';
+
+      // Day
+      const dayInPST = new Date(new Date().toLocaleString('en-US', options));
+      const startOfToday = new Date(nowInPST.setHours(0, 0, 0, 0));
+      const endOfToday = new Date(nowInPST.setHours(23, 59, 59, 999));
+
+      const totalDayDuration = endOfToday - startOfToday;
+      const elapsedDayTime = dayInPST - startOfToday;
+
+      const dayProgress = ((elapsedDayTime / totalDayDuration) * 100 ) % 100;
+
+      // progress bar width
+      document.getElementById('dayProgress').style.width = dayProgress + '%';
+      // percentage with 8 decimal places
+      document.getElementById('dayProgressPercentage').textContent = dayProgress.toFixed(8) + '%';
+
+      // Shake the hourglasses a little
+      const secondsPST = new Date(new Date().toLocaleString('en-US', options));
+      const seconds = secondsPST.getSeconds();
+      const rightHourglassElement = document.getElementById('right-hourglass');
+      const leftHourglassElement = document.getElementById('left-hourglass');
+      if (seconds % 10 === 0) {
+        rightHourglassElement.textContent = '⌛️';
+        leftHourglassElement.textContent = '⌛️';
+        console.log('🤩 Have a beautiful ', dayInPST)
+      
+      } else {
+        rightHourglassElement.textContent = '⏳';
+        leftHourglassElement.textContent = '⏳';
+      }
+
+
     }
 
     setInterval(calculateYearProgress, 1000);
