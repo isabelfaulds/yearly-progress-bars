@@ -195,6 +195,15 @@ resource "aws_route53_record" "www_pbar_domain" {
   }
 }
 
+# seo records
+resource "aws_route53_record" "google_site_verification" {
+  zone_id = data.aws_route53_zone.progress_bars_domain.zone_id
+  name    = "6beufh4he43j"        # Google domain verification
+  type    = "CNAME"
+  ttl     = 300
+  records = ["gv-65kx35byon4ykz.dv.googlehosted.com"]  # Google domain verification
+}
+
 
 #### S3 Files
 
