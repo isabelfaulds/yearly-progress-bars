@@ -195,6 +195,15 @@ resource "aws_route53_record" "www_pbar_domain" {
   }
 }
 
+# seo records
+resource "aws_route53_record" "google_site_verification" {
+  zone_id = data.aws_route53_zone.progress_bars_domain.zone_id
+  name    = "6beufh4he43j"        # Google domain verification
+  type    = "CNAME"
+  ttl     = 300
+  records = ["gv-65kx35byon4ykz.dv.googlehosted.com"]  # Google domain verification
+}
+
 
 #### S3 Files
 
@@ -210,5 +219,11 @@ resource "aws_s3_bucket_object" "background_image" {
   key    = "images/blue-gradient-background.svg"
   source = "frontend/Desktop Shape Frame.svg"  
   content_type  = "image/svg+xml"
+}
 
+resource "aws_s3_bucket_object" "thumbnail_screenshot" {
+  bucket = aws_s3_bucket.pbars_site_bucket.bucket
+  key    = "images/site-screenshot.png"
+  source = "frontend/assets/site-screenshot.png"  
+  content_type  = "image/png"
 }
