@@ -158,7 +158,7 @@
   <script>
     // Function to calculate the progress of the year
     function calculateYearProgress() {
-      const options = { timeZone: 'America/Los_Angeles' };
+      const options = { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone };
       const nowInPST = new Date(new Date().toLocaleString('en-US', options));
 
       // Year
@@ -242,6 +242,7 @@
         rightHourglassElement.textContent = '⌛️';
         leftHourglassElement.textContent = '⌛️';
         console.log('🤩 Have a beautiful ', dayInPST)
+      
       } else {
         rightHourglassElement.textContent = '⏳';
         leftHourglassElement.textContent = '⏳';
