@@ -17,23 +17,22 @@
     }
 
     .background-container {
-      position: fixed; /* Fix the background image in place */
+      position: fixed; 
       top: 0;
       left: 0;
       width: 100%;
       height: 100vh;
-      overflow: hidden; /* Crop the image to fit the container */
+      overflow: hidden; 
     }
 
     .background-image {
-      width: 1920px; /* Set to 1920px width */
-      height: 1080px; /* Set to 1080px height */
-      object-fit: cover; /* Ensure the image covers the container */
-      object-position: center; /* Center the image */
+      width: 100%; 
+      height: 100%;
+      object-fit: cover; /*covers the container*/
+      object-position: center;
       position: absolute;
       top: 0;
       left: 0;
-      clip-path: inset(10 0 0 0); 
     }
 
     .content {
@@ -66,6 +65,10 @@
         -1px 1px 0px white;
     }
 
+    h3 {
+      text-align: center;
+    }
+
     .subtitle {
       font-size: 18px;
       margin-top: 10px;
@@ -87,11 +90,32 @@
     <br>
     <br>
 
+    <h3>Annual</h3>
     <div class="progress-bar">
-      <div class="progress" id="progress"></div>
+      <div class="progress" id="yearProgress"></div>
     </div>
-
-    <div class="subtitle" id="progressPercentage">0.00000000%</div>
+    <div class="subtitle" id="yearProgressPercentage">0.00000000%</div>
+    <br>
+    <br>
+    <h3> Month</h3>
+    <div class="progress-bar">
+      <div class="progress" id="monthProgress"></div>
+    </div>
+    <div class="subtitle" id="monthProgressPercentage">0.00000000%</div>
+    <br>
+    <br>
+    <h3> Week</h3>
+    <div class="progress-bar">
+      <div class="progress" id="weekProgress"></div>
+    </div>
+    <div class="subtitle" id="weekProgressPercentage">0.00000000%</div>
+    <br>
+    <br>
+    <h3> Day</h3>
+    <div class="progress-bar">
+      <div class="progress" id="dayProgress"></div>
+    </div>
+    <div class="subtitle" id="dayProgressPercentage">0.00000000%</div>
   </div>
 
   <script>
@@ -100,20 +124,80 @@
       const options = { timeZone: 'America/Los_Angeles' };
       const nowInPST = new Date(new Date().toLocaleString('en-US', options));
 
-      const now = new Date();
+      // Year
       const startOfYear = new Date(nowInPST.getFullYear(), 0, 1); // January 1st of current year
       const endOfYear = new Date(nowInPST.getFullYear() + 1, 0, 1); // December 31st of current year
 
       const totalYearDuration = endOfYear - startOfYear;
-      const elapsedTime = nowInPST - startOfYear;
+      const elapsedYearTime = nowInPST - startOfYear;
 
-      const progress = ((elapsedTime / totalYearDuration) * 100 ) % 100;
+      const progress = ((elapsedYearTime / totalYearDuration) * 100 ) % 100;
 
-      // Update the progress bar width
-      document.getElementById('progress').style.width = progress + '%';
+      // progress bar width
+      document.getElementById('yearProgress').style.width = progress + '%';
+      // percentage with 8 decimal places
+      document.getElementById('yearProgressPercentage').textContent = progress.toFixed(8) + '%';
 
-      // Display the percentage with 8 decimal places
-      document.getElementById('progressPercentage').textContent = progress.toFixed(8) + '%';
+
+      // Month
+      const monthdateInPST = new Date(new Date().toLocaleString('en-US', options));
+
+      // Start of the Month
+      const startOfMonth = new Date(monthdateInPST.getFullYear(), monthdateInPST.getMonth(), 1);
+      startOfMonth.setHours(0, 0, 0, 0); // Set time to midnight
+
+      // End of the Month
+      const endOfMonth = new Date(monthdateInPST.getFullYear(), monthdateInPST.getMonth() + 1, 0);
+      endOfMonth.setHours(23, 59, 59, 999); // Set time to the last moment of the day
+
+      const totalMonthDuration = endOfMonth - startOfMonth;
+      const elapsedMonthTime = monthdateInPST - startOfMonth;
+
+      const monthProgress = ((elapsedMonthTime / totalMonthDuration) * 100 ) % 100;
+
+      // progress bar width
+      document.getElementById('monthProgress').style.width = monthProgress + '%';
+      // percentage with 8 decimal places
+      document.getElementById('monthProgressPercentage').textContent = monthProgress.toFixed(8) + '%';
+
+      // Week
+      const weekdayInPST = new Date(new Date().toLocaleString('en-US', options));
+      const startOfWeek = new Date(weekdayInPST);
+      const dayOfWeek = startOfWeek.getDay();
+      startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+      startOfWeek.setHours(0, 0, 0, 0)
+      const endOfWeek = new Date(startOfWeek); // Create a new Date object to avoid modifying startOfWeek
+      endOfWeek.setDate(endOfWeek.getDate() + 6); // Add 6 days to get to Saturday
+      endOfWeek.setHours(23, 59, 59, 999);
+      
+      const totalWeekDuration = endOfWeek - startOfWeek;
+      const elapsedWeekTime = weekdayInPST - startOfWeek;
+
+      const weekProgress = ((elapsedWeekTime / totalWeekDuration) * 100 ) % 100;
+
+
+      // progress bar width
+      document.getElementById('weekProgress').style.width = weekProgress + '%';
+      // percentage with 8 decimal places
+      document.getElementById('weekProgressPercentage').textContent = weekProgress.toFixed(8) + '%';
+
+      // Day
+      const dayInPST = new Date(new Date().toLocaleString('en-US', options));
+      const startOfToday = new Date(nowInPST.setHours(0, 0, 0, 0));
+      const endOfToday = new Date(nowInPST.setHours(23, 59, 59, 999));
+
+      const totalDayDuration = endOfToday - startOfToday;
+      const elapsedDayTime = dayInPST - startOfToday;
+
+      const dayProgress = ((elapsedDayTime / totalDayDuration) * 100 ) % 100;
+
+      // progress bar width
+      document.getElementById('dayProgress').style.width = dayProgress + '%';
+      // percentage with 8 decimal places
+      document.getElementById('dayProgressPercentage').textContent = dayProgress.toFixed(8) + '%';
+
+      console.log('🤩 Have a beautiful ', dayInPST)
+
     }
 
     setInterval(calculateYearProgress, 1000);
