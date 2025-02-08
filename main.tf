@@ -61,9 +61,9 @@ resource "aws_s3_bucket_website_configuration" "pbars_website" {
     suffix = "index.html"  # default page
   }
 
-#  error_document {
-#    key = "error.html"  # TODO: 404 page
-#  }
+  error_document {
+    key = "index.html"  # same page for spa
+  }
 }
 
 resource "aws_s3_bucket_versioning" "pbars_versioning" {
@@ -207,11 +207,19 @@ resource "aws_route53_record" "google_site_verification" {
 
 #### S3 Files
 
-resource "aws_s3_bucket_object" "index_html" {
-  bucket = aws_s3_bucket.pbars_site_bucket.bucket
-  key    = "index.html"
-  source = "frontend/public/index.html"
-  content_type = "text/html"
+resource "aws_s3_bucket_object" "dist_files" {
+  for_each = fileset("frontend-web/dist", "**")
+  bucket   = aws_s3_bucket.pbars_site_bucket.bucket
+  key      = each.value
+  source   = "frontend-web/dist/${each.value}"
+  etag     = filemd5("frontend-web/dist/${each.value}")
+
+  content_type = lookup({
+    "html" = "text/html",
+    "css"  = "text/css",
+    "js"   = "application/javascript",
+    "svg"  = "image/svg+xml"
+  }, split(".", each.value)[length(split(".", each.value)) - 1], "application/octet-stream")
 }
 
 resource "aws_s3_bucket_object" "background_image" {
