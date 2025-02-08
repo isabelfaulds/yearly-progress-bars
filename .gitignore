@@ -1,3 +1,9 @@
+# terraform files
+.terraform/providers/*
+terraform.tfstate
+terraform.tfstate.backup
+
+# default node configuration
 # Logs
 logs
 *.log
