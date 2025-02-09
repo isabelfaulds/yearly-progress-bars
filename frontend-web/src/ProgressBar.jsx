@@ -47,7 +47,7 @@ const ProgressBar = () => {
     document.getElementById("yearProgress").style.width = progress + "%";
     // percentage with 8 decimal places
     document.getElementById("yearProgressPercentage").textContent =
-      progress.toFixed(8) + "%";
+      progress.toFixed(7) + "%";
 
     // Month
     const monthdateInPST = new Date(
@@ -79,7 +79,7 @@ const ProgressBar = () => {
     document.getElementById("monthProgress").style.width = monthProgress + "%";
     // percentage with 8 decimal places
     document.getElementById("monthProgressPercentage").textContent =
-      monthProgress.toFixed(8) + "%";
+      monthProgress.toFixed(7) + "%";
 
     // Week
     const weekdayInPST = new Date(new Date().toLocaleString("en-US", options));
@@ -100,7 +100,7 @@ const ProgressBar = () => {
     document.getElementById("weekProgress").style.width = weekProgress + "%";
     // percentage with 8 decimal places
     document.getElementById("weekProgressPercentage").textContent =
-      weekProgress.toFixed(8) + "%";
+      weekProgress.toFixed(7) + "%";
 
     // Day
     const dayInPST = new Date(new Date().toLocaleString("en-US", options));
@@ -114,21 +114,13 @@ const ProgressBar = () => {
     document.getElementById("dayProgress").style.width = dayProgress + "%";
     // percentage with 8 decimal places
     document.getElementById("dayProgressPercentage").textContent =
-      dayProgress >= 100 ? "💯%" : dayProgress.toFixed(8) + "%";
+      dayProgress >= 100 ? "💯%" : dayProgress.toFixed(7) + "%";
 
     // Shake the hourglasses a little
     const secondsPST = new Date(new Date().toLocaleString("en-US", options));
     const seconds = secondsPST.getSeconds();
     const rightHourglassElement = document.getElementById("right-hourglass");
     const leftHourglassElement = document.getElementById("left-hourglass");
-    if (seconds % 100 === 0) {
-      rightHourglassElement.textContent = "⌛️";
-      leftHourglassElement.textContent = "⌛️";
-      // console.log("🤩 Have a beautiful ", dayInPST);
-    } else {
-      rightHourglassElement.textContent = "⏳";
-      leftHourglassElement.textContent = "⏳";
-    }
   };
   useEffect(() => {
     const interval = setInterval(calculateYearProgress, 1);
@@ -139,73 +131,66 @@ const ProgressBar = () => {
 
   return (
     <div className="App">
-      <div className="background-container">
-        <img
-          src="https://s3.us-west-1.amazonaws.com/year-progress-bar.com/images/blue-gradient-background.svg"
-          alt="Background"
-          className="background-image"
-        />
-      </div>
+      <div className="bg-cover bg-center w-screen h-screen bg-[url('https://s3.us-west-1.amazonaws.com/year-progress-bar.com/images/blue-gradient-background.svg')] ">
+        <div class="flex flex-col justify-center h-screen w-fit mx-auto min-w-[10rem] sm:min-w-[20rem] ">
+          <div class="mt-4 mb-3 sm:mb-7">
+            <div class="mb-1 text-sm sm:text-base">Annual</div>
+            <div className="progress-bar">
+              <div className="progress" id="yearProgress"></div>
+            </div>
+            <div class="mt-2 text-xs sm:text-base" id="yearProgressPercentage">
+              0.00000000%
+            </div>
+          </div>
 
-      <div className="content">
-        <div className="header-container">
-          <span id="left-hourglass" className="hourglass">
-            ⌛️
-          </span>
-          <h1 className="title">Year Progress Bar</h1>
-          <span id="right-hourglass" className="hourglass">
-            ⏳
-          </span>
+          <div class="mt-4 mb-3 sm:mb-7">
+            <div class="mb-1 text-sm sm:text-base">Month</div>
+            <div className="progress-bar">
+              <div className="progress" id="monthProgress"></div>
+            </div>
+            <div
+              className="mt-2 text-xs sm:text-base"
+              id="monthProgressPercentage"
+            >
+              0.00000000%
+            </div>
+          </div>
+
+          <div class="mt-4 mb-3 sm:mb-7">
+            <div class="mb-1 text-sm sm:text-base">Week</div>
+            <div className="progress-bar">
+              <div className="progress" id="weekProgress"></div>
+            </div>
+            <div
+              className="mt-2 text-xs sm:text-base"
+              id="weekProgressPercentage"
+            >
+              0.00000000%
+            </div>
+          </div>
+
+          <div class="mt-4 mb-3 sm:mb-7">
+            <div class="mb-1 text-sm sm:text-base">Day</div>
+            <div className="progress-bar">
+              <div className="progress" id="dayProgress"></div>
+            </div>
+            <div
+              className="mt-2 text-xs sm:text-base"
+              id="dayProgressPercentage"
+            >
+              0.00000000%
+            </div>
+          </div>
         </div>
 
-        <div className="progress-container">
-          <h3>Annual</h3>
-          <div className="progress-bar">
-            <div className="progress" id="yearProgress"></div>
-          </div>
-          <div className="subtitle" id="yearProgressPercentage">
-            0.00000000%
-          </div>
+        <div className="fixed bottom-4 right-4 p-3 text-white rounded-full ">
+          <button
+            onClick={() => (window.location.href = "/settings")}
+            className="flex items-center justify-center w-12 h-12 rounded-full shadow-lg focus:outline-none hover:border-2"
+          >
+            <Bars2Icon className="w-6 h-6 drop-shadow-[0_0_1px_white]" />
+          </button>
         </div>
-
-        <div className="progress-container">
-          <h3>Month</h3>
-          <div className="progress-bar">
-            <div className="progress" id="monthProgress"></div>
-          </div>
-          <div className="subtitle" id="monthProgressPercentage">
-            0.00000000%
-          </div>
-        </div>
-
-        <div className="progress-container">
-          <h3>Week</h3>
-          <div className="progress-bar">
-            <div className="progress" id="weekProgress"></div>
-          </div>
-          <div className="subtitle" id="weekProgressPercentage">
-            0.00000000%
-          </div>
-        </div>
-
-        <div className="progress-container">
-          <h3>Day</h3>
-          <div className="progress-bar">
-            <div className="progress" id="dayProgress"></div>
-          </div>
-          <div className="subtitle" id="dayProgressPercentage">
-            0.00000000%
-          </div>
-        </div>
-      </div>
-
-      <div className="fixed bottom-4 right-4 p-3 text-white rounded-full ">
-        <button
-          onClick={() => (window.location.href = "/settings")}
-          className="flex items-center justify-center w-12 h-12 rounded-full shadow-lg focus:outline-none hover:border-2"
-        >
-          <Bars2Icon className="w-6 h-6" />
-        </button>
       </div>
     </div>
   );
