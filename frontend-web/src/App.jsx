@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./index-output.css";
 import ProgressBar from "./ProgressBar";
-import Settings from "./Settings";
+import Settings from "./routes/Settings";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Link, useLocation } from "react-router-dom";
 
