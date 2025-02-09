@@ -273,6 +273,30 @@ resource "aws_iam_policy_attachment" "apigateway_dynamodb_policy_attachment" {
   roles       = [aws_iam_role.apigateway_dynamodb_role.name]
 }
 
+resource "aws_iam_role" "api_gateway_logging_role" {
+  name = "APIGatewayCloudWatchRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "apigateway.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_policy_attachment" "api_gateway_logging_policy" {
+  name       = "api_gateway_logging_policy"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+  roles      = [aws_iam_role.api_gateway_logging_role.name]
+}
+
+resource "aws_api_gateway_account" "api_gateway_account" {
+  cloudwatch_role_arn = aws_iam_role.api_gateway_logging_role.arn
+}
 
 ### Backend Tables
 
