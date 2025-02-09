@@ -53,7 +53,7 @@ const Settings = () => {
         </div>
       </div>
       <button
-        onClick={() => (window.location.href = "/settings")}
+        onClick={() => (window.location.href = "/login")}
         className="ml-5 mt-6 p-3 text-gray rounded-full rounded-full shadow-lg focus:outline-none hover:border-2"
       >
         Login <ArrowRightCircleIcon className="text-gray-700 h-6 w-6" />
