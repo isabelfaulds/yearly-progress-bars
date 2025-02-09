@@ -205,7 +205,7 @@ resource "aws_route53_record" "google_site_verification" {
 }
 
 
-#### S3 Files
+#### S3 Frontend Files
 
 resource "aws_s3_bucket_object" "dist_files" {
   for_each = fileset("frontend-web/dist", "**")
@@ -234,4 +234,21 @@ resource "aws_s3_bucket_object" "thumbnail_screenshot" {
   key    = "images/site-screenshot.png"
   source = "frontend/assets/site-screenshot.png"  
   content_type  = "image/png"
+}
+
+### Backend Tables
+
+resource "aws_dynamodb_table" "pb_user_data" {
+  name = "pb_user_data"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "user_id"
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
 }
