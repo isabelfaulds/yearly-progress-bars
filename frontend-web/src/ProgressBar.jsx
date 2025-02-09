@@ -133,42 +133,51 @@ const ProgressBar = () => {
     <div className="App">
       <div className="bg-cover bg-center w-screen h-screen bg-[url('https://s3.us-west-1.amazonaws.com/year-progress-bar.com/images/blue-gradient-background.svg')] ">
         <div class="flex flex-col justify-center h-screen w-fit mx-auto min-w-[10rem] sm:min-w-[20rem] ">
-          <div class="mt-4 mb-3 sm:mb-10">
-            <div class="text-sm sm:text-base">Annual</div>
+          <div class="mt-4 mb-3 sm:mb-7">
+            <div class="mb-1 text-sm sm:text-base">Annual</div>
             <div className="progress-bar">
               <div className="progress" id="yearProgress"></div>
             </div>
-            <div class="text-xs sm:text-base" id="yearProgressPercentage">
+            <div class="mt-2 text-xs sm:text-base" id="yearProgressPercentage">
               0.00000000%
             </div>
           </div>
 
-          <div class="mt-4 mb-3 sm:mb-10">
-            <div class="text-sm sm:text-base">Month</div>
+          <div class="mt-4 mb-3 sm:mb-7">
+            <div class="mb-1 text-sm sm:text-base">Month</div>
             <div className="progress-bar">
               <div className="progress" id="monthProgress"></div>
             </div>
-            <div className="text-xs sm:text-base" id="monthProgressPercentage">
+            <div
+              className="mt-2 text-xs sm:text-base"
+              id="monthProgressPercentage"
+            >
               0.00000000%
             </div>
           </div>
 
-          <div class="mt-4 mb-3 sm:mb-10">
-            <div class="text-sm sm:text-base">Week</div>
+          <div class="mt-4 mb-3 sm:mb-7">
+            <div class="mb-1 text-sm sm:text-base">Week</div>
             <div className="progress-bar">
               <div className="progress" id="weekProgress"></div>
             </div>
-            <div className="text-xs sm:text-base" id="weekProgressPercentage">
+            <div
+              className="mt-2 text-xs sm:text-base"
+              id="weekProgressPercentage"
+            >
               0.00000000%
             </div>
           </div>
 
-          <div class="mt-4 mb-3 sm:mb-10">
-            <div class="text-sm sm:text-base">Day</div>
+          <div class="mt-4 mb-3 sm:mb-7">
+            <div class="mb-1 text-sm sm:text-base">Day</div>
             <div className="progress-bar">
               <div className="progress" id="dayProgress"></div>
             </div>
-            <div className="text-xs sm:text-base" id="dayProgressPercentage">
+            <div
+              className="mt-2 text-xs sm:text-base"
+              id="dayProgressPercentage"
+            >
               0.00000000%
             </div>
           </div>
