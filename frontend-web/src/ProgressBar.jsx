@@ -47,7 +47,7 @@ const ProgressBar = () => {
     document.getElementById("yearProgress").style.width = progress + "%";
     // percentage with 8 decimal places
     document.getElementById("yearProgressPercentage").textContent =
-      progress.toFixed(8) + "%";
+      progress.toFixed(7) + "%";
 
     // Month
     const monthdateInPST = new Date(
@@ -79,7 +79,7 @@ const ProgressBar = () => {
     document.getElementById("monthProgress").style.width = monthProgress + "%";
     // percentage with 8 decimal places
     document.getElementById("monthProgressPercentage").textContent =
-      monthProgress.toFixed(8) + "%";
+      monthProgress.toFixed(7) + "%";
 
     // Week
     const weekdayInPST = new Date(new Date().toLocaleString("en-US", options));
@@ -100,7 +100,7 @@ const ProgressBar = () => {
     document.getElementById("weekProgress").style.width = weekProgress + "%";
     // percentage with 8 decimal places
     document.getElementById("weekProgressPercentage").textContent =
-      weekProgress.toFixed(8) + "%";
+      weekProgress.toFixed(7) + "%";
 
     // Day
     const dayInPST = new Date(new Date().toLocaleString("en-US", options));
@@ -114,7 +114,7 @@ const ProgressBar = () => {
     document.getElementById("dayProgress").style.width = dayProgress + "%";
     // percentage with 8 decimal places
     document.getElementById("dayProgressPercentage").textContent =
-      dayProgress >= 100 ? "💯%" : dayProgress.toFixed(8) + "%";
+      dayProgress >= 100 ? "💯%" : dayProgress.toFixed(7) + "%";
 
     // Shake the hourglasses a little
     const secondsPST = new Date(new Date().toLocaleString("en-US", options));
@@ -132,43 +132,43 @@ const ProgressBar = () => {
   return (
     <div className="App">
       <div className="bg-cover bg-center w-screen h-screen bg-[url('https://s3.us-west-1.amazonaws.com/year-progress-bar.com/images/blue-gradient-background.svg')] ">
-        <div class="flex flex-col justify-center h-screen w-fit mx-auto min-w-[10rem] sm:min-w-[20rem]">
-          <div className="progress-container">
-            <h3>Annual</h3>
+        <div class="flex flex-col justify-center h-screen w-fit mx-auto min-w-[10rem] sm:min-w-[20rem] ">
+          <div class="mt-4 mb-3 sm:mb-10">
+            <div class="text-sm sm:text-base">Annual</div>
             <div className="progress-bar">
               <div className="progress" id="yearProgress"></div>
             </div>
-            <div className="subtitle" id="yearProgressPercentage">
+            <div class="text-xs sm:text-base" id="yearProgressPercentage">
               0.00000000%
             </div>
           </div>
 
-          <div className="progress-container">
-            <h3>Month</h3>
+          <div class="mt-4 mb-3 sm:mb-10">
+            <div class="text-sm sm:text-base">Month</div>
             <div className="progress-bar">
               <div className="progress" id="monthProgress"></div>
             </div>
-            <div className="subtitle" id="monthProgressPercentage">
+            <div className="text-xs sm:text-base" id="monthProgressPercentage">
               0.00000000%
             </div>
           </div>
 
-          <div className="progress-container">
-            <h3>Week</h3>
+          <div class="mt-4 mb-3 sm:mb-10">
+            <div class="text-sm sm:text-base">Week</div>
             <div className="progress-bar">
               <div className="progress" id="weekProgress"></div>
             </div>
-            <div className="subtitle" id="weekProgressPercentage">
+            <div className="text-xs sm:text-base" id="weekProgressPercentage">
               0.00000000%
             </div>
           </div>
 
-          <div className="progress-container">
-            <h3>Day</h3>
+          <div class="mt-4 mb-3 sm:mb-10">
+            <div class="text-sm sm:text-base">Day</div>
             <div className="progress-bar">
               <div className="progress" id="dayProgress"></div>
             </div>
-            <div className="subtitle" id="dayProgressPercentage">
+            <div className="text-xs sm:text-base" id="dayProgressPercentage">
               0.00000000%
             </div>
           </div>
@@ -179,7 +179,7 @@ const ProgressBar = () => {
             onClick={() => (window.location.href = "/settings")}
             className="flex items-center justify-center w-12 h-12 rounded-full shadow-lg focus:outline-none hover:border-2"
           >
-            <Bars2Icon className="w-6 h-6" />
+            <Bars2Icon className="w-6 h-6 drop-shadow-[0_0_1px_white]" />
           </button>
         </div>
       </div>
