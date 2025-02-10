@@ -1,6 +1,6 @@
 import { useState } from "react";
-import TimePicker from "./components/TimePicker";
-import { XMarkIcon } from "@heroicons/react/24/solid";
+import TimePicker from "../components/TimePicker";
+import { XMarkIcon, ArrowRightCircleIcon } from "@heroicons/react/24/solid";
 
 const Settings = () => {
   const [dayEndHourSetting, dayEndHourSettingValue] = useState(
@@ -24,7 +24,6 @@ const Settings = () => {
       <div className="text-gray-800 pl-8 text-2xl sm:text-4xl font-bold ">
         Settings
       </div>
-
       <button
         onClick={() => (window.location.href = "/")}
         className="fixed top-7 right-4 p-3 text-white rounded-full rounded-full shadow-lg focus:outline-none hover:border-2"

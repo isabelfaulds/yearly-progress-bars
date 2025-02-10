@@ -205,7 +205,7 @@ resource "aws_route53_record" "google_site_verification" {
 }
 
 
-#### S3 Files
+#### S3 Frontend Files
 
 resource "aws_s3_bucket_object" "dist_files" {
   for_each = fileset("frontend-web/dist", "**")
@@ -234,4 +234,257 @@ resource "aws_s3_bucket_object" "thumbnail_screenshot" {
   key    = "images/site-screenshot.png"
   source = "frontend/assets/site-screenshot.png"  
   content_type  = "image/png"
+}
+
+### IAM
+resource "aws_iam_role" "apigateway_dynamodb_role" {
+  name = "pb_apigateway_dynamodb_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_policy" "apigateway_dynamodb_policy" {
+  name = "apigateway_dynamodb_policy"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "dynamodb:PutItem",
+        Effect   = "Allow",
+        Resource = aws_dynamodb_table.user_tokens.arn
+      },
+    ]
+  })
+}
+
+resource "aws_iam_policy_attachment" "apigateway_dynamodb_policy_attachment" {
+  name       = "apigateway_dynamodb_policy_attachment"
+  policy_arn = aws_iam_policy.apigateway_dynamodb_policy.arn
+  roles       = [aws_iam_role.apigateway_dynamodb_role.name]
+}
+
+resource "aws_iam_role" "api_gateway_logging_role" {
+  name = "APIGatewayCloudWatchRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "apigateway.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_policy_attachment" "api_gateway_logging_policy" {
+  name       = "api_gateway_logging_policy"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+  roles      = [aws_iam_role.api_gateway_logging_role.name]
+}
+
+resource "aws_api_gateway_account" "api_gateway_account" {
+  cloudwatch_role_arn = aws_iam_role.api_gateway_logging_role.arn
+}
+
+### Backend Tables
+
+resource "aws_dynamodb_table" "user_tokens" {
+  name = "pb_user_tokens"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "user_id"
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+}
+
+### API Gateway
+
+resource "aws_api_gateway_rest_api" "user_data_api" {
+  name = "pb_user_data_api"
+}
+
+resource "aws_api_gateway_resource" "users_resource" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_rest_api.user_data_api.root_resource_id
+  path_part   = "user_tokens"
+}
+
+# post token data method
+resource "aws_api_gateway_method" "store_user_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.users_resource.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+# facilitates cross origin (client side) preflight requests options
+resource "aws_api_gateway_method" "options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.users_resource.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.store_user_method.resource_id
+  http_method = "OPTIONS"
+  type        = "MOCK"  # mock integration for OPTIONS
+
+# required for preflight access
+  request_templates = {
+      "application/json" = jsonencode(
+        {
+          statusCode = 200
+        }
+      )
+    }
+
+  passthrough_behavior = "WHEN_NO_MATCH"
+}
+
+resource "aws_api_gateway_method_response" "options_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.users_resource.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.options_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.users_resource.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type, Authorization, Origin'"
+    "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS, POST'"
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+
+  response_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+      headers = {
+        "Access-Control-Allow-Origin"  = "*"
+        "Access-Control-Allow-Methods" = "POST, OPTIONS"
+        "Access-Control-Allow-Headers" = "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
+      }
+    })
+  }
+}
+
+# ddb insertions
+resource "aws_api_gateway_integration" "dynamodb_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.store_user_method.resource_id
+  http_method = aws_api_gateway_method.store_user_method.http_method
+  integration_http_method = "POST" # put item
+  type                    = "AWS" 
+  credentials             = aws_iam_role.apigateway_dynamodb_role.arn
+
+  uri = "arn:aws:apigateway:us-west-1:dynamodb:action/PutItem"
+
+# 400 if template improperly formed
+  request_templates = {
+    "application/json" = <<EOF
+{
+  "TableName": "pb_user_tokens",
+  "Item": {
+    "user_id": { "S": "$input.path('$.user_id')" },
+    "email": { "S": "$input.path('$.email')" },
+    "token": { "S": "$input.path('$.token')" },
+    "refresh_token": { "S": "$input.path('$.refresh_token')" },
+    "datetime": { "S": "$input.path('$.datetime')" },
+    "expires_in": { "S": "$input.path('$.expires_in')" }
+  }
+}
+EOF
+  }
+  passthrough_behavior = "WHEN_NO_MATCH"
+}
+
+
+# API Gateway Method 200 Response
+resource "aws_api_gateway_method_response" "store_user_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_method.store_user_method.resource_id
+  http_method   = aws_api_gateway_method.store_user_method.http_method
+  status_code   = "200"
+
+  response_parameters = {
+      "method.response.header.Access-Control-Allow-Origin": true,
+      "method.response.header.Access-Control-Allow-Headers": true,
+      "method.response.header.Access-Control-Allow-Methods": true,
+
+
+  }
+  
+}
+
+# API Gateway Integration 200 Response
+resource "aws_api_gateway_integration_response" "dynamodb_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.store_user_method.resource_id
+  http_method = aws_api_gateway_method.store_user_method.http_method
+  status_code = aws_api_gateway_method_response.store_user_response.status_code
+
+  depends_on = [aws_api_gateway_integration.dynamodb_integration] 
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin": "'*'"
+  }
+}
+
+# API Gateway Deployment
+resource "aws_api_gateway_deployment" "user_data_deployment" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  triggers = {
+    redeployment = sha1(jsonencode([
+      # api gateway db placements
+      aws_api_gateway_method.store_user_method,
+      aws_api_gateway_integration.dynamodb_integration,
+      aws_api_gateway_method_response.store_user_response,
+      aws_api_gateway_integration_response.dynamodb_integration_response,
+      # api gateway options for cors preflight confirmation
+      aws_api_gateway_method.options_method,
+      aws_api_gateway_integration.options_integration,
+      aws_api_gateway_method_response.options_method_response,
+      aws_api_gateway_integration_response.options_integration_response
+    ]))
+  }
+}
+
+resource "aws_api_gateway_stage" "dev" { 
+  deployment_id = aws_api_gateway_deployment.user_data_deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  stage_name    = "dev"
+}
+
+output "api_endpoint" {
+  value = aws_api_gateway_stage.dev.invoke_url # Use the stage's invoke_url
 }
