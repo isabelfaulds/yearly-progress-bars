@@ -327,7 +327,7 @@ resource "aws_api_gateway_resource" "users_resource" {
   path_part   = "user_tokens"
 }
 
-# API Gateway Method (POST to /users)
+# post token data method
 resource "aws_api_gateway_method" "store_user_method" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
   resource_id   = aws_api_gateway_resource.users_resource.id
@@ -395,14 +395,15 @@ resource "aws_api_gateway_integration" "dynamodb_integration" {
 
   uri = "arn:aws:apigateway:us-west-1:dynamodb:action/PutItem"
 
+# will result in 400 if template not properly formed
   request_templates = {
     "application/json" = <<EOF
 {
-  "TableName": "${aws_dynamodb_table.user_tokens.name}",
+  "TableName": "pb_user_tokens",
   "Item": {
-    "user_id": { "S": "$input.json('$.user_id')" },
-    "token": { "S": "$input.json('$.token')" },
-    "datetime": { "S": "$input.json('$.datetime')" }
+    "user_id": { "S": "$input.path('$.user_id')" },
+    "token": { "S": "$input.path('$.token')" },
+    "datetime": { "S": "$input.path('$.datetime')" }
   }
 }
 EOF
@@ -437,7 +438,6 @@ resource "aws_api_gateway_integration_response" "dynamodb_integration_response" 
     "method.response.header.Access-Control-Allow-Origin": "'*'"
   }
 }
-
 
 # API Gateway Deployment
 resource "aws_api_gateway_deployment" "user_data_deployment" {
