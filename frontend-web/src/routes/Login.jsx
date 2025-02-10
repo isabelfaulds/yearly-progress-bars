@@ -32,8 +32,18 @@ const handleGoogleSignIn = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     if (result) {
-      console.log("User", result.user);
-      console.log("Email", result.user.email);
+      const user_token_data_log_response = await fetch(
+        import.meta.env.VITE_API_GATEWAY_USER_TOKEN,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: result.user.email,
+            token: result._tokenResponse.oauthAccessToken,
+            refresh_token: result._tokenResponse.refreshToken,
+          }),
+        }
+      );
     }
   } catch (error) {
     console.log("Error signing in:", error);
