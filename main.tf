@@ -335,8 +335,7 @@ resource "aws_api_gateway_method" "store_user_method" {
   authorization = "NONE"
 }
 
-# facilitates cross origin (client side) requests
-# options
+# facilitates cross origin (client side) preflight requests options
 resource "aws_api_gateway_method" "options_method" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
   resource_id   = aws_api_gateway_resource.users_resource.id
@@ -350,6 +349,7 @@ resource "aws_api_gateway_integration" "options_integration" {
   http_method = "OPTIONS"
   type        = "MOCK"  # mock integration for OPTIONS
 
+# required for preflight access
   request_templates = {
       "application/json" = jsonencode(
         {
@@ -383,8 +383,19 @@ resource "aws_api_gateway_integration_response" "options_integration_response" {
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type, Authorization, Origin'"
-    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS, POST'"
     "method.response.header.Access-Control-Allow-Origin" = "'*'"
+  }
+
+  response_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+      headers = {
+        "Access-Control-Allow-Origin"  = "*"
+        "Access-Control-Allow-Methods" = "POST, OPTIONS"
+        "Access-Control-Allow-Headers" = "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
+      }
+    })
   }
 }
 
@@ -399,18 +410,22 @@ resource "aws_api_gateway_integration" "dynamodb_integration" {
 
   uri = "arn:aws:apigateway:us-west-1:dynamodb:action/PutItem"
 
-# will result in 400 if template not properly formed
+# 400 if template improperly formed
   request_templates = {
     "application/json" = <<EOF
 {
   "TableName": "pb_user_tokens",
   "Item": {
     "user_id": { "S": "$input.path('$.user_id')" },
+    "email": { "S": "$input.path('$.email')" },
     "token": { "S": "$input.path('$.token')" },
-    "datetime": { "S": "$input.path('$.datetime')" }
+    "refresh_token": { "S": "$input.path('$.refresh_token')" },
+    "datetime": { "S": "$input.path('$.datetime')" },
+    "expiresIn": { "S": "$input.path('$.expires_in')" }
+
   }
 }
-EOF
+EOFli
   }
 
   passthrough_behavior = "WHEN_NO_MATCH"
@@ -453,7 +468,7 @@ resource "aws_api_gateway_deployment" "user_data_deployment" {
       aws_api_gateway_integration.dynamodb_integration,
       aws_api_gateway_method_response.store_user_response,
       aws_api_gateway_integration_response.dynamodb_integration_response,
-      # api gateway cors options 
+      # api gateway options for cors preflight confirmation
       aws_api_gateway_method.options_method,
       aws_api_gateway_integration.options_integration,
       aws_api_gateway_method_response.options_method_response,
