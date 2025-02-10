@@ -421,13 +421,11 @@ resource "aws_api_gateway_integration" "dynamodb_integration" {
     "token": { "S": "$input.path('$.token')" },
     "refresh_token": { "S": "$input.path('$.refresh_token')" },
     "datetime": { "S": "$input.path('$.datetime')" },
-    "expiresIn": { "S": "$input.path('$.expires_in')" }
-
+    "expires_in": { "S": "$input.path('$.expires_in')" }
   }
 }
-EOFli
+EOF
   }
-
   passthrough_behavior = "WHEN_NO_MATCH"
 }
 
@@ -440,7 +438,11 @@ resource "aws_api_gateway_method_response" "store_user_response" {
   status_code   = "200"
 
   response_parameters = {
-      "method.response.header.Access-Control-Allow-Origin": true
+      "method.response.header.Access-Control-Allow-Origin": true,
+      "method.response.header.Access-Control-Allow-Headers": true,
+      "method.response.header.Access-Control-Allow-Methods": true,
+
+
   }
   
 }
