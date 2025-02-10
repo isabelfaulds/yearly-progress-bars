@@ -351,8 +351,12 @@ resource "aws_api_gateway_integration" "options_integration" {
   type        = "MOCK"  # mock integration for OPTIONS
 
   request_templates = {
-    "application/json" = "{}"
-  }
+      "application/json" = jsonencode(
+        {
+          statusCode = 200
+        }
+      )
+    }
 
   passthrough_behavior = "WHEN_NO_MATCH"
 }
@@ -378,7 +382,7 @@ resource "aws_api_gateway_integration_response" "options_integration_response" {
   status_code   = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type, Authorization, Origin'"
     "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin" = "'*'"
   }
