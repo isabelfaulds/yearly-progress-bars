@@ -20,10 +20,9 @@ googleProvider.addScope("https://www.googleapis.com/auth/tasks.readonly");
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    console.log("user logged in");
     currentUser = user.email;
   } else {
-    console.log("none logged in");
+    currentUser = null;
   }
 });
 
@@ -31,8 +30,6 @@ const handleGoogleSignIn = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     if (result) {
-      console.log("result", result);
-      console.log(import.meta.env.VITE_API_GATEWAY_USER_TOKEN);
       const user_token_data_log_response = await fetch(
         import.meta.env.VITE_API_GATEWAY_USER_TOKEN,
         {
@@ -40,6 +37,7 @@ const handleGoogleSignIn = async () => {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include",
           body: JSON.stringify({
             user_id: result.user.email,
             email: result.user.email,
@@ -63,9 +61,9 @@ const handleGoogleSignIn = async () => {
 const Login = () => {
   return (
     <div className="bg-[#f2f5f4] bg-cover bg-center w-screen min-h-screen m-0 flex flex-col items-start pt-10 pl-1 sm:pt-12 sm:pl-20 px-4 sm:px-20">
-      Do More with Progress Bars Personal Assistant
+      Do More with Progress Bars Assistant
       <p> • Manage time with values & goals </p>
-      <p> • Intelligent event categorization </p>
+      <p> • Intelligent schedule grouping </p>
       <p> • Sync daily journals </p>
       <button
         onClick={handleGoogleSignIn}
