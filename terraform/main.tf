@@ -208,11 +208,11 @@ resource "aws_route53_record" "google_site_verification" {
 #### S3 Frontend Files
 
 resource "aws_s3_bucket_object" "dist_files" {
-  for_each = fileset("frontend-web/dist", "**")
+  for_each = fileset("../frontend-web/dist", "**")
   bucket   = aws_s3_bucket.pbars_site_bucket.bucket
   key      = each.value
-  source   = "frontend-web/dist/${each.value}"
-  etag     = filemd5("frontend-web/dist/${each.value}")
+  source   = "../frontend-web/dist/${each.value}"
+  etag     = filemd5("../frontend-web/dist/${each.value}")
 
   content_type = lookup({
     "html" = "text/html",
