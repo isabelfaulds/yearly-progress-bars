@@ -23,6 +23,27 @@ resource "aws_iam_policy_attachment" "lambda_policy_attachment" {
   roles      = [aws_iam_role.lambda_execution_role.name]
 }
 
+resource "aws_iam_policy" "s3_full_access_policy" {
+  name        = "s3-full-access-policy"
+  description = "Policy for full S3 access"
+  policy      = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "s3:*"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Attach the custom S3 policy to the Lambda execution role
+resource "aws_iam_role_policy_attachment" "s3_full_access_attachment" {
+  role       = aws_iam_role.lambda_execution_role.name
+  policy_arn = aws_iam_policy.s3_full_access_policy.arn
+}
+
 ### Zip & Lambda
 
 resource "aws_s3_bucket" "pbars_lambdas_bucket" {
