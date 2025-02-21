@@ -73,7 +73,6 @@ resource "aws_lambda_function" "node_auth_token_creation" {
   s3_bucket     = aws_s3_bucket.pbars_lambdas_bucket.bucket
   s3_key        = aws_s3_bucket_object.auth_token_creation_zip.key
 
-# module path.function_name
   handler = "index.handler"
   runtime = "nodejs22.x"  
 
@@ -85,7 +84,7 @@ resource "aws_lambda_function" "node_auth_token_creation" {
     variables = {
         FILE_NAME = var.lambda_auth_file_name
         BUCKET_NAME = var.lambda_auth_bucket_name
-        JWT_SECRET = var.jwt_secret
+        JWT_SECRET = var.jwt_secret # openssl rand -base64 64 generated
     }
   }
 }
