@@ -23,9 +23,9 @@ resource "aws_iam_policy_attachment" "lambda_policy_attachment" {
   roles      = [aws_iam_role.lambda_execution_role.name]
 }
 
-resource "aws_iam_policy" "s3_full_access_policy" {
-  name        = "s3-full-access-policy"
-  description = "Policy for full S3 access"
+resource "aws_iam_policy" "s3_dynamodb_full_access_policy" {
+  name        = "s3-dynamodb-full-access-policy"
+  description = "Policy for full access to S3 and DynamoDB"
   policy      = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -33,15 +33,20 @@ resource "aws_iam_policy" "s3_full_access_policy" {
         Effect   = "Allow"
         Action   = "s3:*"
         Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = "dynamodb:*"
+        Resource = "*"
       }
     ]
   })
 }
 
-# Attach the custom S3 policy to the Lambda execution role
-resource "aws_iam_role_policy_attachment" "s3_full_access_attachment" {
+# TODO: Fine grain
+resource "aws_iam_role_policy_attachment" "s3_dynamo_full_access_attachment" {
   role       = aws_iam_role.lambda_execution_role.name
-  policy_arn = aws_iam_policy.s3_full_access_policy.arn
+  policy_arn = aws_iam_policy.s3_dynamodb_full_access_policy.arn
 }
 
 ### Zip & Lambda
@@ -80,6 +85,7 @@ resource "aws_lambda_function" "node_auth_token_creation" {
     variables = {
         FILE_NAME = var.lambda_auth_file_name
         BUCKET_NAME = var.lambda_auth_bucket_name
+        JWT_SECRET = var.jwt_secret
     }
   }
 }
