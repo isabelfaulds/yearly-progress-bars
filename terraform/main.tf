@@ -298,23 +298,6 @@ resource "aws_api_gateway_account" "api_gateway_account" {
   cloudwatch_role_arn = aws_iam_role.api_gateway_logging_role.arn
 }
 
-### Backend Tables
-
-resource "aws_dynamodb_table" "user_tokens" {
-  name = "pb_user_tokens"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "user_id"
-
-  attribute {
-    name = "user_id"
-    type = "S"
-  }
-
-  server_side_encryption {
-    enabled = true
-  }
-}
-
 ### API Gateway
 
 resource "aws_api_gateway_rest_api" "user_data_api" {
