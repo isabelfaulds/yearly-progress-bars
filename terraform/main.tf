@@ -208,11 +208,11 @@ resource "aws_route53_record" "google_site_verification" {
 #### S3 Frontend Files
 
 resource "aws_s3_bucket_object" "dist_files" {
-  for_each = fileset("frontend-web/dist", "**")
+  for_each = fileset("../frontend-web/dist", "**")
   bucket   = aws_s3_bucket.pbars_site_bucket.bucket
   key      = each.value
-  source   = "frontend-web/dist/${each.value}"
-  etag     = filemd5("frontend-web/dist/${each.value}")
+  source   = "../frontend-web/dist/${each.value}"
+  etag     = filemd5("../frontend-web/dist/${each.value}")
 
   content_type = lookup({
     "html" = "text/html",
@@ -296,23 +296,6 @@ resource "aws_iam_policy_attachment" "api_gateway_logging_policy" {
 
 resource "aws_api_gateway_account" "api_gateway_account" {
   cloudwatch_role_arn = aws_iam_role.api_gateway_logging_role.arn
-}
-
-### Backend Tables
-
-resource "aws_dynamodb_table" "user_tokens" {
-  name = "pb_user_tokens"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "user_id"
-
-  attribute {
-    name = "user_id"
-    type = "S"
-  }
-
-  server_side_encryption {
-    enabled = true
-  }
 }
 
 ### API Gateway
