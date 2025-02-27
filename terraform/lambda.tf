@@ -1,3 +1,4 @@
+data "aws_caller_identity" "current" {}
 
 ### IAM
 resource "aws_iam_role" "lambda_execution_role" {
@@ -12,7 +13,14 @@ resource "aws_iam_role" "lambda_execution_role" {
         Principal = {
           Service = "lambda.amazonaws.com"
         }
-      }
+      },
+      {
+           Action    = "sts:AssumeRole"
+           Effect    = "Allow"
+           Principal = {
+               Service = "apigateway.amazonaws.com"
+            }
+        },
     ]
   })
 }
@@ -38,7 +46,8 @@ resource "aws_iam_policy" "s3_dynamodb_full_access_policy" {
         Effect   = "Allow"
         Action   = "dynamodb:*"
         Resource = "*"
-      }
+      },
+      
     ]
   })
 }
@@ -48,6 +57,7 @@ resource "aws_iam_role_policy_attachment" "s3_dynamo_full_access_attachment" {
   role       = aws_iam_role.lambda_execution_role.name
   policy_arn = aws_iam_policy.s3_dynamodb_full_access_policy.arn
 }
+
 
 ### Zip & Lambda
 
@@ -89,3 +99,10 @@ resource "aws_lambda_function" "node_auth_token_creation" {
   }
 }
 
+
+resource "aws_lambda_permission" "allow_apigateway_invocation" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.node_auth_token_creation.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:050229608434:vae1x9x8se/*/POST/users_auth"
+}
