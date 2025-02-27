@@ -18,42 +18,42 @@ googleProvider.addScope("openid");
 googleProvider.addScope("https://www.googleapis.com/auth/calendar.readonly");
 googleProvider.addScope("https://www.googleapis.com/auth/tasks.readonly");
 
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log("user logged in");
-    currentUser = user.email;
-  } else {
-    console.log("none logged in");
-  }
-});
-
 const handleGoogleSignIn = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     if (result) {
       console.log("result", result);
-      console.log(import.meta.env.VITE_API_GATEWAY_USER_TOKEN);
-      const user_token_data_log_response = await fetch(
+
+      const authResponse = await fetch(
         import.meta.env.VITE_API_GATEWAY_USER_TOKEN,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include",
           body: JSON.stringify({
-            user_id: result.user.email,
+            userID: result.user.email,
             email: result.user.email,
-            token: result._tokenResponse.oauthAccessToken,
-            refresh_token: result._tokenResponse.refreshToken,
+            token: result._tokenResponse.idToken,
+            gapiToken: result._tokenResponse.oauthAccessToken,
+            refreshToken: result._tokenResponse.refreshToken,
             datetime: new Date().toISOString(),
-            expires_in: result._tokenResponse.expires_in,
+            expiresIn: result._tokenResponse.expires_in,
           }),
         }
-      )
-        .then((response) => response.json())
-        .then((data) => console.log(data))
-        .catch((error) => console.error("Error:", error));
-      console.log("logged token data");
+      );
+      if (authResponse.status === 200) {
+        console.log("Auth Login Success");
+      } else {
+        const errorResponse = await authResponse.text();
+        console.error(
+          "Auth failed with status:",
+          authResponse.status,
+          "Response:",
+          errorResponse
+        );
+      }
     }
   } catch (error) {
     console.log("Error signing in:", error);
