@@ -83,7 +83,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers: {
-        "Access-Control-Allow-Origin": "http://localhost:5173", // Frontend
+        "Access-Control-Allow-Origin": "https://www.year-progress-bar.com", // Frontend
         "Access-Control-Allow-Methods": "OPTIONS, POST",
         "Access-Control-Allow-Headers":
           "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
@@ -151,7 +151,7 @@ exports.handler = async (event) => {
         cookie: `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None`,
       }),
       headers: {
-        "Access-Control-Allow-Origin": "http://localhost:5173", // Frontend
+        "Access-Control-Allow-Origin": "https://www.year-progress-bar.com", // Frontend
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers":
           "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
@@ -166,7 +166,7 @@ exports.handler = async (event) => {
       statusCode: 500,
       body: JSON.stringify({ message: "Error processing request" }),
       headers: {
-        "Access-Control-Allow-Origin": "http://localhost:5173", // Frontend
+        "Access-Control-Allow-Origin": "https://www.year-progress-bar.com", // Frontend
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers":
           "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
