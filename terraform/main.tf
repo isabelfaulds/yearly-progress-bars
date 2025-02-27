@@ -168,10 +168,7 @@ resource "aws_cloudfront_distribution" "pbars_cloudfront" {
     }
   }
 
-
-
 }
-
 
 resource "aws_route53_record" "root_pbar_domain" {
   zone_id = data.aws_route53_zone.progress_bars_domain.zone_id
@@ -273,7 +270,7 @@ resource "aws_iam_policy_attachment" "apigateway_dynamodb_policy_attachment" {
   roles       = [aws_iam_role.apigateway_dynamodb_role.name]
 }
 
-resource "aws_iam_role" "api_gateway_logging_role" {
+resource "aws_iam_role" "api_gateway_logging_lambda_role" {
   name = "APIGatewayCloudWatchRole"
 
   assume_role_policy = jsonencode({
@@ -291,11 +288,25 @@ resource "aws_iam_role" "api_gateway_logging_role" {
 resource "aws_iam_policy_attachment" "api_gateway_logging_policy" {
   name       = "api_gateway_logging_policy"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
-  roles      = [aws_iam_role.api_gateway_logging_role.name]
+  roles      = [aws_iam_role.api_gateway_logging_lambda_role.name]
+}
+
+resource "aws_iam_policy" "apigateway_lambda_policy" {
+  name = "apigateway_lambda_policy"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "lambda:InvokeFunction",
+        Effect = "Allow",
+        Resource = [aws_lambda_function.node_auth_token_creation.arn]
+      }
+    ]
+  })
 }
 
 resource "aws_api_gateway_account" "api_gateway_account" {
-  cloudwatch_role_arn = aws_iam_role.api_gateway_logging_role.arn
+  cloudwatch_role_arn = aws_iam_role.api_gateway_logging_lambda_role.arn
 }
 
 ### API Gateway
@@ -304,31 +315,70 @@ resource "aws_api_gateway_rest_api" "user_data_api" {
   name = "pb_user_data_api"
 }
 
-resource "aws_api_gateway_resource" "users_resource" {
+
+# API Gateway Deployment
+resource "aws_api_gateway_deployment" "user_data_deployment" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  triggers = {
+    redeployment = sha1(jsonencode([
+      # auth lambda
+      aws_api_gateway_method.validate_auth_method,
+      aws_api_gateway_integration.auth_lambda_integration,
+      aws_api_gateway_method_response.auth_user_response,
+      # auth cors preflight confirmation
+      aws_api_gateway_method.auth_options_method,
+      aws_api_gateway_integration.auth_options_integration,
+      aws_api_gateway_method_response.auth_options_method_response,
+      aws_api_gateway_integration_response.auth_options_integration_response
+    ]))
+  }
+}
+
+resource "aws_api_gateway_stage" "dev" { 
+  deployment_id = aws_api_gateway_deployment.user_data_deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  stage_name    = "dev"
+  lifecycle {
+    create_before_destroy = true # Recreate before destroying
+  }
+}
+
+output "api_endpoint" {
+  value = aws_api_gateway_stage.dev.invoke_url # Use the stage's invoke_url
+}
+
+
+### Auth User Gateway
+
+resource "aws_api_gateway_resource" "users_auth" {
   rest_api_id = aws_api_gateway_rest_api.user_data_api.id
   parent_id   = aws_api_gateway_rest_api.user_data_api.root_resource_id
-  path_part   = "user_tokens"
+  path_part   = "users_auth"
 }
 
 # post token data method
-resource "aws_api_gateway_method" "store_user_method" {
+resource "aws_api_gateway_method" "validate_auth_method" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
-  resource_id   = aws_api_gateway_resource.users_resource.id
+  resource_id   = aws_api_gateway_resource.users_auth.id
   http_method   = "POST"
   authorization = "NONE"
 }
 
+output "auth_api_endpoint" {
+  value = aws_api_gateway_stage.dev.invoke_url # Use the stage's invoke_url
+}
+
 # facilitates cross origin (client side) preflight requests options
-resource "aws_api_gateway_method" "options_method" {
+resource "aws_api_gateway_method" "auth_options_method" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
-  resource_id   = aws_api_gateway_resource.users_resource.id
+  resource_id   = aws_api_gateway_resource.users_auth.id
   http_method   = "OPTIONS"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_integration" "options_integration" {
+resource "aws_api_gateway_integration" "auth_options_integration" {
   rest_api_id = aws_api_gateway_rest_api.user_data_api.id
-  resource_id = aws_api_gateway_method.store_user_method.resource_id
+  resource_id = aws_api_gateway_method.validate_auth_method.resource_id
   http_method = "OPTIONS"
   type        = "MOCK"  # mock integration for OPTIONS
 
@@ -344,130 +394,76 @@ resource "aws_api_gateway_integration" "options_integration" {
   passthrough_behavior = "WHEN_NO_MATCH"
 }
 
-resource "aws_api_gateway_method_response" "options_method_response" {
+resource "aws_api_gateway_method_response" "auth_options_method_response" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
-  resource_id   = aws_api_gateway_resource.users_resource.id
+  resource_id   = aws_api_gateway_resource.users_auth.id
   http_method   = "OPTIONS"
   status_code   = "200"
-  depends_on = [aws_api_gateway_method.options_method]
+  depends_on = [aws_api_gateway_method.auth_options_method]
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = true,
     "method.response.header.Access-Control-Allow-Methods" = true,
-    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Origin" = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
   }
 }
 
-resource "aws_api_gateway_integration_response" "options_integration_response" {
+resource "aws_api_gateway_integration_response" "auth_options_integration_response" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
-  resource_id   = aws_api_gateway_resource.users_resource.id
+  resource_id   = aws_api_gateway_resource.users_auth.id
   http_method   = "OPTIONS"
   status_code   = "200"
+  depends_on = [aws_api_gateway_method.auth_options_method] 
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type, Authorization, Origin'"
-    "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS, POST'"
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
+    "method.response.header.Access-Control-Allow-Origin" = "'http://localhost:5173'"
+    "method.response.header.Access-Control-Allow-Credentials": "'true'",
+
+    
   }
 
   response_templates = {
     "application/json" = jsonencode({
       statusCode = 200
       headers = {
-        "Access-Control-Allow-Origin"  = "*"
+        "Access-Control-Allow-Origin"  = "'http://localhost:5173'"
         "Access-Control-Allow-Methods" = "POST, OPTIONS"
         "Access-Control-Allow-Headers" = "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
+        "Access-Control-Allow-Credentials" = "'true'" # client expects string
       }
     })
   }
 }
 
-# ddb insertions
-resource "aws_api_gateway_integration" "dynamodb_integration" {
+resource "aws_api_gateway_integration" "auth_lambda_integration" {
   rest_api_id = aws_api_gateway_rest_api.user_data_api.id
-  resource_id = aws_api_gateway_method.store_user_method.resource_id
-  http_method = aws_api_gateway_method.store_user_method.http_method
-  integration_http_method = "POST" # put item
-  type                    = "AWS" 
-  credentials             = aws_iam_role.apigateway_dynamodb_role.arn
+  resource_id = aws_api_gateway_method.validate_auth_method.resource_id
+  http_method = aws_api_gateway_method.validate_auth_method.http_method
 
-  uri = "arn:aws:apigateway:us-west-1:dynamodb:action/PutItem"
-
-# 400 if template improperly formed
-  request_templates = {
-    "application/json" = <<EOF
-{
-  "TableName": "pb_user_tokens",
-  "Item": {
-    "user_id": { "S": "$input.path('$.user_id')" },
-    "email": { "S": "$input.path('$.email')" },
-    "token": { "S": "$input.path('$.token')" },
-    "refresh_token": { "S": "$input.path('$.refresh_token')" },
-    "datetime": { "S": "$input.path('$.datetime')" },
-    "expires_in": { "S": "$input.path('$.expires_in')" }
-  }
-}
-EOF
-  }
-  passthrough_behavior = "WHEN_NO_MATCH"
+  type                    = "AWS_PROXY" # Lambda
+  integration_http_method = "POST"
+  credentials             = null
+  request_parameters = {}
+  request_templates = {}
+  content_handling = "CONVERT_TO_TEXT"
+  uri = aws_lambda_function.node_auth_token_creation.invoke_arn
+  passthrough_behavior = "WHEN_NO_TEMPLATES" 
 }
 
-
-# API Gateway Method 200 Response
-resource "aws_api_gateway_method_response" "store_user_response" {
+resource "aws_api_gateway_method_response" "auth_user_response" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
-  resource_id   = aws_api_gateway_method.store_user_method.resource_id
-  http_method   = aws_api_gateway_method.store_user_method.http_method
+  resource_id   = aws_api_gateway_method.validate_auth_method.resource_id
+  http_method   = aws_api_gateway_method.validate_auth_method.http_method
   status_code   = "200"
 
   response_parameters = {
       "method.response.header.Access-Control-Allow-Origin": true,
       "method.response.header.Access-Control-Allow-Headers": true,
       "method.response.header.Access-Control-Allow-Methods": true,
-
+      "method.response.header.Access-Control-Allow-Credentials": true,
 
   }
-  
-}
-
-# API Gateway Integration 200 Response
-resource "aws_api_gateway_integration_response" "dynamodb_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
-  resource_id = aws_api_gateway_method.store_user_method.resource_id
-  http_method = aws_api_gateway_method.store_user_method.http_method
-  status_code = aws_api_gateway_method_response.store_user_response.status_code
-
-  depends_on = [aws_api_gateway_integration.dynamodb_integration] 
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin": "'*'"
-  }
-}
-
-# API Gateway Deployment
-resource "aws_api_gateway_deployment" "user_data_deployment" {
-  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
-  triggers = {
-    redeployment = sha1(jsonencode([
-      # api gateway db placements
-      aws_api_gateway_method.store_user_method,
-      aws_api_gateway_integration.dynamodb_integration,
-      aws_api_gateway_method_response.store_user_response,
-      aws_api_gateway_integration_response.dynamodb_integration_response,
-      # api gateway options for cors preflight confirmation
-      aws_api_gateway_method.options_method,
-      aws_api_gateway_integration.options_integration,
-      aws_api_gateway_method_response.options_method_response,
-      aws_api_gateway_integration_response.options_integration_response
-    ]))
-  }
-}
-
-resource "aws_api_gateway_stage" "dev" { 
-  deployment_id = aws_api_gateway_deployment.user_data_deployment.id
-  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
-  stage_name    = "dev"
-}
-
-output "api_endpoint" {
-  value = aws_api_gateway_stage.dev.invoke_url # Use the stage's invoke_url
 }
