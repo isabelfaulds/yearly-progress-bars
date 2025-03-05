@@ -76,7 +76,7 @@ exports.handler = async (event) => {
         message: "Access token missing from cookies.",
       }),
       headers: {
-        "Access-Control-Allow-Origin": "https://localhost:5173", // Frontend
+        "Access-Control-Allow-Origin": "https://www.year-progress-bar.com", // Frontend
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers":
           "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
@@ -95,7 +95,7 @@ exports.handler = async (event) => {
       message: "Login invalidated",
     }),
     headers: {
-      "Access-Control-Allow-Origin": "https://localhost:5173", // Frontend
+      "Access-Control-Allow-Origin": "https://www.year-progress-bar.com", // Frontend
       "Access-Control-Allow-Methods": "POST",
       "Access-Control-Allow-Headers":
         "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
