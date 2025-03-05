@@ -153,14 +153,9 @@ resource "aws_api_gateway_integration" "auth_options_integration" {
   http_method = "OPTIONS"
   type        = "MOCK"  # mock integration for OPTIONS
 
-# required for preflight access
   request_templates = {
-      "application/json" = jsonencode(
-        {
-          statusCode = 200
-        }
-      )
-    }
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
 
   passthrough_behavior = "WHEN_NO_MATCH"
 }
@@ -178,7 +173,9 @@ resource "aws_api_gateway_method_response" "auth_options_method_response" {
     "method.response.header.Access-Control-Allow-Origin" = true,
     "method.response.header.Access-Control-Allow-Credentials" = true
   }
+  
 }
+
 
 resource "aws_api_gateway_integration_response" "auth_options_integration_response" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
@@ -191,23 +188,22 @@ resource "aws_api_gateway_integration_response" "auth_options_integration_respon
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
     "method.response.header.Access-Control-Allow-Origin" = "'https://www.year-progress-bar.com'"
-    "method.response.header.Access-Control-Allow-Credentials": "'true'",
-
-    
+    "method.response.header.Access-Control-Allow-Credentials": "'true'"
   }
 
   response_templates = {
     "application/json" = jsonencode({
       statusCode = 200
       headers = {
-        "Access-Control-Allow-Origin"  = "'https://www.year-progress-bar.com'"
-        "Access-Control-Allow-Methods" = "POST, OPTIONS"
-        "Access-Control-Allow-Headers" = "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
-        "Access-Control-Allow-Credentials" = "'true'" # client expects string
+        "Access-Control-Allow-Origin"      = "'https://www.year-progress-bar.com'"
+        "Access-Control-Allow-Methods"     = "POST, OPTIONS"
+        "Access-Control-Allow-Headers"     = "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
+        "Access-Control-Allow-Credentials" = "'true'" # Client expects string
       }
     })
   }
 }
+
 
 resource "aws_api_gateway_integration" "auth_lambda_integration" {
   rest_api_id = aws_api_gateway_rest_api.user_data_api.id
@@ -221,7 +217,7 @@ resource "aws_api_gateway_integration" "auth_lambda_integration" {
   request_templates = {}
   content_handling = "CONVERT_TO_TEXT"
   uri = aws_lambda_function.node_auth_token_creation.invoke_arn
-  passthrough_behavior = "WHEN_NO_TEMPLATES" 
+  passthrough_behavior = "WHEN_NO_MATCH" 
 }
 
 resource "aws_api_gateway_method_response" "auth_user_response" {
@@ -274,7 +270,7 @@ resource "aws_api_gateway_integration" "auth_logout_options_integration" {
 
   passthrough_behavior = "WHEN_NO_MATCH"
 
-  depends_on = [aws_api_gateway_method.logout_options_method] # dependency
+  depends_on = [aws_api_gateway_method.logout_options_method]
 }
 
 resource "aws_api_gateway_method_response" "auth_logout_options_method_response" {
@@ -282,8 +278,7 @@ resource "aws_api_gateway_method_response" "auth_logout_options_method_response"
   resource_id   = aws_api_gateway_resource.users_auth_logout.id
   http_method   = "OPTIONS"
   status_code   = "200"
-
-  depends_on = [aws_api_gateway_method.logout_options_method] # dependency
+  depends_on = [aws_api_gateway_method.logout_options_method]
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = true,
@@ -311,17 +306,7 @@ resource "aws_api_gateway_integration_response" "auth_logout_options_integration
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
-  response_templates = {
-    "application/json" = jsonencode({
-      statusCode = 200
-      headers = {
-        "Access-Control-Allow-Origin"      = "'https://www.year-progress-bar.com'"
-        "Access-Control-Allow-Methods"     = "POST, OPTIONS"
-        "Access-Control-Allow-Headers"     = "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
-        "Access-Control-Allow-Credentials" = "'true'" # Client expects string
-      }
-    })
-  }
+
 }
 
 resource "aws_api_gateway_integration" "auth_logout_lambda_integration" {
@@ -330,13 +315,13 @@ resource "aws_api_gateway_integration" "auth_logout_lambda_integration" {
   http_method = aws_api_gateway_method.logout_post_method.http_method
 
   type                    = "AWS_PROXY" # Lambda
+
   integration_http_method = "POST"
   credentials             = null
   request_parameters = {}
   request_templates = {}
-  content_handling = "CONVERT_TO_TEXT"
   uri = aws_lambda_function.node_auth_token_invalidation.invoke_arn
-  passthrough_behavior = "WHEN_NO_TEMPLATES" 
+  passthrough_behavior = "WHEN_NO_MATCH" 
 }
 
 resource "aws_api_gateway_method_response" "logout_user_response" {
