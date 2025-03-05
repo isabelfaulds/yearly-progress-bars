@@ -148,7 +148,6 @@ exports.handler = async (event) => {
       statusCode: 200,
       body: JSON.stringify({
         message: "Authentication Success!",
-        cookie: `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None`,
       }),
       headers: {
         "Access-Control-Allow-Origin": "https://www.year-progress-bar.com", // Frontend
