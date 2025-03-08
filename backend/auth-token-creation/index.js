@@ -17,6 +17,14 @@ const streamToString = (stream) =>
     stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
   });
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "https://www.year-progress-bar.com",
+  "Access-Control-Allow-Methods": "POST",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
+  "Access-Control-Allow-Credentials": "true",
+};
+
 async function addUserAndTokens(
   userID,
   email,
@@ -66,7 +74,8 @@ async function addUserAndTokens(
           accessToken: { S: cookieToken },
           refreshToken: { S: refreshCookieToken },
           datetime: { S: datetime },
-          expiresIn: { N: "3600" },
+          accessTokenexpiresIn: { N: "3600" },
+          refreshTokenexpiresIn: { N: "36000" },
         },
       })
     );
@@ -83,11 +92,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers: {
-        "Access-Control-Allow-Origin": "https://www.year-progress-bar.com", // Frontend
-        "Access-Control-Allow-Methods": "OPTIONS, POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
-        "Access-Control-Allow-Credentials": "true", // for cookies
+        ...corsHeaders,
       },
       body: "",
     };
@@ -150,13 +155,9 @@ exports.handler = async (event) => {
         message: "Authentication Success!",
       }),
       headers: {
-        "Access-Control-Allow-Origin": "https://www.year-progress-bar.com", // Frontend
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
-        "Access-Control-Allow-Credentials": "true", // for cookies
-        // Secure flag -- https only, SameSite=None for cors
-        "Set-Cookie": `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None`,
+        ...corsHeaders,
+        "Set-Cookie": `refreshToken=${refreshCookieToken}; Path=/; Max-Age=36000; HttpOnly; SameSite=None`,
+        "set-cookie": `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None`,
       },
     };
   } catch (error) {
@@ -165,11 +166,7 @@ exports.handler = async (event) => {
       statusCode: 500,
       body: JSON.stringify({ message: "Error processing request" }),
       headers: {
-        "Access-Control-Allow-Origin": "https://www.year-progress-bar.com", // Frontend
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
-        "Access-Control-Allow-Credentials": "true", // for cookies
+        ...corsHeaders,
       },
     };
   }
