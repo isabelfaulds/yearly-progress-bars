@@ -156,4 +156,23 @@ resource "aws_lambda_function" "node_auth_token_refresh" {
   role = aws_iam_role.lambda_execution_role.arn
   timeout = 100
   memory_size = 128
+
+  environment {
+    variables = {
+        JWT_SECRET = var.jwt_secret
+    }
+  }
+}
+
+resource "aws_lambda_permission" "allow_apigateway_invocation_refresh" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.node_auth_token_refresh.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:050229608434:vae1x9x8se/*/POST/users_auth/refresh"
+}
+
+
+resource "aws_cloudwatch_log_group" "lambda_log_group" {
+  name = "/aws/lambda/node-auth-token-refresh"
+  retention_in_days = 7
 }
