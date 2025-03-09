@@ -1,11 +1,14 @@
 
 # terraform files
 terraform/.terraform/providers/*
-terraform/terraform.tfstate
+*terraform.tfstate*
+terraform/terraform.tfvars
 terraform/terraform.tfstate.backup
 # lambda dependencies
 **/lambda-dependency-package/
 **/node_modules/
+**/build
+backend/**/*.zip
 
 # default node configuration
 # Logs
