@@ -103,7 +103,7 @@ resource "aws_lambda_permission" "allow_apigateway_invocation" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.node_auth_token_creation.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:us-west-1:050229608434:vae1x9x8se/*/POST/users_auth"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:vae1x9x8se/*/POST/users_auth"
 }
 
 
@@ -131,5 +131,48 @@ resource "aws_lambda_permission" "allow_apigateway_invocation_invalidation" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.node_auth_token_invalidation.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:us-west-1:050229608434:vae1x9x8se/*/POST/users_auth/logout"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:vae1x9x8se/*/POST/users_auth/logout"
+}
+
+
+### token refresh
+resource "aws_s3_bucket_object" "node_auth_token_refresh" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/auth-token-refresh/auth-token-refresh.zip"
+  key    = "auth-token-refresh.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "node_auth_token_refresh" {
+  function_name = "node-auth-token-refresh"
+  s3_bucket     = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  s3_key        = aws_s3_bucket_object.node_auth_token_refresh.key
+
+  handler = "index.handler"
+  runtime = "nodejs22.x"  
+  depends_on = [aws_s3_bucket_object.node_auth_token_refresh]
+
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+
+  environment {
+    variables = {
+        JWT_SECRET = var.jwt_secret
+    }
+  }
+}
+
+resource "aws_lambda_permission" "allow_apigateway_invocation_refresh" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.node_auth_token_refresh.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:vae1x9x8se/*/POST/users_auth/refresh"
+}
+
+
+resource "aws_cloudwatch_log_group" "lambda_log_group" {
+  name = "/aws/lambda/node-auth-token-refresh"
+  retention_in_days = 7
 }
