@@ -176,3 +176,41 @@ resource "aws_cloudwatch_log_group" "lambda_log_group" {
   name = "/aws/lambda/node-auth-token-refresh"
   retention_in_days = 7
 }
+
+### token authorizer
+resource "aws_s3_bucket_object" "node_auth_token_authorizer" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/auth-token-authorizer/auth-token-authorizer.zip"
+  key    = "auth-token-authorizer.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "node_auth_token_authorizer" {
+  function_name = "node-auth-token-authorizer"
+  s3_bucket     = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  s3_key        = aws_s3_bucket_object.node_auth_token_authorizer.key
+
+  handler = "index.handler"
+  runtime = "nodejs22.x"  
+  depends_on = [aws_s3_bucket_object.node_auth_token_authorizer]
+
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+
+  environment {
+    variables = {
+        JWT_SECRET = var.jwt_secret
+    }
+  }
+}
+
+resource "aws_lambda_permission" "allow_apigateway_invocation_authorizer" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.node_auth_token_refresh.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:vae1x9x8se/*/POST/*/*"
+}
+
+
