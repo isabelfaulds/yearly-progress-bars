@@ -214,3 +214,41 @@ resource "aws_lambda_permission" "allow_apigateway_invocation_authorizer" {
 }
 
 
+
+
+#### api gateway authorizer
+
+resource "aws_iam_role" "api_gateway_authorizer_role" {
+  name = "api-gateway-authorizer-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_permission" "api_gateway_auth" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.node_auth_token_authorizer.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.user_data_api.execution_arn}/*/*"
+}
+
+
+resource "aws_api_gateway_authorizer" "login_token_gateway_authorizer" {
+  name            = "TokenAuthorizer"
+  rest_api_id     = aws_api_gateway_rest_api.user_data_api.id
+  authorizer_uri  = aws_lambda_function.node_auth_token_authorizer.invoke_arn 
+  type            = "REQUEST"
+  identity_source = "method.request.header.login-auth-token"
+  authorizer_credentials = aws_iam_role.api_gateway_authorizer_role.arn
+  authorizer_result_ttl_in_seconds = 300 # token caching
+}

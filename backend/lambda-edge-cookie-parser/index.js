@@ -9,7 +9,9 @@ exports.handler = (event, context, callback) => {
       ?.split("=")[1];
 
     if (accessToken) {
-      headers.authorization = [{ key: "Authorization", value: accessToken }];
+      headers["login-auth-token"] = [
+        { key: "login-auth-token", value: accessToken },
+      ];
     }
     delete headers.cookie; // Remove cookie from the request
   }
