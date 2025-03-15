@@ -103,7 +103,7 @@ resource "aws_lambda_permission" "allow_apigateway_invocation" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.node_auth_token_creation.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:vae1x9x8se/*/POST/users_auth"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/users_auth"
 }
 
 
@@ -131,7 +131,7 @@ resource "aws_lambda_permission" "allow_apigateway_invocation_invalidation" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.node_auth_token_invalidation.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:vae1x9x8se/*/POST/users_auth/logout"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/users_auth/logout"
 }
 
 
@@ -168,7 +168,7 @@ resource "aws_lambda_permission" "allow_apigateway_invocation_refresh" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.node_auth_token_refresh.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:vae1x9x8se/*/POST/users_auth/refresh"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/users_auth/refresh"
 }
 
 
@@ -210,7 +210,7 @@ resource "aws_lambda_permission" "allow_apigateway_invocation_authorizer" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.node_auth_token_refresh.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:vae1x9x8se/*/POST/*/*"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/*/*"
 }
 
 
