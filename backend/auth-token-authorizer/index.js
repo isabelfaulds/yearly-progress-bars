@@ -17,19 +17,9 @@ function generatePolicy(principalId, effect, resource) {
   return authResponse;
 }
 
-const getCookieValue = (cookieString, cookieName) => {
-  const cookies = cookieString.split("; ");
-  for (let cookie of cookies) {
-    const [name, value] = cookie.split("=");
-    if (name === cookieName) return value;
-  }
-  return null;
-};
-
 exports.handler = async (event) => {
-  const cookies = event.headers.Cookie || event.headers.cookie;
+  const accessToken = event.headers["login-auth-token"];
   try {
-    const accessToken = getCookieValue(cookies, "accessToken");
     const decodedToken = jwt.verify(accessToken, process.env.JWT_SECRET);
     const userId = decodedToken.userId;
     console.log("User ID from JWT:", userId);
