@@ -103,7 +103,7 @@ resource "aws_lambda_permission" "allow_apigateway_invocation" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.node_auth_token_creation.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:vae1x9x8se/*/POST/users_auth"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/users_auth"
 }
 
 
@@ -131,7 +131,7 @@ resource "aws_lambda_permission" "allow_apigateway_invocation_invalidation" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.node_auth_token_invalidation.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:vae1x9x8se/*/POST/users_auth/logout"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/users_auth/logout"
 }
 
 
@@ -168,11 +168,108 @@ resource "aws_lambda_permission" "allow_apigateway_invocation_refresh" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.node_auth_token_refresh.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:vae1x9x8se/*/POST/users_auth/refresh"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/users_auth/refresh"
 }
 
 
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
   name = "/aws/lambda/node-auth-token-refresh"
   retention_in_days = 7
+}
+
+### token authorizer
+resource "aws_s3_bucket_object" "node_auth_token_authorizer" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/auth-token-authorizer/auth-token-authorizer.zip"
+  key    = "auth-token-authorizer.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "node_auth_token_authorizer" {
+  function_name = "node-auth-token-authorizer"
+  s3_bucket     = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  s3_key        = aws_s3_bucket_object.node_auth_token_authorizer.key
+
+  handler = "index.handler"
+  runtime = "nodejs22.x"  
+  depends_on = [aws_s3_bucket_object.node_auth_token_authorizer]
+
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+
+  environment {
+    variables = {
+        JWT_SECRET = var.jwt_secret
+    }
+  }
+}
+
+resource "aws_lambda_permission" "allow_apigateway_invocation_authorizer" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.node_auth_token_refresh.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/*/*"
+}
+
+
+
+
+#### api gateway authorizer
+
+resource "aws_iam_role" "api_gateway_authorizer_role" {
+  name = "api-gateway-authorizer-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_permission" "api_gateway_auth" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.node_auth_token_authorizer.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.user_data_api.execution_arn}/*/*"
+}
+
+resource "aws_iam_policy" "lambda_invoke_policy" {
+  name        = "lambda-invoke-policy"
+  description = "Policy to allow API Gateway to invoke Lambda authorizer"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "lambda:InvokeFunction"
+        ],
+        Effect = "Allow",
+        Resource = aws_lambda_function.node_auth_token_authorizer.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "api_gateway_lambda_invoke" {
+  role       = aws_iam_role.api_gateway_authorizer_role.name
+  policy_arn = aws_iam_policy.lambda_invoke_policy.arn
+}
+
+resource "aws_api_gateway_authorizer" "login_token_gateway_authorizer" {
+  name            = "TokenAuthorizer"
+  rest_api_id     = aws_api_gateway_rest_api.user_data_api.id
+  authorizer_uri  = aws_lambda_function.node_auth_token_authorizer.invoke_arn 
+  type            = "REQUEST"
+  identity_source = "method.request.header.login-auth-token"
+  authorizer_credentials = aws_iam_role.api_gateway_authorizer_role.arn
+  authorizer_result_ttl_in_seconds = 300 # token caching
 }
