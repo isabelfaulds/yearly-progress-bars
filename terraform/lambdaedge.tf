@@ -72,11 +72,52 @@ resource "aws_iam_role_policy_attachment" "lambda_edge_policy_attach" {
   policy_arn = aws_iam_policy.lambda_edge_policy.arn
 }
 
+# CloudFront Cache Policy (CachingDisabled)
+resource "aws_cloudfront_cache_policy" "caching_disabled" {
+  name        = "CachingDisabled"
+  comment     = "Caching disabled for API Gateway"
+  default_ttl = 0
+  max_ttl     = 0
+  min_ttl     = 0
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+    headers_config {
+      header_behavior = "none"
+    }
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+    enable_accept_encoding_gzip  = false
+    enable_accept_encoding_brotli = false
+  }
+}
+
+resource "aws_cloudfront_origin_request_policy" "all_viewer_except_host_header" {
+  name    = "AllViewerExceptHostHeader"
+  comment = "Forward all viewer headers except Host header"
+  cookies_config {
+    cookie_behavior = "all"
+  }
+  headers_config {
+    header_behavior = "allExcept"
+    headers {
+      items = ["Host"]
+    }
+  }
+  query_strings_config {
+    query_string_behavior = "all"
+  }
+}
+
+
 # CloudFront Distribution
 resource "aws_cloudfront_distribution" "api_cloudfront_distribution" {
   origin {
     domain_name =  element(split("/", replace("${aws_api_gateway_deployment.user_data_deployment.invoke_url}", "https://", "")), 0)
     origin_id   = "APIGatewayOrigin"
+    origin_path = "/dev"
 
     custom_origin_config {
       http_port             = 80
@@ -93,16 +134,11 @@ resource "aws_cloudfront_distribution" "api_cloudfront_distribution" {
     allowed_methods  = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "APIGatewayOrigin"
-
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "all"
-      }
-      headers = ["Authorization"]
-    }
-
     viewer_protocol_policy = "redirect-to-https"
+
+    cache_policy_id          = aws_cloudfront_cache_policy.caching_disabled.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.all_viewer_except_host_header.id
+
     min_ttl                = 0
     default_ttl            = 3600
     max_ttl                = 86400
