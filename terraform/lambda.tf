@@ -242,6 +242,27 @@ resource "aws_lambda_permission" "api_gateway_auth" {
   source_arn    = "${aws_api_gateway_rest_api.user_data_api.execution_arn}/*/*"
 }
 
+resource "aws_iam_policy" "lambda_invoke_policy" {
+  name        = "lambda-invoke-policy"
+  description = "Policy to allow API Gateway to invoke Lambda authorizer"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "lambda:InvokeFunction"
+        ],
+        Effect = "Allow",
+        Resource = aws_lambda_function.node_auth_token_authorizer.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "api_gateway_lambda_invoke" {
+  role       = aws_iam_role.api_gateway_authorizer_role.name
+  policy_arn = aws_iam_policy.lambda_invoke_policy.arn
+}
 
 resource "aws_api_gateway_authorizer" "login_token_gateway_authorizer" {
   name            = "TokenAuthorizer"
