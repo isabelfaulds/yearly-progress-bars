@@ -12,3 +12,8 @@ variable "jwt_secret" {
   description = "String used for jwt tokens"
   type        = string
 }
+
+variable "api_id" {
+  description = "api gateway id"
+  type = string
+}
