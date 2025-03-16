@@ -273,3 +273,39 @@ resource "aws_api_gateway_authorizer" "login_token_gateway_authorizer" {
   authorizer_credentials = aws_iam_role.api_gateway_authorizer_role.arn
   authorizer_result_ttl_in_seconds = 300 # token caching
 }
+
+### generic 200 endpoint
+resource "aws_s3_bucket_object" "node_success_response" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/success-response/node-success-response.zip"
+  key    = "node-success-response.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "node_success_response" {
+  function_name = "node-success-response"
+  s3_bucket     = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  s3_key        = aws_s3_bucket_object.node_success_response.key
+
+  handler = "index.handler"
+  runtime = "nodejs22.x"  
+  depends_on = [aws_s3_bucket_object.node_success_response]
+
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+
+  environment {
+    variables = {
+        JWT_SECRET = var.jwt_secret
+    }
+  }
+}
+
+resource "aws_lambda_permission" "allow_apigateway_success_response" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.node_success_response.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/*/*"
+}
