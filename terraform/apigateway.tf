@@ -455,7 +455,8 @@ resource "aws_api_gateway_method" "auth_check_post_method" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
   resource_id   = aws_api_gateway_resource.users_auth_check.id
   http_method   = "POST"
-  authorization = "NONE"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
 }
 
 resource "aws_api_gateway_method" "auth_check_options_method" {
