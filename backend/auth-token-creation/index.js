@@ -156,7 +156,7 @@ exports.handler = async (event) => {
       }),
       headers: {
         ...corsHeaders,
-        "Set-Cookie": `refreshToken=${refreshCookieToken}; Path=/; Max-Age=36000; HttpOnly; SameSite=None`,
+        "Set-Cookie": `refreshToken=${refreshCookieToken}; Path=/; Max-Age=691200; HttpOnly; SameSite=None`,
         "set-cookie": `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None`,
       },
     };
