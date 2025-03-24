@@ -11,8 +11,6 @@ import {
 } from "firebase/auth";
 import { app, auth } from "../firebase.js";
 
-const AuthContext = createContext();
-
 const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope("https://www.googleapis.com/auth/userinfo.email");
 googleProvider.addScope("https://www.googleapis.com/auth/userinfo.profile");
@@ -20,19 +18,36 @@ googleProvider.addScope("openid");
 googleProvider.addScope("https://www.googleapis.com/auth/calendar.readonly");
 googleProvider.addScope("https://www.googleapis.com/auth/tasks.readonly");
 
-function getCookieValue(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(";").shift();
-}
+const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [isSignedIn, setIsSignedIn] = useState(false);
 
+  const checkLoginCookie = async () => {
+    try {
+      const authCheckResponse = await fetch(
+        import.meta.env.VITE_CLOUDFRONT_AUTH_CHECK,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      if (authCheckResponse.status === 200) {
+        setIsSignedIn(true);
+      } else {
+        setIsSignedIn(false);
+      }
+    } catch (error) {
+      console.error("Auth check failed:", error);
+    }
+  };
+
   // initial set access token
   useEffect(() => {
-    const accessToken = getCookieValue("accessToken");
-    setIsSignedIn(!!accessToken);
+    checkLoginCookie();
   }, []);
 
   // sign in func
@@ -40,8 +55,6 @@ export function AuthProvider({ children }) {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       if (result) {
-        console.log("result", result);
-
         const authResponse = await fetch(
           import.meta.env.VITE_API_GATEWAY_USER_TOKEN,
           {
@@ -62,8 +75,7 @@ export function AuthProvider({ children }) {
           }
         );
         if (authResponse.status === 200) {
-          setIsSignedIn(true);
-          console.log("Auth Login Success");
+          checkLoginCookie();
         } else {
           const errorResponse = await authResponse.text();
           console.error(
@@ -79,7 +91,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // sign out func
   const handleSignOut = async () => {
     const authResponse = await fetch(import.meta.env.VITE_API_GATEWAY_LOGOUT, {
       method: "POST",
@@ -88,15 +99,17 @@ export function AuthProvider({ children }) {
       },
       credentials: "include",
     });
-    if (authResponse) {
-      console.log("logout result", authResponse);
-    }
     setIsSignedIn(false);
   };
 
   return (
     <AuthContext.Provider
-      value={{ isSignedIn, handleGoogleSignIn, handleSignOut }}
+      value={{
+        isSignedIn,
+        handleGoogleSignIn,
+        handleSignOut,
+        checkLoginCookie,
+      }}
     >
       {children}
     </AuthContext.Provider>

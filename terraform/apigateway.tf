@@ -103,6 +103,7 @@ resource "aws_api_gateway_deployment" "user_data_deployment" {
       aws_api_gateway_integration.auth_logout_options_integration,
       aws_api_gateway_method_response.auth_logout_options_method_response,
       aws_api_gateway_integration_response.auth_logout_options_integration_response
+      # login check
     ]))
   }
 }
@@ -187,7 +188,7 @@ resource "aws_api_gateway_integration_response" "auth_options_integration_respon
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
-    "method.response.header.Access-Control-Allow-Origin" = "'https://www.year-progress-bar.com'"
+    "method.response.header.Access-Control-Allow-Origin" = "'https://year-progress-bar.com'"
     "method.response.header.Access-Control-Allow-Credentials": "'true'"
   }
 
@@ -195,7 +196,7 @@ resource "aws_api_gateway_integration_response" "auth_options_integration_respon
     "application/json" = jsonencode({
       statusCode = 200
       headers = {
-        "Access-Control-Allow-Origin"      = "'https://www.year-progress-bar.com'"
+        "Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'"
         "Access-Control-Allow-Methods"     = "POST, OPTIONS"
         "Access-Control-Allow-Headers"     = "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
         "Access-Control-Allow-Credentials" = "'true'" # Client expects string
@@ -302,7 +303,7 @@ resource "aws_api_gateway_integration_response" "auth_logout_options_integration
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://www.year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
@@ -406,7 +407,7 @@ resource "aws_api_gateway_integration_response" "auth_refresh_options_integratio
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://www.year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
@@ -429,6 +430,108 @@ resource "aws_api_gateway_method_response" "refresh_user_response" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
   resource_id   = aws_api_gateway_method.refresh_post_method.resource_id
   http_method   = aws_api_gateway_method.refresh_post_method.http_method
+  status_code   = "200"
+
+  response_parameters = {
+      "method.response.header.Access-Control-Allow-Origin": true,
+      "method.response.header.Access-Control-Allow-Headers": true,
+      "method.response.header.Access-Control-Allow-Methods": true,
+      "method.response.header.Access-Control-Allow-Credentials": true,
+
+  }
+}
+
+
+
+#### auth check
+
+resource "aws_api_gateway_resource" "users_auth_check" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_resource.users_auth.id
+  path_part   = "auth_check"
+}
+
+resource "aws_api_gateway_method" "auth_check_post_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.users_auth_check.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+}
+
+resource "aws_api_gateway_method" "auth_check_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.users_auth_check.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "auth_check_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.users_auth_check.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+
+  passthrough_behavior = "WHEN_NO_MATCH"
+
+  depends_on = [aws_api_gateway_method.auth_check_options_method]
+}
+
+resource "aws_api_gateway_method_response" "auth_check_options_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.users_auth_check.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.auth_check_options_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "auth_check_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.users_auth_check.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.auth_check_options_integration,
+    aws_api_gateway_method_response.auth_check_options_method_response
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+resource "aws_api_gateway_integration" "auth_check_lambda_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.auth_check_post_method.resource_id
+  http_method = aws_api_gateway_method.auth_check_post_method.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  credentials             = null
+  request_parameters = {}
+  request_templates = {}
+  uri = aws_lambda_function.node_success_response.invoke_arn
+  passthrough_behavior = "WHEN_NO_MATCH" 
+}
+
+resource "aws_api_gateway_method_response" "auth_check_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_method.auth_check_post_method.resource_id
+  http_method   = aws_api_gateway_method.auth_check_post_method.http_method
   status_code   = "200"
 
   response_parameters = {
