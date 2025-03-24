@@ -188,7 +188,7 @@ resource "aws_api_gateway_integration_response" "auth_options_integration_respon
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
-    "method.response.header.Access-Control-Allow-Origin" = "'https://www.year-progress-bar.com'"
+    "method.response.header.Access-Control-Allow-Origin" = "'https://year-progress-bar.com'"
     "method.response.header.Access-Control-Allow-Credentials": "'true'"
   }
 
@@ -196,7 +196,7 @@ resource "aws_api_gateway_integration_response" "auth_options_integration_respon
     "application/json" = jsonencode({
       statusCode = 200
       headers = {
-        "Access-Control-Allow-Origin"      = "'https://www.year-progress-bar.com'"
+        "Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'"
         "Access-Control-Allow-Methods"     = "POST, OPTIONS"
         "Access-Control-Allow-Headers"     = "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token"
         "Access-Control-Allow-Credentials" = "'true'" # Client expects string
@@ -303,7 +303,7 @@ resource "aws_api_gateway_integration_response" "auth_logout_options_integration
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://www.year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
@@ -407,7 +407,7 @@ resource "aws_api_gateway_integration_response" "auth_refresh_options_integratio
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://www.year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
@@ -510,7 +510,7 @@ resource "aws_api_gateway_integration_response" "auth_check_options_integration_
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://www.year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }

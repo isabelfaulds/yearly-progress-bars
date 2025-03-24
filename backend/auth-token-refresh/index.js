@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 
 const dynamoClient = new DynamoDBClient({ region: "us-west-1" });
 const corsheaders = {
-  "Access-Control-Allow-Origin": "https://www.year-progress-bar.com",
+  "Access-Control-Allow-Origin": "https://year-progress-bar.com",
   "Access-Control-Allow-Methods": "POST",
   "Access-Control-Allow-Headers":
     "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
