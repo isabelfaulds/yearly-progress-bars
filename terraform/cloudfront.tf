@@ -111,57 +111,6 @@ resource "aws_cloudfront_origin_request_policy" "all_viewer_except_host_header" 
   }
 }
 
-
-# CloudFront Distribution
-resource "aws_cloudfront_distribution" "api_cloudfront_distribution" {
-  origin {
-    domain_name =  element(split("/", replace("${aws_api_gateway_deployment.user_data_deployment.invoke_url}", "https://", "")), 0)
-    origin_id   = "APIGatewayOrigin"
-    origin_path = "/dev"
-
-    custom_origin_config {
-      http_port             = 80
-      https_port            = 443
-      origin_protocol_policy = "https-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
-  }
-
-  enabled             = true
-  is_ipv6_enabled     = true
-
-  default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "APIGatewayOrigin"
-    viewer_protocol_policy = "redirect-to-https"
-
-    cache_policy_id          = aws_cloudfront_cache_policy.caching_disabled.id
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.all_viewer_except_host_header.id
-
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
-
-    lambda_function_association {
-      event_type   = "viewer-request"
-      lambda_arn   = "${aws_lambda_function.lambda_edge_cookie_parser.arn}:${aws_lambda_function.lambda_edge_cookie_parser.version}"
-      include_body = true
-    }
-  }
-
-  viewer_certificate {
-    cloudfront_default_certificate = true
-  }
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
-  }
-}
-
-
 resource "aws_route53_record" "cloudfront_cname" {
   zone_id = data.aws_route53_zone.progress_bars_domain.zone_id 
   name    = "api.year-progress-bar.com"
@@ -193,3 +142,57 @@ resource "aws_route53_record" "api_subdomain_cert_validation" {
   type            = each.value.type
   zone_id         = data.aws_route53_zone.progress_bars_domain.zone_id 
 }
+
+# CloudFront Distribution
+resource "aws_cloudfront_distribution" "api_cloudfront_distribution" {
+  origin {
+    domain_name =  element(split("/", replace("${aws_api_gateway_deployment.user_data_deployment.invoke_url}", "https://", "")), 0)
+    origin_id   = "APIGatewayOrigin"
+    origin_path = "/dev"
+
+    custom_origin_config {
+      http_port             = 80
+      https_port            = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  aliases = ["api.year-progress-bar.com"]
+
+  enabled             = true
+  is_ipv6_enabled     = true
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "APIGatewayOrigin"
+    viewer_protocol_policy = "redirect-to-https"
+
+    cache_policy_id          = aws_cloudfront_cache_policy.caching_disabled.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.all_viewer_except_host_header.id
+
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+
+    lambda_function_association {
+      event_type   = "viewer-request"
+      lambda_arn   = "${aws_lambda_function.lambda_edge_cookie_parser.arn}:${aws_lambda_function.lambda_edge_cookie_parser.version}"
+      include_body = true
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn = aws_acm_certificate.api_subdomain_cert.arn
+    ssl_support_method = "sni-only" # for custom domain
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+}
+
