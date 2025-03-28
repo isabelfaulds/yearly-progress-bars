@@ -18,7 +18,7 @@ const streamToString = (stream) =>
   });
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://localhost:5173",
+  "Access-Control-Allow-Origin": "https://year-progress-bar.com",
   "Access-Control-Allow-Methods": "POST",
   "Access-Control-Allow-Headers":
     "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
@@ -156,8 +156,8 @@ exports.handler = async (event) => {
       }),
       headers: {
         ...corsHeaders,
-        "Set-Cookie": `refreshToken=${refreshCookieToken}; Path=/; Max-Age=691200; HttpOnly; SameSite=None; domain=year-progress-bar.com`,
-        "set-cookie": `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None; domain=year-progress-bar.com`,
+        "Set-Cookie": `refreshToken=${refreshCookieToken}; Path=/; Max-Age=691200; HttpOnly; SameSite=None; Domain=year-progress-bar.com`,
+        "set-cookie": `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None; Domain=year-progress-bar.com`,
       },
     };
   } catch (error) {

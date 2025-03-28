@@ -100,7 +100,7 @@ exports.handler = async (event) => {
       "Access-Control-Allow-Headers":
         "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
       "Access-Control-Allow-Credentials": "true", // for cookies
-      "Set-Cookie": `accessToken=; Path=/; HttpOnly; Expires=${pastDate}; Secure; SameSite=None`,
+      "Set-Cookie": `accessToken=; Path=/; HttpOnly; Expires=${pastDate}; Secure; SameSite=None; Domain=year-progress-bar.com`,
     },
   };
 };
