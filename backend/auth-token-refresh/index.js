@@ -140,8 +140,8 @@ exports.handler = async (event) => {
       }),
       headers: {
         ...corsheaders,
-        "Set-Cookie": `refreshToken=${refreshCookieToken}; Path=/; HttpOnly; Max-Age=36000; Secure; SameSite=None`,
-        "set-cookie": `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None`,
+        "Set-Cookie": `refreshToken=${refreshCookieToken}; Path=/; HttpOnly; Max-Age=36000; Secure; SameSite=None; Domain=year-progress-bar.com`,
+        "set-cookie": `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None; Domain=year-progress-bar.com`,
       },
     };
   }

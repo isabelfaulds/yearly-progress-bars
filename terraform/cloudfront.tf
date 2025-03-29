@@ -111,6 +111,37 @@ resource "aws_cloudfront_origin_request_policy" "all_viewer_except_host_header" 
   }
 }
 
+resource "aws_route53_record" "cloudfront_cname" {
+  zone_id = data.aws_route53_zone.progress_bars_domain.zone_id 
+  name    = "api.year-progress-bar.com"
+  type    = "CNAME"
+  ttl     = "300"
+  records = [aws_cloudfront_distribution.api_cloudfront_distribution.domain_name]
+}
+
+resource "aws_acm_certificate" "api_subdomain_cert" {
+  provider          = aws.us_east_1
+  domain_name       = "api.year-progress-bar.com"
+  validation_method = "DNS"
+}
+
+
+resource "aws_route53_record" "api_subdomain_cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.api_subdomain_cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.progress_bars_domain.zone_id 
+}
 
 # CloudFront Distribution
 resource "aws_cloudfront_distribution" "api_cloudfront_distribution" {
@@ -126,6 +157,8 @@ resource "aws_cloudfront_distribution" "api_cloudfront_distribution" {
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
+
+  aliases = ["api.year-progress-bar.com"]
 
   enabled             = true
   is_ipv6_enabled     = true
@@ -151,7 +184,9 @@ resource "aws_cloudfront_distribution" "api_cloudfront_distribution" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn = aws_acm_certificate.api_subdomain_cert.arn
+    ssl_support_method = "sni-only" # for custom domain
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   restrictions {
