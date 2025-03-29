@@ -229,6 +229,6 @@ resource "aws_s3_bucket_object" "background_image" {
 resource "aws_s3_bucket_object" "thumbnail_screenshot" {
   bucket = aws_s3_bucket.pbars_site_bucket.bucket
   key    = "images/site-screenshot.png"
-  source = "frontend/assets/site-screenshot.png"  
+  source = "frontend-web/assets/site-screenshot.png"  
   content_type  = "image/png"
 }
