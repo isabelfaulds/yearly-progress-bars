@@ -23,6 +23,7 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [isSignedIn, setIsSignedIn] = useState(false);
 
+  // accesstoken checker
   const checkLoginCookie = async () => {
     try {
       const authCheckResponse = await fetch(
@@ -48,9 +49,10 @@ export function AuthProvider({ children }) {
   // initial set access token
   useEffect(() => {
     checkLoginCookie();
+    checkRefreshCookie();
   }, []);
 
-  // sign in func
+  // sign in
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
@@ -91,6 +93,7 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // sign out
   const handleSignOut = async () => {
     const authResponse = await fetch(import.meta.env.VITE_API_GATEWAY_LOGOUT, {
       method: "POST",
@@ -102,6 +105,20 @@ export function AuthProvider({ children }) {
     setIsSignedIn(false);
   };
 
+  // refresh
+  const checkRefreshCookie = async () => {
+    const authResponse = await fetch(import.meta.env.VITE_API_GATEWAY_REFRESH, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+    if (authResponse.status === 200) {
+      setIsSignedIn(true);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -109,6 +126,7 @@ export function AuthProvider({ children }) {
         handleGoogleSignIn,
         handleSignOut,
         checkLoginCookie,
+        checkRefreshCookie,
       }}
     >
       {children}
