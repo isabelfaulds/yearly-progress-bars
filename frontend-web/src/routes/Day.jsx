@@ -72,7 +72,7 @@ const Day = () => {
         labels: motivatorKeys,
         datasets: [
           {
-            label: "Fulfillment",
+            label: "",
             data: motivatorValues,
             backgroundColor: "rgba(255, 99, 132, 0.2)", // Keep fill color
             borderColor: "rgb(255, 99, 132)",
@@ -85,6 +85,11 @@ const Day = () => {
         ],
       },
       options: {
+        plugins: {
+          legend: {
+            display: false,
+          },
+        },
         scales: {
           r: {
             // radar chart scales under 'r'
@@ -95,6 +100,7 @@ const Day = () => {
             suggestedMin: 0,
             suggestedMax: 1,
             ticks: {
+              display: false,
               stepSize: 1,
               color: "#FFFFFF",
               backdropColor: "transparent",
@@ -128,7 +134,7 @@ const Day = () => {
         {" "}
         {/* First column: graph, title */}
         <div className="text-white text-2xl font-bold mb-4">
-          Daily Events Chart
+          Day Events Chart
         </div>
         <div className="p-8 rounded-lg shadow-lg">
           <canvas ref={chartRef} width="400" height="400" />
