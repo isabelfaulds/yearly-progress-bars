@@ -1,24 +1,52 @@
 import { useState, useRef, useEffect } from "react";
 import Chart from "chart.js/auto";
 import { ArrowPathRoundedSquareIcon } from "@heroicons/react/24/outline";
+import { useAuthContext } from "../hooks/useAuth.jsx";
+import { Bars2Icon } from "@heroicons/react/24/solid";
+import NavButton from "../components/NavButton.jsx";
 
 const Day = () => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
   const [calendarEvents, setCalendarEvents] = useState([
-    ["Category1", "Event2"],
-    ["Category3", "Event4"],
-    ["Category5", "Event6"],
+    ["Cat1", "EventA", 60],
+    ["Cat2", "EventB", 20],
+    ["Cat3", "EventC", 10],
+    ["Cat4", "EventD", 10],
   ]);
 
   const [editingIndex, setEditingIndex] = useState(null);
   const [editedText, setEditedText] = useState("");
   const editedTextRef = useRef(null);
 
+  const handleSync = async () => {
+    try {
+      const authCheckResponse = await fetch(
+        import.meta.env.VITE_CLOUDFRONT_AUTH_CHECK,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      if (authCheckResponse.status === 200) {
+        setCalendarEvents([
+          ["Category1", "Event2"],
+          ["Category3", "Event4"],
+          ["Category5", "Event6"],
+        ]);
+      }
+    } catch (error) {
+      console.error("Sync failed:", error);
+    }
+  };
+
   const handleCategoryClick = (index, currentText) => {
     setEditingIndex(index);
     setEditedText(currentText);
-    // small delay to allow render
+    // delay to allow render
     setTimeout(() => {
       editedTextRef.current?.focus();
     }, 0);
@@ -51,6 +79,7 @@ const Day = () => {
       setEditingIndex(null);
     }
   };
+
   useEffect(() => {
     const dailyMotivators = {
       Cat1: 0,
@@ -74,13 +103,13 @@ const Day = () => {
           {
             label: "",
             data: motivatorValues,
-            backgroundColor: "rgba(255, 99, 132, 0.2)", // Keep fill color
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
             borderColor: "rgb(255, 99, 132)",
             pointBackgroundColor: "rgb(255, 99, 132)",
             pointBorderColor: "#fff",
             pointHoverBackgroundColor: "#fff",
             pointHoverBorderColor: "rgb(255, 99, 132)",
-            fill: true, // Explicitly enable fill (default behavior)
+            fill: true,
           },
         ],
       },
@@ -95,7 +124,7 @@ const Day = () => {
             // radar chart scales under 'r'
             angleLines: {
               display: true,
-              color: "rgba(255, 255, 255, 0.9)", // Semi-transparent white
+              color: "rgba(255, 255, 255, 0.9)",
             },
             suggestedMin: 0,
             suggestedMax: 1,
@@ -179,6 +208,10 @@ const Day = () => {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="fixed bottom-4 right-4 p-3 text-white rounded-full ">
+        <NavButton />
       </div>
     </div>
   );
