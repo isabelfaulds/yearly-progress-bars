@@ -1,5 +1,6 @@
 import "./index-output.css";
-import ProgressBar from "./ProgressBar";
+import ProgressBar from "./routes/ProgressBar";
+import Day from "./routes/Day";
 import Settings from "./routes/Settings";
 import Login from "./routes/Login";
 import { AuthProvider } from "./hooks/useAuth";
@@ -13,6 +14,7 @@ function App() {
           <Route path="/" element={<ProgressBar />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/day-view" element={<Day />} />
         </Routes>
       </Router>
     </AuthProvider>
