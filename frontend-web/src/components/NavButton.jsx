@@ -9,26 +9,27 @@ import { useNavigate } from "react-router-dom";
 function NavButton() {
   const [showIcons, setShowIcons] = useState(false);
   const buttonRef = useRef(null);
+  const menuRef = useRef(null);
   const navigate = useNavigate();
 
   const handleClick = () => {
-    setShowIcons(!showIcons);
+    setShowIcons((prev) => !prev);
   };
 
   const handleOutsideClick = (event) => {
-    if (buttonRef.current && !buttonRef.current.contains(event.target)) {
+    if (
+      buttonRef.current &&
+      !buttonRef.current.contains(event.target) &&
+      menuRef.current &&
+      !menuRef.current.contains(event.target)
+    ) {
       setShowIcons(false);
     }
   };
 
-  const handleHomeClick = () => {
-    navigate("/");
+  const handleNavigation = (path) => {
     setShowIcons(false);
-  };
-
-  const handleSettingsClick = () => {
-    navigate("/settings");
-    setShowIcons(false);
+    navigate(path);
   };
 
   useEffect(() => {
@@ -39,14 +40,17 @@ function NavButton() {
   }, []);
 
   return (
-    <div className=" relative">
+    <div className="relative">
       {showIcons && (
-        <div className=" flex flex-col items-center ">
-          <button onClick={handleHomeClick} className="mb-2">
-            <Bars4Icon className="w-6 h-6 text-white rounded-full hover:border-2" />
+        <div className="flex flex-col items-center nav-menu" ref={menuRef}>
+          <button onClick={() => handleNavigation("/")} className="mb-2">
+            <Bars4Icon className="w-6 h-6 p-1 text-white rounded-full hover:border-2" />
           </button>
-          <button onClick={handleSettingsClick} className="mb-2">
-            <Cog6ToothIcon className="w-6 h-6 text-white rounded-full hover:border-2" />
+          <button
+            onClick={() => handleNavigation("/day-view/settings")}
+            className="mb-2"
+          >
+            <Cog6ToothIcon className="w-6 h-6 p-1 text-white rounded-full hover:border-2" />
           </button>
         </div>
       )}
