@@ -133,7 +133,7 @@ const CategorySettings = () => {
               grid-cols-[minmax(0,1fr)_auto_auto_auto] 
               text-white
               items-center // used for vertical centering
-              py-5 border-b border-gray-300
+              py-5 border-b border-gray-500
               gap-2
               "
             >
