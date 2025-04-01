@@ -70,34 +70,6 @@ const Day = () => {
   const [editedText, setEditedText] = useState("");
   const editedTextRef = useRef(null);
 
-  // TODO : replace with nosql call
-  const handleSync = async () => {
-    try {
-      const authCheckResponse = await fetch(
-        import.meta.env.VITE_CLOUDFRONT_AUTH_CHECK,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-      if (authCheckResponse.status === 200) {
-        // TODO: remove dummy data
-
-        setCalendarEvents([
-          { Category: "Cat1", Event: "EventA", Time: 0 },
-          { Category: "Cat2", Event: "EventA", Time: 15 },
-          { Category: "Cat3", Event: "EventA", Time: 10 },
-          { Category: "Cat3", Event: "EventA", Time: 10 },
-        ]);
-      }
-    } catch (error) {
-      console.error("Sync failed:", error);
-    }
-  };
-
   const handleCategoryClick = (index, currentText) => {
     setEditingIndex(index);
     setEditedText(currentText);
@@ -133,6 +105,34 @@ const Day = () => {
       handleBlur(index);
     } else if (e.key === "Escape") {
       setEditingIndex(null);
+    }
+  };
+
+  // TODO : replace with nosql call
+  const handleSync = async () => {
+    try {
+      const authCheckResponse = await fetch(
+        import.meta.env.VITE_CLOUDFRONT_AUTH_CHECK,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      if (authCheckResponse.status === 200) {
+        // TODO: remove dummy data
+
+        setCalendarEvents([
+          { Category: "Cat1", Event: "EventA", Time: 0 },
+          { Category: "Cat2", Event: "EventA", Time: 15 },
+          { Category: "Cat3", Event: "EventA", Time: 10 },
+          { Category: "Cat3", Event: "EventA", Time: 10 },
+        ]);
+      }
+    } catch (error) {
+      console.error("Sync failed:", error);
     }
   };
 
@@ -224,11 +224,8 @@ const Day = () => {
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.toLocaleDateString("en-US", { month: "long" });
-  // .toUpperCase();
   const weekday = currentDate.toLocaleDateString("en-US", { weekday: "long" });
   const year = currentDate.toLocaleDateString("en-US", { year: "numeric" });
-
-  // .toCase();
 
   return (
     <div
@@ -307,7 +304,7 @@ const Day = () => {
         </div>
       </div>
 
-      <div className=" fixed top-4 sm:bottom-2  md:top-auto right-4 p-1 rounded-full ">
+      <div className=" fixed top-4 sm:bottom-4  md:top-auto right-4 p-1 rounded-full ">
         <NavButton />
       </div>
     </div>
