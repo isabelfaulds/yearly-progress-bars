@@ -222,13 +222,14 @@ resource "aws_s3_bucket_object" "dist_files" {
 resource "aws_s3_bucket_object" "background_image" {
   bucket = aws_s3_bucket.pbars_site_bucket.bucket
   key    = "images/blue-gradient-background.svg"
-  source = "frontend/Desktop Shape Frame.svg"  
+  source = "../frontend-web/src/assets/Desktop Shape Frame.svg"
   content_type  = "image/svg+xml"
 }
 
 resource "aws_s3_bucket_object" "thumbnail_screenshot" {
   bucket = aws_s3_bucket.pbars_site_bucket.bucket
   key    = "images/site-screenshot.png"
-  source = "frontend-web/assets/site-screenshot.png"  
+  source = "../frontend-web/src/assets/site-screenshot.png"  
   content_type  = "image/png"
 }
+
