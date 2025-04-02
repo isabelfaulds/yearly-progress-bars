@@ -18,12 +18,15 @@ const streamToString = (stream) =>
   });
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://year-progress-bar.com",
   "Access-Control-Allow-Methods": "POST",
   "Access-Control-Allow-Headers":
     "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
   "Access-Control-Allow-Credentials": "true",
 };
+const allowedOrigins = [
+  "https://year-progress-bar.com",
+  "https://localhost:5173",
+];
 
 async function addUserAndTokens(
   userID,
@@ -88,10 +91,18 @@ async function addUserAndTokens(
 }
 
 exports.handler = async (event) => {
+  console.log(event.headers);
+  let origin = event.headers.origin;
+  let accessControlAllowOrigin = null;
+  if (allowedOrigins.includes(origin)) {
+    accessControlAllowOrigin = origin;
+  }
+
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
       headers: {
+        "Access-Control-Allow-Origin": accessControlAllowOrigin,
         ...corsHeaders,
       },
       body: "",
@@ -133,10 +144,10 @@ exports.handler = async (event) => {
     const decodedToken = await admin.auth().verifyIdToken(token);
     console.log("Decoded Token:", decodedToken);
     const cookieToken = jwt.sign({ userID }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
+      expiresIn: "1hr",
     });
     const refreshCookieToken = jwt.sign({ userID }, process.env.JWT_SECRET, {
-      expiresIn: "1hr",
+      expiresIn: "8d",
     });
 
     const results = await addUserAndTokens(
@@ -155,9 +166,10 @@ exports.handler = async (event) => {
         message: "Authentication Success!",
       }),
       headers: {
+        "Access-Control-Allow-Origin": accessControlAllowOrigin,
         ...corsHeaders,
-        "Set-Cookie": `refreshToken=${refreshCookieToken}; Path=/; Max-Age=691200; HttpOnly; SameSite=None; Domain=year-progress-bar.com`,
-        "set-cookie": `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None; Domain=year-progress-bar.com`,
+        "Set-Cookie": `refreshToken=${refreshCookieToken}; Path=/; Max-Age=691200; HttpOnly; SameSite=None; Secure; Domain=year-progress-bar.com`,
+        "set-cookie": `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None; Secure; Domain=year-progress-bar.com`,
       },
     };
   } catch (error) {
@@ -166,6 +178,7 @@ exports.handler = async (event) => {
       statusCode: 500,
       body: JSON.stringify({ message: "Error processing request" }),
       headers: {
+        "Access-Control-Allow-Origin": accessControlAllowOrigin,
         ...corsHeaders,
       },
     };

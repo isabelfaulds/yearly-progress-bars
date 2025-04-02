@@ -5,6 +5,16 @@ const {
 } = require("@aws-sdk/client-dynamodb");
 const { unmarshall } = require("@aws-sdk/util-dynamodb");
 
+const corsheaders = {
+  "Access-Control-Allow-Methods": "POST",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
+  "Access-Control-Allow-Credentials": "true",
+};
+const allowedOrigins = [
+  "https://year-progress-bar.com",
+  "https://localhost:5173",
+];
 const dynamoClient = new DynamoDBClient({ region: "us-west-1" });
 
 async function getUserID(accessToken) {
@@ -56,6 +66,11 @@ async function deleteItem(userID) {
 }
 
 exports.handler = async (event) => {
+  let origin = event.headers.origin;
+  let accessControlAllowOrigin = null;
+  if (allowedOrigins.includes(origin)) {
+    accessControlAllowOrigin = origin;
+  }
   const cookies = event.headers["Cookie"] || event.headers["cookie"];
   const getCookieValue = (cookieString, cookieName) => {
     const cookies = cookieString.split("; ");
@@ -76,11 +91,8 @@ exports.handler = async (event) => {
         message: "Access token missing from cookies.",
       }),
       headers: {
-        "Access-Control-Allow-Origin": "https://year-progress-bar.com", // Frontend
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
-        "Access-Control-Allow-Credentials": "true", // for cookies
+        "Access-Control-Allow-Origin": accessControlAllowOrigin,
+        ...corsheaders,
       },
     };
   }
@@ -95,12 +107,10 @@ exports.handler = async (event) => {
       message: "Login invalidated",
     }),
     headers: {
-      "Access-Control-Allow-Origin": "https://year-progress-bar.com", // Frontend
-      "Access-Control-Allow-Methods": "POST",
-      "Access-Control-Allow-Headers":
-        "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
-      "Access-Control-Allow-Credentials": "true", // for cookies
+      "Access-Control-Allow-Origin": accessControlAllowOrigin,
+      ...corsheaders,
       "Set-Cookie": `accessToken=; Path=/; HttpOnly; Expires=${pastDate}; Secure; SameSite=None; Domain=year-progress-bar.com`,
+      "set-cookie": `refreshToken=; Path=/; HttpOnly; Expires=${pastDate}; Secure; SameSite=None; Domain=year-progress-bar.com`,
     },
   };
 };
