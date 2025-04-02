@@ -8,12 +8,15 @@ const jwt = require("jsonwebtoken");
 
 const dynamoClient = new DynamoDBClient({ region: "us-west-1" });
 const corsheaders = {
-  "Access-Control-Allow-Origin": "https://year-progress-bar.com",
   "Access-Control-Allow-Methods": "POST",
   "Access-Control-Allow-Headers":
     "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
   "Access-Control-Allow-Credentials": "true",
 };
+const allowedOrigins = [
+  "https://year-progress-bar.com",
+  "https://localhost:5173",
+];
 
 function expiredToken(isoDateString, expiresInSeconds) {
   const date = new Date(isoDateString);
@@ -77,6 +80,11 @@ async function putToken(userID, datetime, cookieToken, refreshCookieToken) {
 }
 
 exports.handler = async (event) => {
+  let origin = event.headers.origin;
+  let accessControlAllowOrigin = null;
+  if (allowedOrigins.includes(origin)) {
+    accessControlAllowOrigin = origin;
+  }
   const cookies = event.headers["Cookie"] || event.headers["cookie"];
   const getCookieValue = (cookieString, cookieName) => {
     const cookies = cookieString.split("; ");
@@ -94,6 +102,7 @@ exports.handler = async (event) => {
         message: "Access token missing from cookies.",
       }),
       headers: {
+        "Access-Control-Allow-Origin": accessControlAllowOrigin,
         ...corsheaders,
       },
     };
@@ -106,6 +115,7 @@ exports.handler = async (event) => {
         message: "No token stored for user",
       }),
       headers: {
+        "Access-Control-Allow-Origin": accessControlAllowOrigin,
         ...corsheaders,
       },
     };
@@ -119,6 +129,7 @@ exports.handler = async (event) => {
         message: "Stale login",
       }),
       headers: {
+        "Access-Control-Allow-Origin": accessControlAllowOrigin,
         ...corsheaders,
       },
     };
@@ -139,6 +150,7 @@ exports.handler = async (event) => {
         message: "Authorized and refreshed login",
       }),
       headers: {
+        "Access-Control-Allow-Origin": accessControlAllowOrigin,
         ...corsheaders,
         "Set-Cookie": `refreshToken=${refreshCookieToken}; Path=/; HttpOnly; Max-Age=36000; Secure; SameSite=None; Domain=year-progress-bar.com`,
         "set-cookie": `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None; Domain=year-progress-bar.com`,
