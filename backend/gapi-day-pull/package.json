@@ -1,0 +1,18 @@
+{
+  "name": "build",
+  "version": "1.0.0",
+  "main": "gapi-day-pull.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "google-auth-library": "^9.15.1",
+    "googleapis": "^148.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "luxon": "^3.6.1"
+  }
+}
