@@ -43,3 +43,61 @@ resource "aws_dynamodb_table" "users" {
     enabled = true
   }
 }
+
+resource "aws_dynamodb_table" "calendar_events" {
+  name = "pb_events"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "event_uid"
+
+  attribute {
+    name = "event_uid"
+    type = "S"
+  }
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "event_startdate"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "UserIdDateIndex"
+    hash_key        = "user_id"
+    range_key       = "event_startdate"
+    projection_type = "ALL"
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+}
+
+resource "aws_dynamodb_table" "user_categories" {
+  name = "pb_categories"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "category_uid"
+
+  attribute {
+    name = "category_uid"
+    type = "S"
+  }
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "UserIdIndex"
+    hash_key        = "user_id"
+    projection_type = "ALL"
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+}
