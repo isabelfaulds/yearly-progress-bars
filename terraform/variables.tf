@@ -17,3 +17,13 @@ variable "api_id" {
   description = "api gateway id"
   type = string
 }
+
+variable "client_id" {
+  description = "client id"
+  type = string
+}
+
+variable "client_secret" {
+  description = "client secret"
+  type = string
+}

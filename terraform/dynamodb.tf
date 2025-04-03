@@ -60,14 +60,14 @@ resource "aws_dynamodb_table" "calendar_events" {
   }
 
   attribute {
-    name = "event_date"
+    name = "event_startdate"
     type = "S"
   }
 
   global_secondary_index {
     name            = "UserIdDateIndex"
     hash_key        = "user_id"
-    range_key       = "event_date"
+    range_key       = "event_startdate"
     projection_type = "ALL"
   }
 
