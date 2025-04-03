@@ -31,7 +31,7 @@ exports.handler = async (event) => {
   const item = tokenResponse.Item ? unmarshall(tokenResponse.Item) : null;
   if (!item) {
     return {
-      statusCode: 404,
+      statusCode: 400,
       body: JSON.stringify({ message: "No gapi token found" }),
     };
   }
