@@ -22,9 +22,16 @@ resource "aws_iam_policy" "apigateway_dynamodb_policy" {
     Version = "2012-10-17",
     Statement = [
       {
-        Action = "dynamodb:PutItem",
+        Action = ["dynamodb:PutItem",
+        "dynamodb:GetItem",
+        "dynamodb:Query"
+        ]
         Effect   = "Allow",
-        Resource = aws_dynamodb_table.user_tokens.arn
+        Resource =[
+        aws_dynamodb_table.user_tokens.arn,
+        aws_dynamodb_table.calendar_events.arn,
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events/index/UserIdDateIndex"
+        ]
       },
     ]
   })
@@ -541,4 +548,156 @@ resource "aws_api_gateway_method_response" "auth_check_response" {
       "method.response.header.Access-Control-Allow-Credentials": true,
 
   }
+}
+
+
+
+#### events fetch
+
+resource "aws_api_gateway_resource" "calendar_data_api" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_rest_api.user_data_api.root_resource_id
+  path_part   = "calendar"
+}
+
+
+resource "aws_api_gateway_resource" "calendar_events_api" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_resource.calendar_data_api.id
+  path_part   = "events"
+}
+
+## cors
+resource "aws_api_gateway_method" "calendar_events_options" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_events_api.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+resource "aws_api_gateway_integration" "calendar_event_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.calendar_events_options.resource_id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+      "application/json" = jsonencode(
+        {
+          statusCode = 200
+        }
+      )
+    }
+  passthrough_behavior = "WHEN_NO_MATCH"
+}
+resource "aws_api_gateway_method_response" "calendar_event_options_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_events_api.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.calendar_events_options]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin" = true,
+    "method.response.header.Access-Control-Allow-Credentials": true,
+
+  }
+}
+resource "aws_api_gateway_integration_response" "options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_events_api.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+resource "aws_api_gateway_method" "calendar_events_read_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_events_api.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.querystring.event_date" = false  # optional
+    "method.request.header.user_id"         = false  # optional
+  }
+}
+
+# ddb reads
+resource "aws_api_gateway_integration" "calendar_events_read_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.calendar_events_read_method.resource_id
+  http_method = aws_api_gateway_method.calendar_events_read_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS"
+  credentials             = aws_iam_role.apigateway_dynamodb_role.arn
+
+  uri = "arn:aws:apigateway:us-west-1:dynamodb:action/Query"
+
+  request_templates = {
+    "application/json" = <<EOF
+  {
+    "TableName": "pb_events",
+    "IndexName": "UserIdDateIndex",
+    "KeyConditionExpression": "user_id = :user_id AND event_startdate = :event_date",
+    "ExpressionAttributeValues": {
+      ":user_id": { "S": "$input.params().header.user_id" },
+      ":event_date": { "S": "$input.params().querystring.event_date" } 
+    },
+    "Select": "ALL_ATTRIBUTES"
+  }
+  EOF
+    }
+  passthrough_behavior = "WHEN_NO_MATCH"
+
+}
+
+resource "aws_api_gateway_integration_response" "calendar_events_read_response" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.calendar_events_api.id
+  http_method = aws_api_gateway_method.calendar_events_read_method.http_method
+  status_code = "200"
+  depends_on = [aws_api_gateway_integration.calendar_events_read_integration]
+  response_templates = {
+    "application/json" = <<EOF
+#set($inputRoot = $input.path('$'))
+{
+  "events": [
+    #foreach($item in $inputRoot.Items) {
+      "event_uid": "$item.event_uid.S",
+      "start_date": "$item.event_startdate.S",
+      "start_time": "$item.event_starttime.S",
+      "event_name": "$item.event_name.S"
+
+    }#if($foreach.hasNext),#end
+    #end
+  ]
+}
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "store_user_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_method.calendar_events_read_method.resource_id
+  http_method   = aws_api_gateway_method.calendar_events_read_method.http_method
+  status_code   = "200"
+
+  response_parameters = {
+      "method.response.header.Access-Control-Allow-Origin": true,
+      "method.response.header.Access-Control-Allow-Headers": true,
+      "method.response.header.Access-Control-Allow-Methods": true,
+      "method.response.header.Access-Control-Allow-Credentials" = true
+
+
+  }
+
 }
