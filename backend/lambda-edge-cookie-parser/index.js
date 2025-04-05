@@ -1,3 +1,5 @@
+const jwt = require("jsonwebtoken");
+
 exports.handler = (event, context, callback) => {
   const request = event.Records[0].cf.request;
   const headers = request.headers;
@@ -7,13 +9,16 @@ exports.handler = (event, context, callback) => {
     const accessToken = cookies
       .find((cookie) => cookie.startsWith("accessToken="))
       ?.split("=")[1];
+    const decodedToken = jwt.verify(accessToken, jwt_secret);
+    const userID = decodedToken.userID;
+    console.log(decodedToken);
 
-    if (accessToken) {
+    if (userID) {
       headers["login-auth-token"] = [
         { key: "login-auth-token", value: accessToken },
       ];
+      headers["user-id"] = [{ key: "user-id", value: userID }];
     }
-    delete headers.cookie; // Remove cookie from the request
   }
 
   callback(null, request);
