@@ -1,43 +1,8 @@
 
 ### IAM
-resource "aws_iam_role" "apigateway_dynamodb_role" {
-  name = "pb_apigateway_dynamodb_role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "apigateway.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
 
-resource "aws_iam_policy" "apigateway_dynamodb_policy" {
-  name = "apigateway_dynamodb_policy"
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = "dynamodb:PutItem",
-        Effect   = "Allow",
-        Resource = aws_dynamodb_table.user_tokens.arn
-      },
-    ]
-  })
-}
-
-resource "aws_iam_policy_attachment" "apigateway_dynamodb_policy_attachment" {
-  name       = "apigateway_dynamodb_policy_attachment"
-  policy_arn = aws_iam_policy.apigateway_dynamodb_policy.arn
-  roles       = [aws_iam_role.apigateway_dynamodb_role.name]
-}
-
-resource "aws_iam_role" "api_gateway_logging_lambda_role" {
-  name = "APIGatewayCloudWatchRole"
+resource "aws_iam_role" "api_gateway_logging_dynamo_role" {
+  name = "APIGatewayDyanmoCloudWatchRole"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -51,36 +16,56 @@ resource "aws_iam_role" "api_gateway_logging_lambda_role" {
   })
 }
 
-resource "aws_iam_policy_attachment" "api_gateway_logging_policy" {
-  name       = "api_gateway_logging_policy"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
-  roles      = [aws_iam_role.api_gateway_logging_lambda_role.name]
-}
 
-resource "aws_iam_policy" "apigateway_lambda_policy" {
-  name = "apigateway_lambda_policy"
+
+resource "aws_iam_policy" "apigateway_logging_dynamo_policy" {
+  name = "apigateway_dynamo_logging_policy"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Action = "lambda:InvokeFunction",
-        Effect = "Allow",
-        Resource = [aws_lambda_function.node_auth_token_creation.arn]
-      }
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams"
+        ],
+        Effect   = "Allow",
+        Resource = "*"
+      },
+      {
+        Action = ["dynamodb:PutItem",
+        "dynamodb:GetItem",
+        "dynamodb:Query"
+        ]
+        Effect   = "Allow",
+        Resource =[
+        aws_dynamodb_table.user_tokens.arn,
+        aws_dynamodb_table.calendar_events.arn,
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events/index/UserIdDateIndex"
+        ]
+      },
     ]
   })
 }
 
-resource "aws_api_gateway_account" "api_gateway_account" {
-  cloudwatch_role_arn = aws_iam_role.api_gateway_logging_lambda_role.arn
+resource "aws_iam_policy_attachment" "api_gateway_logging_dynamo_policy_attachment" {
+  name       = "api_gateway_dynamo_logging_policy"
+  policy_arn = aws_iam_policy.apigateway_logging_dynamo_policy.arn
+  roles      = [aws_iam_role.api_gateway_logging_dynamo_role.name]
 }
+
+resource "aws_api_gateway_account" "api_gateway_account" {
+  cloudwatch_role_arn = aws_iam_role.api_gateway_logging_dynamo_role.arn
+}
+
 
 ### API Gateway
 
 resource "aws_api_gateway_rest_api" "user_data_api" {
   name = "pb_user_data_api"
 }
-
 
 # API Gateway Deployment
 resource "aws_api_gateway_deployment" "user_data_deployment" {
@@ -103,7 +88,6 @@ resource "aws_api_gateway_deployment" "user_data_deployment" {
       aws_api_gateway_integration.auth_logout_options_integration,
       aws_api_gateway_method_response.auth_logout_options_method_response,
       aws_api_gateway_integration_response.auth_logout_options_integration_response
-      # login check
     ]))
   }
 }
@@ -411,7 +395,6 @@ resource "aws_api_gateway_integration_response" "auth_refresh_options_integratio
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
-
 }
 
 resource "aws_api_gateway_integration" "auth_refresh_lambda_integration" {
@@ -532,6 +515,112 @@ resource "aws_api_gateway_method_response" "auth_check_response" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
   resource_id   = aws_api_gateway_method.auth_check_post_method.resource_id
   http_method   = aws_api_gateway_method.auth_check_post_method.http_method
+  status_code   = "200"
+
+  response_parameters = {
+      "method.response.header.Access-Control-Allow-Origin": true,
+      "method.response.header.Access-Control-Allow-Headers": true,
+      "method.response.header.Access-Control-Allow-Methods": true,
+      "method.response.header.Access-Control-Allow-Credentials": true,
+
+  }
+}
+
+#### get calendar events
+
+resource "aws_api_gateway_resource" "calendar_data_api" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_rest_api.user_data_api.root_resource_id
+  path_part   = "calendar"
+}
+
+resource "aws_api_gateway_resource" "calendar_events" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_resource.calendar_data_api.id
+  path_part   = "events"
+}
+
+resource "aws_api_gateway_method" "calendar_events_get_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_events.id
+  http_method   = "GET"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+}
+
+resource "aws_api_gateway_method" "calendar_events_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_events.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "calendar_events_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.calendar_events.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+
+  passthrough_behavior = "WHEN_NO_MATCH"
+
+  depends_on = [aws_api_gateway_method.calendar_events_options_method]
+}
+
+resource "aws_api_gateway_method_response" "calendar_events_options_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_events.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.calendar_events_options_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "calendar_events_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_events.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.calendar_events_options_integration,
+    aws_api_gateway_method_response.calendar_events_options_method_response
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+resource "aws_api_gateway_integration" "calendar_events_get_lambda_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.calendar_events_get_method.resource_id
+  http_method = aws_api_gateway_method.calendar_events_get_method.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  credentials             = null
+  request_parameters = {}
+  request_templates = {}
+  uri = aws_lambda_function.get_calendar_events.invoke_arn
+  passthrough_behavior = "WHEN_NO_MATCH" 
+}
+
+resource "aws_api_gateway_method_response" "calendar_events_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_method.calendar_events_get_method.resource_id
+  http_method   = aws_api_gateway_method.calendar_events_get_method.http_method
   status_code   = "200"
 
   response_parameters = {
