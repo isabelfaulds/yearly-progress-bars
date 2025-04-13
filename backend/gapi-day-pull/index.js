@@ -11,16 +11,30 @@ const { DateTime } = require("luxon");
 const dynamodb = new DynamoDBClient({ region: "us-west-1" });
 const calendar = google.calendar("v3");
 
+function calculateMinuteDifferenceWithDate(
+  startDateTimeString,
+  endDateTimeString
+) {
+  try {
+    const startTime = DateTime.fromISO(startDateTimeString);
+    const endTime = DateTime.fromISO(endDateTimeString);
+
+    const duration = endTime.diff(startTime, "minutes");
+
+    return duration.minutes;
+  } catch (error) {
+    console.error("Error calculating minute difference:", error);
+    return 0;
+  }
+}
+
 exports.handler = async (event) => {
   const jwtSecret = process.env.JWT_SECRET;
   const clientId = process.env.CLIENT_ID;
   const clientSecret = process.env.CLIENT_SECRET;
 
-  // decode jwt user id and get token
-  const pbAccessToken = event.headers["login-auth-token"];
-  const decodedToken = jwt.verify(pbAccessToken, jwtSecret);
-  const userId = decodedToken.userID;
-  console.log(userId);
+  // get token
+  const userId = event.headers["user-id"];
   const tokenResponse = await dynamodb.send(
     new GetItemCommand({
       TableName: "pb_user_tokens",
@@ -31,7 +45,7 @@ exports.handler = async (event) => {
   const item = tokenResponse.Item ? unmarshall(tokenResponse.Item) : null;
   if (!item) {
     return {
-      statusCode: 400,
+      statusCode: 404,
       body: JSON.stringify({ message: "No gapi token found" }),
     };
   }
@@ -71,6 +85,7 @@ exports.handler = async (event) => {
   const putRequests = events.map((event) => {
     const startDateTime = event.start.dateTime;
     const endDateTime = event.end.dateTime;
+    let minutes = calculateMinuteDifferenceWithDate(startDateTime, endDateTime);
     return dynamodb.send(
       new PutItemCommand({
         TableName: "pb_events",
@@ -82,6 +97,7 @@ exports.handler = async (event) => {
           event_starttime: { S: startDateTime.split("T")[1].split("-")[0] },
           event_enddate: { S: endDateTime.substring(0, 10) },
           event_endtime: { S: endDateTime.split("T")[1].split("-")[0] },
+          minutes: { N: minutes.toString() },
         },
       })
     );
@@ -92,7 +108,7 @@ exports.handler = async (event) => {
   return {
     statusCode: 200,
     body: JSON.stringify({
-      message: "Daily Events Updated",
+      message: "Day records updated",
     }),
   };
 };
