@@ -9,10 +9,7 @@ const corsheaders = {
 };
 const { unmarshall } = require("@aws-sdk/util-dynamodb");
 
-const allowedOrigins = [
-  "https://year-progress-bar.com",
-  "https://localhost:5173",
-];
+const allowedOrigins = ["https://localhost:5173", "https://localhost:5173"];
 const dynamodb = new DynamoDBClient({ region: "us-west-1" });
 
 exports.handler = async (event) => {
@@ -55,11 +52,12 @@ exports.handler = async (event) => {
 
     // Formatting
     const formattedEvents = result.Items.map((item) => ({
-      event_uid: item.event_uid,
-      start_date: item.event_startdate,
-      start_time: item.event_starttime,
-      event_name: item.event_name,
-      minutes: item.minutes,
+      event_uid: item.event_uid.S,
+      category: "Placeholder",
+      start_date: item.event_startdate.S,
+      start_time: item.event_starttime.S,
+      event_name: item.event_name.S,
+      minutes: Number(item.minutes.N),
     }));
 
     return {

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import Chart from "chart.js/auto";
 import { ArrowPathRoundedSquareIcon } from "@heroicons/react/24/outline";
 import NavButton from "../components/NavButton.jsx";
+import { DateTime } from "luxon";
 
 function calculateCategoryPercentages(todayEvents, todayCategories) {
   const categoryTotals = {};
@@ -27,6 +28,11 @@ function calculateCategoryPercentages(todayEvents, todayCategories) {
   });
 
   return categoryPercentages;
+}
+
+function todayFormatted() {
+  const today = DateTime.now();
+  return today.toFormat("yyyy-MM-dd");
 }
 
 const Day = () => {
@@ -108,28 +114,23 @@ const Day = () => {
     }
   };
 
-  // TODO : replace with nosql call
   const handleSync = async () => {
     try {
-      const authCheckResponse = await fetch(
-        import.meta.env.VITE_CLOUDFRONT_AUTH_CHECK,
+      const todaysDate = todayFormatted();
+      const eventResponse = await fetch(
+        import.meta.env.VITE_CLOUDFRONT_CALENDAR_EVENTS +
+          "?event_date=2025-04-13",
         {
-          method: "POST",
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
         }
       );
-      if (authCheckResponse.status === 200) {
-        // TODO: remove dummy data
 
-        setCalendarEvents([
-          { Category: "Cat1", Event: "EventA", Time: 0 },
-          { Category: "Cat2", Event: "EventA", Time: 15 },
-          { Category: "Cat3", Event: "EventA", Time: 10 },
-          { Category: "Cat3", Event: "EventA", Time: 10 },
-        ]);
+      if (eventResponse.status === 200) {
+        const responseData = await eventResponse.json();
       }
     } catch (error) {
       console.error("Sync failed:", error);
@@ -267,7 +268,7 @@ const Day = () => {
       <div className="flex flex-col  md:w-1/2 md:pl-4 md:mt-80">
         <div className="flex justify-end items-end">
           <button
-            onClick={handleSync()}
+            onClick={handleSync}
             className="bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none hover:border-2 flex items-center"
           >
             Sync Events
