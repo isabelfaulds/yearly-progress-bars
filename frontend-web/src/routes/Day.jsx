@@ -1,34 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import Chart from "chart.js/auto";
 import { ArrowPathRoundedSquareIcon } from "@heroicons/react/24/outline";
 import NavButton from "../components/NavButton.jsx";
 import { DateTime } from "luxon";
-
-function calculateCategoryPercentages(todayEvents, todayCategories) {
-  const categoryTotals = {};
-  const categoryPercentages = [];
-
-  todayCategories.forEach((category) => {
-    categoryTotals[category.Category] = 0;
-  });
-
-  // sum
-  todayEvents.forEach((event) => {
-    if (categoryTotals.hasOwnProperty(event.Category)) {
-      categoryTotals[event.Category] += event.Time;
-    }
-  });
-
-  // percentage
-  todayCategories.forEach((category) => {
-    const totalTime = categoryTotals[category.Category] || 0;
-    const categoryTimeLimit = category.Time;
-    const percentage = Math.min((totalTime / categoryTimeLimit) * 100, 100);
-    categoryPercentages[category.Category] = percentage;
-  });
-
-  return categoryPercentages;
-}
+import RadarChart from "../components/RadarChart.jsx";
 
 function todayFormatted() {
   const today = DateTime.now();
@@ -36,8 +10,6 @@ function todayFormatted() {
 }
 
 const Day = () => {
-  const chartRef = useRef(null);
-  const chartInstance = useRef(null);
   // TODO: remove dummy data
   const [calendarEvents, setCalendarEvents] = useState([
     {
@@ -50,27 +22,13 @@ const Day = () => {
       Event: "Extra long event with many things happening",
       Time: 15,
     },
-    {
-      Category: "Cat3",
-      Event: "Extra long event with many things happening2",
-      Time: 10,
-    },
-    {
-      Category: "Cat3",
-      Event: "Extra long event with many things happening4",
-      Time: 10,
-    },
-    {
-      Category: "Cat3",
-      Event: "Extra long event with many things happening45",
-      Time: 10,
-    },
-    {
-      Category: "Cat3",
-      Event: "Extra long event with many things happening456",
-      Time: 10,
-    },
   ]);
+  const todayCategories = [
+    { Category: "Cat1", Time: 60 },
+    { Category: "Cat2", Time: 20 },
+    { Category: "Cat3", Time: 60 },
+    { Category: "Cat4", Time: 20 },
+  ];
 
   const [editingIndex, setEditingIndex] = useState(null);
   const [editedText, setEditedText] = useState("");
@@ -103,7 +61,6 @@ const Day = () => {
     });
     setCalendarEvents(updatedEvents);
     setEditingIndex(null);
-    renderChart(updatedEvents);
   };
 
   const handleKeyDown = (e, index) => {
@@ -128,100 +85,17 @@ const Day = () => {
           credentials: "include",
         }
       );
-
+      console.log(eventResponse);
       if (eventResponse.status === 200) {
         const responseData = await eventResponse.json();
+        console.log(responseData);
       }
     } catch (error) {
       console.error("Sync failed:", error);
     }
   };
 
-  // chart
-  const renderChart = (events) => {
-    // TODO: remove dummy data
-
-    let todayCategories = [
-      { Category: "Cat1", Time: 60 },
-      { Category: "Cat2", Time: 20 },
-      { Category: "Cat3", Time: 60 },
-      { Category: "Cat4", Time: 20 },
-    ];
-    let todayResult = calculateCategoryPercentages(events, todayCategories);
-    let categoryKeys = Object.keys(todayResult);
-    let categoryValues = Object.values(todayResult);
-
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
-    const ctx = chartRef.current.getContext("2d");
-
-    chartInstance.current = new Chart(ctx, {
-      type: "radar",
-      data: {
-        labels: categoryKeys,
-        datasets: [
-          {
-            label: "",
-            data: categoryValues,
-            backgroundColor: "rgba(255, 99, 132, 0.2)",
-            borderColor: "rgb(255, 99, 132)",
-            pointBackgroundColor: "rgb(255, 99, 132)",
-            pointBorderColor: "#fff",
-            pointHoverBackgroundColor: "#fff",
-            pointHoverBorderColor: "rgb(255, 99, 132)",
-            fill: true,
-          },
-        ],
-      },
-      options: {
-        plugins: {
-          legend: {
-            display: false,
-          },
-        },
-        scales: {
-          r: {
-            // radar chart scales under 'r'
-            angleLines: {
-              display: true,
-              color: "rgba(255, 255, 255, 0.9)",
-            },
-            suggestedMin: 0,
-            suggestedMax: 100,
-            ticks: {
-              display: false,
-              stepSize: 1,
-              color: "#FFFFFF",
-              backdropColor: "transparent",
-              showLabelBackdrop: false,
-            },
-            pointLabels: {
-              fontSize: 16,
-              color: "#FFFFFF",
-              backdropColor: "transparent",
-              font: {
-                backgroundColor: "transparent",
-              },
-            },
-          },
-        },
-        responsive: true,
-        maintainAspectRatio: false,
-      },
-    });
-  };
-
-  useEffect(() => {
-    renderChart(calendarEvents);
-
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
-    };
-  }, [calendarEvents]);
-
+  /* current date */
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.toLocaleDateString("en-US", { month: "long" });
@@ -257,10 +131,7 @@ const Day = () => {
           </div>
         </div>
         <div className="p-8 rounded-lg shadow-lg">
-          <canvas
-            ref={chartRef}
-            className="w-full h-80 sm:w-3/4 sm:h-96 md:w-2/3 md:h-96 lg:w-1/2 lg:h-96"
-          />
+          <RadarChart events={calendarEvents} categories={todayCategories} />
         </div>
       </div>
       {/* Second column: button and events */}
@@ -269,7 +140,7 @@ const Day = () => {
         <div className="flex justify-end items-end">
           <button
             onClick={handleSync}
-            className="bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none hover:border-2 flex items-center"
+            className="bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
           >
             Sync Events
             <ArrowPathRoundedSquareIcon className="h-6 w-6 text-blue-500 ml-2" />
