@@ -25,7 +25,6 @@ const Day = () => {
           credentials: "include",
         }
       );
-      console.log(eventResponse);
       if (eventResponse.status === 200) {
         const responseData = await eventResponse.json();
         setCalendarEvents(responseData.events);
@@ -97,7 +96,6 @@ const Day = () => {
           credentials: "include",
         }
       );
-      console.log(eventResponse);
       if (eventResponse.status === 200) {
         const responseData = await eventResponse.json();
         getEvents();
