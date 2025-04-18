@@ -4,30 +4,45 @@ import NavButton from "../components/NavButton.jsx";
 import { DateTime } from "luxon";
 import RadarChart from "../components/RadarChart.jsx";
 
-function todayFormatted() {
-  const today = DateTime.now();
-  return today.toFormat("yyyy-MM-dd");
-}
-
 const Day = () => {
+  const currentDate = new Date();
+  const day = currentDate.getDate();
+  const month = currentDate.toLocaleDateString("en-US", { month: "long" });
+  const weekday = currentDate.toLocaleDateString("en-US", { weekday: "long" });
+  const year = currentDate.toLocaleDateString("en-US", { year: "numeric" });
+
+  async function getEvents() {
+    try {
+      const todaysDate = DateTime.now().toFormat("yyyy-MM-dd");
+      const eventResponse = await fetch(
+        import.meta.env.VITE_CLOUDFRONT_CALENDAR_EVENTS +
+          `?event_date=${todaysDate}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      console.log(eventResponse);
+      if (eventResponse.status === 200) {
+        const responseData = await eventResponse.json();
+        setCalendarEvents(responseData.events);
+        console.log(calendarEvents);
+      }
+    } catch (error) {
+      console.error("Sync failed:", error);
+    }
+  }
+
+  const [calendarEvents, setCalendarEvents] = useState([]);
   // TODO: remove dummy data
-  const [calendarEvents, setCalendarEvents] = useState([
-    {
-      Category: "Cat1",
-      Event: "Extra long event with many things happening3",
-      Time: 0,
-    },
-    {
-      Category: "Cat2",
-      Event: "Extra long event with many things happening",
-      Time: 15,
-    },
-  ]);
   const todayCategories = [
-    { Category: "Cat1", Time: 60 },
-    { Category: "Cat2", Time: 20 },
-    { Category: "Cat3", Time: 60 },
-    { Category: "Cat4", Time: 20 },
+    { category: "Cat1", minutes: 60 },
+    { category: "Cat2", minutes: 20 },
+    { category: "Cat3", minutes: 60 },
+    { category: "Cat4", minutes: 20 },
   ];
 
   const [editingIndex, setEditingIndex] = useState(null);
@@ -55,7 +70,7 @@ const Day = () => {
 
     const updatedEvents = calendarEvents.map((event, i) => {
       if (i === index) {
-        return { ...event, Category: editedText };
+        return { ...event, category: editedText };
       }
       return event;
     });
@@ -73,7 +88,7 @@ const Day = () => {
 
   const handleSync = async () => {
     try {
-      const todaysDate = todayFormatted();
+      // TODO: replace with gapi call
       const eventResponse = await fetch(
         import.meta.env.VITE_CLOUDFRONT_CALENDAR_EVENTS +
           "?event_date=2025-04-13",
@@ -89,18 +104,17 @@ const Day = () => {
       if (eventResponse.status === 200) {
         const responseData = await eventResponse.json();
         console.log(responseData);
+        setCalendarEvents(responseData.events);
+        console.log(calendarEvents);
       }
     } catch (error) {
       console.error("Sync failed:", error);
     }
   };
 
-  /* current date */
-  const currentDate = new Date();
-  const day = currentDate.getDate();
-  const month = currentDate.toLocaleDateString("en-US", { month: "long" });
-  const weekday = currentDate.toLocaleDateString("en-US", { weekday: "long" });
-  const year = currentDate.toLocaleDateString("en-US", { year: "numeric" });
+  useEffect(() => {
+    getEvents();
+  }, []);
 
   return (
     <div
@@ -163,14 +177,14 @@ const Day = () => {
                 />
               ) : (
                 <div
-                  onClick={() => handleCategoryClick(index, event.Category)}
+                  onClick={() => handleCategoryClick(index, event.category)}
                   className="bg-gray-800 rounded-full px-3 py-1 mr-6 mb-1 cursor-pointer hover:bg-gray-700 transition-colors"
                 >
-                  {event.Category || "No Category"}
+                  {event.category || "No Category"}
                 </div>
               )}
 
-              <span>{event.Event || ""} </span>
+              <span>{event.event_name || ""} </span>
             </div>
           ))}
         </div>
