@@ -6,20 +6,20 @@ function calculateCategoryPercentages(graphEvents, eventCategories) {
   const categoryPercentages = [];
 
   eventCategories.forEach((category) => {
-    categoryTotals[category.Category] = 0;
+    categoryTotals[category.category] = 0;
   });
 
   graphEvents.forEach((event) => {
-    if (categoryTotals.hasOwnProperty(event.Category)) {
-      categoryTotals[event.Category] += event.Time;
+    if (categoryTotals.hasOwnProperty(event.category)) {
+      categoryTotals[event.category] += event.minutes;
     }
   });
 
   eventCategories.forEach((category) => {
-    const totalTime = categoryTotals[category.Category] || 0;
-    const categoryTimeLimit = category.Time;
+    const totalTime = categoryTotals[category.category] || 0;
+    const categoryTimeLimit = category.minutes;
     const percentage = Math.min((totalTime / categoryTimeLimit) * 100, 100);
-    categoryPercentages[category.Category] = percentage;
+    categoryPercentages[category.category] = percentage;
   });
 
   return categoryPercentages;
