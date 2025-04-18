@@ -25,6 +25,7 @@ const Day = () => {
           credentials: "include",
         }
       );
+      console.log(eventResponse);
       if (eventResponse.status === 200) {
         const responseData = await eventResponse.json();
         setCalendarEvents(responseData.events);
@@ -86,21 +87,20 @@ const Day = () => {
 
   const handleSync = async () => {
     try {
-      // TODO: replace with gapi call
       const eventResponse = await fetch(
-        import.meta.env.VITE_CLOUDFRONT_CALENDAR_EVENTS +
-          "?event_date=2025-04-13",
+        import.meta.env.VITE_CLOUDFRONT_SYNC_GCAL,
         {
-          method: "GET",
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
         }
       );
+      console.log(eventResponse);
       if (eventResponse.status === 200) {
         const responseData = await eventResponse.json();
-        setCalendarEvents(responseData.events);
+        getEvents();
       }
     } catch (error) {
       console.error("Sync failed:", error);

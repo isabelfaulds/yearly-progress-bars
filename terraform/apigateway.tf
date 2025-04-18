@@ -631,3 +631,106 @@ resource "aws_api_gateway_method_response" "calendar_events_response" {
 
   }
 }
+
+#### gapi events
+
+resource "aws_api_gateway_resource" "calendar_sync" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_resource.calendar_data_api.id
+  path_part   = "sync"
+}
+
+resource "aws_api_gateway_resource" "calendar_sync_gcal" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_resource.calendar_sync.id
+  path_part   = "gcal"
+}
+
+resource "aws_api_gateway_method" "sync_gcal_post" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_sync_gcal.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+}
+
+resource "aws_api_gateway_integration" "sync_gcal_post_lambda_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.sync_gcal_post.resource_id
+  http_method = aws_api_gateway_method.sync_gcal_post.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  credentials             = null
+  request_parameters = {}
+  request_templates = {}
+  uri = aws_lambda_function.node_gapi_day_pull.invoke_arn
+  passthrough_behavior = "WHEN_NO_MATCH" 
+}
+
+resource "aws_api_gateway_method_response" "sync_gcal_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_method.sync_gcal_post.resource_id
+  http_method   = aws_api_gateway_method.sync_gcal_post.http_method
+  status_code   = "200"
+
+  response_parameters = {
+      "method.response.header.Access-Control-Allow-Origin": true,
+      "method.response.header.Access-Control-Allow-Headers": true,
+      "method.response.header.Access-Control-Allow-Methods": true,
+      "method.response.header.Access-Control-Allow-Credentials": true,
+
+  }
+}
+
+resource "aws_api_gateway_method" "sync_gcal_options" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_sync_gcal.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "sync_gcal_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.calendar_sync_gcal.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+  passthrough_behavior = "WHEN_NO_MATCH"
+  depends_on = [aws_api_gateway_method.sync_gcal_options]
+}
+
+resource "aws_api_gateway_method_response" "sync_gcal_options_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_sync_gcal.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.sync_gcal_options]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "sync_gcal_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_sync_gcal.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.sync_gcal_options_integration,
+    aws_api_gateway_method_response.sync_gcal_options_response
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
