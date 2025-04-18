@@ -25,11 +25,9 @@ const Day = () => {
           credentials: "include",
         }
       );
-      console.log(eventResponse);
       if (eventResponse.status === 200) {
         const responseData = await eventResponse.json();
         setCalendarEvents(responseData.events);
-        console.log(calendarEvents);
       }
     } catch (error) {
       console.error("Sync failed:", error);
@@ -100,12 +98,9 @@ const Day = () => {
           credentials: "include",
         }
       );
-      console.log(eventResponse);
       if (eventResponse.status === 200) {
         const responseData = await eventResponse.json();
-        console.log(responseData);
         setCalendarEvents(responseData.events);
-        console.log(calendarEvents);
       }
     } catch (error) {
       console.error("Sync failed:", error);
