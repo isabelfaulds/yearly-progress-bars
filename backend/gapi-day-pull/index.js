@@ -4,12 +4,24 @@ const {
   PutItemCommand,
 } = require("@aws-sdk/client-dynamodb");
 const { google } = require("googleapis");
-const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const { unmarshall } = require("@aws-sdk/util-dynamodb");
 const { DateTime } = require("luxon");
 const dynamodb = new DynamoDBClient({ region: "us-west-1" });
 const calendar = google.calendar("v3");
+
+const allowedOrigins = [
+  "https://year-progress-bar.com",
+  "https://localhost:5173",
+];
+
+const corsheaders = {
+  "Access-Control-Allow-Methods": "POST",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
+  "Access-Control-Allow-Credentials": "true",
+  "Content-Type": "application/json",
+};
 
 function calculateMinuteDifferenceWithDate(
   startDateTimeString,
@@ -29,10 +41,13 @@ function calculateMinuteDifferenceWithDate(
 }
 
 exports.handler = async (event) => {
-  const jwtSecret = process.env.JWT_SECRET;
   const clientId = process.env.CLIENT_ID;
   const clientSecret = process.env.CLIENT_SECRET;
-
+  let accessControlAllowOrigin = allowedOrigins[0];
+  let origin = event.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    accessControlAllowOrigin = origin;
+  }
   // get token
   const userId = event.headers["user-id"];
   const tokenResponse = await dynamodb.send(
@@ -60,7 +75,6 @@ exports.handler = async (event) => {
 
   // fetch paginated events
   const now = DateTime.now().setZone("America/Los_Angeles");
-  const todayISO = now.toISODate();
   const timeMin = now.startOf("day").toUTC().toISO();
   const timeMax = now.endOf("day").toUTC().toISO();
   let events = [];
@@ -107,6 +121,10 @@ exports.handler = async (event) => {
 
   return {
     statusCode: 200,
+    headers: {
+      "Access-Control-Allow-Origin": accessControlAllowOrigin,
+      ...corsheaders,
+    },
     body: JSON.stringify({
       message: "Day records updated",
     }),
