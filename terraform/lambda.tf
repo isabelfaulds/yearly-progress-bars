@@ -332,7 +332,6 @@ resource "aws_lambda_function" "node_gapi_day_pull" {
 
   environment {
     variables = {
-        JWT_SECRET = var.jwt_secret
         CLIENT_ID = var.client_id
         CLIENT_SECRET = var.client_secret
     }
@@ -377,3 +376,32 @@ resource "aws_lambda_permission" "allow_apigateway_get_calendar_events" {
 }
 
 
+#### get categories
+resource "aws_s3_bucket_object" "get_categories" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/get-categories/get-categories.zip"
+  key    = "get-categories.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "get_categories" {
+  function_name = "node-get-categories"
+  s3_bucket     = aws_s3_bucket_object.get_categories.bucket
+  s3_key        = aws_s3_bucket_object.get_categories.key
+
+  handler = "index.handler"
+  runtime = "nodejs22.x"  
+  depends_on = [aws_s3_bucket_object.get_categories]
+
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+}
+
+resource "aws_lambda_permission" "allow_apigateway_get_categories" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_categories.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/GET/categories"
+}
