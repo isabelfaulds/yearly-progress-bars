@@ -405,3 +405,34 @@ resource "aws_lambda_permission" "allow_apigateway_get_categories" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/GET/categories"
 }
+
+#### update categories
+resource "aws_s3_bucket_object" "update_categories" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/update-categories/update-categories.zip"
+  key    = "update-categories.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "update_categories" {
+  function_name = "node-update-categories"
+  s3_bucket     = aws_s3_bucket_object.update_categories.bucket
+  s3_key        = aws_s3_bucket_object.update_categories.key
+
+  handler = "index.handler"
+  runtime = "nodejs22.x"  
+  depends_on = [aws_s3_bucket_object.update_categories]
+
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+}
+
+resource "aws_lambda_permission" "allow_apigateway_update_categories" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.update_categories.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/categories"
+}
+

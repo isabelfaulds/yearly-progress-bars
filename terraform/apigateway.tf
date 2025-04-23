@@ -826,8 +826,46 @@ resource "aws_api_gateway_integration_response" "categories_options_integration_
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
     "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+
+### update categories
+resource "aws_api_gateway_method" "categories_post_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.categories_api.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+}
+
+resource "aws_api_gateway_integration" "categories_post_lambda_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.categories_post_method.resource_id
+  http_method = aws_api_gateway_method.categories_post_method.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  credentials             = null
+  request_parameters = {}
+  request_templates = {}
+  uri = aws_lambda_function.update_categories.invoke_arn
+  passthrough_behavior = "WHEN_NO_MATCH" 
+}
+
+resource "aws_api_gateway_method_response" "categories_post_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_method.categories_post_method.resource_id
+  http_method   = aws_api_gateway_method.categories_post_method.http_method
+  status_code   = "200"
+
+  response_parameters = {
+      "method.response.header.Access-Control-Allow-Origin": true,
+      "method.response.header.Access-Control-Allow-Headers": true,
+      "method.response.header.Access-Control-Allow-Methods": true,
+      "method.response.header.Access-Control-Allow-Credentials": true,
+
   }
 }
