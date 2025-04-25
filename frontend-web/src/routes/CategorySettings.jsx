@@ -38,7 +38,6 @@ const CategorySettings = () => {
           credentials: "include",
         }
       );
-      console.log(categoryResponse);
       if (categoryResponse.status === 200) {
         const responseData = await categoryResponse.json();
         const formattedCategories = responseData.categories.map((item) => ({
@@ -92,12 +91,6 @@ const CategorySettings = () => {
             const newRemainderMinutes = parseInt(value);
             newMinutes = cat.totalHours * 60 + newRemainderMinutes;
           }
-          console.log("updating", {
-            ...cat,
-            minutes: newMinutes,
-            totalHours: Math.floor(newMinutes / 60),
-            remainderMinutes: newMinutes % 60,
-          });
 
           return {
             ...cat,
@@ -109,7 +102,6 @@ const CategorySettings = () => {
         return cat;
       });
       setCategories(updatedCategories);
-      console.log("upodated numbers", categories);
       setEditingCell({ index: null, field: null });
     }
   };
@@ -145,7 +137,6 @@ const CategorySettings = () => {
         remainderMinutes: minutes % 60,
       };
       setCategories([...categories, parsedCategory]);
-      console.log(categories);
       setNewCategory("");
       setTimeAmount("");
     }
