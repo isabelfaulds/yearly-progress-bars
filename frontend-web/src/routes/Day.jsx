@@ -11,6 +11,16 @@ const Day = () => {
   const weekday = currentDate.toLocaleDateString("en-US", { weekday: "long" });
   const year = currentDate.toLocaleDateString("en-US", { year: "numeric" });
 
+  function titleCase(str) {
+    return str
+      .toLowerCase()
+      .split(" ")
+      .map(function (word) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(" ");
+  }
+
   async function getEvents() {
     try {
       const todaysDate = DateTime.now().toFormat("yyyy-MM-dd");
@@ -25,6 +35,7 @@ const Day = () => {
           credentials: "include",
         }
       );
+      console.log(eventResponse);
       if (eventResponse.status === 200) {
         const responseData = await eventResponse.json();
         setCalendarEvents(responseData.events);
@@ -34,14 +45,33 @@ const Day = () => {
     }
   }
 
+  async function getCategories() {
+    try {
+      const categoryResponse = await fetch(
+        import.meta.env.VITE_CLOUDFRONT_CATEGORIES,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      if (categoryResponse.status === 200) {
+        const responseData = await categoryResponse.json();
+        const formattedCategories = responseData.categories.map((item) => ({
+          ...item,
+          category: titleCase(item.category),
+        }));
+        setTodayCategories(formattedCategories);
+      }
+    } catch (error) {
+      console.error("Sync failed:", error);
+    }
+  }
+
   const [calendarEvents, setCalendarEvents] = useState([]);
-  // TODO: remove dummy data
-  const todayCategories = [
-    { category: "Cat1", minutes: 60 },
-    { category: "Cat2", minutes: 20 },
-    { category: "Cat3", minutes: 60 },
-    { category: "Cat4", minutes: 20 },
-  ];
+  const [todayCategories, setTodayCategories] = useState([]);
 
   const [editingIndex, setEditingIndex] = useState(null);
   const [editedText, setEditedText] = useState("");
@@ -68,7 +98,7 @@ const Day = () => {
 
     const updatedEvents = calendarEvents.map((event, i) => {
       if (i === index) {
-        return { ...event, category: editedText };
+        return { ...event, category: titleCase(editedText) };
       }
       return event;
     });
@@ -106,6 +136,7 @@ const Day = () => {
   };
 
   useEffect(() => {
+    getCategories();
     getEvents();
   }, []);
 

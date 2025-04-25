@@ -12,70 +12,140 @@ const CategorySettings = () => {
   const [newCategory, setNewCategory] = useState("");
   const [timeAmount, setTimeAmount] = useState("");
   const [timeUnit, setTimeUnit] = useState("minutes");
+  const [editingCell, setEditingCell] = useState({ index: null, field: null }); // { index: row index, field: 'minutes' | 'hours' }
+  const [editedValues, setEditedValues] = useState({}); // Store edited values for each row and field
+  const editedInputRef = useRef(null);
 
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [editedText, setEditedText] = useState("");
-  const editedTextRef = useRef(null);
+  function titleCase(str) {
+    return str
+      .toLowerCase()
+      .split(" ")
+      .map(function (word) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(" ");
+  }
 
-  const handleTimeClick = (index, currentText) => {
-    setEditingIndex(index);
-    setEditedText(currentText);
-    // delay to allow render
+  async function getCategories() {
+    try {
+      const categoryResponse = await fetch(
+        import.meta.env.VITE_CLOUDFRONT_CATEGORIES,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      console.log(categoryResponse);
+      if (categoryResponse.status === 200) {
+        const responseData = await categoryResponse.json();
+        const formattedCategories = responseData.categories.map((item) => ({
+          ...item,
+          category: titleCase(item.category),
+          totalHours: Math.floor(item.minutes / 60),
+          remainderMinutes: item.minutes % 60,
+        }));
+        setCategories(formattedCategories);
+      }
+    } catch (error) {
+      console.error("Sync failed:", error);
+    }
+  }
+
+  const handleTimeClick = (index, field, currentValue) => {
+    setEditingCell({ index, field });
+    setEditedValues((prev) => ({
+      ...prev,
+      [`${index}-${field}`]: currentValue,
+    }));
     setTimeout(() => {
-      editedTextRef.current?.focus();
+      editedInputRef.current?.focus();
     }, 0);
   };
 
   const handleTextChange = (e) => {
-    setEditedText(e.target.value);
+    const { value } = e.target;
+    setEditedValues((prev) => ({
+      ...prev,
+      [`${editingCell.index}-${editingCell.field}`]: value,
+    }));
   };
 
-  const handleBlur = (index) => {
-    if (editedText.trim() === "") {
-      setEditingIndex(null);
-      return;
-    }
-
-    const updatedEvents = categories.map((event, i) => {
-      if (i === index) {
-        return { ...event, time: editedText };
+  const handleBlur = (index, field) => {
+    if (editingCell.index === index && editingCell.field === field) {
+      const value = editedValues[`${index}-${field}`]?.trim();
+      if (value === "") {
+        setEditingCell({ index: null, field: null });
+        return;
       }
-      return event;
-    });
-    setCategories(updatedEvents);
-    setEditingIndex(null);
+
+      const updatedCategories = categories.map((cat, i) => {
+        if (i === index) {
+          let newMinutes = cat.minutes;
+
+          if (field === "hours") {
+            const newHours = parseInt(value);
+            newMinutes = newHours * 60 + cat.remainderMinutes;
+          } else if (field === "minutes") {
+            const newRemainderMinutes = parseInt(value);
+            newMinutes = cat.totalHours * 60 + newRemainderMinutes;
+          }
+          console.log("updating", {
+            ...cat,
+            minutes: newMinutes,
+            totalHours: Math.floor(newMinutes / 60),
+            remainderMinutes: newMinutes % 60,
+          });
+
+          return {
+            ...cat,
+            minutes: newMinutes,
+            totalHours: Math.floor(newMinutes / 60),
+            remainderMinutes: newMinutes % 60,
+          };
+        }
+        return cat;
+      });
+      setCategories(updatedCategories);
+      console.log("upodated numbers", categories);
+      setEditingCell({ index: null, field: null });
+    }
   };
 
-  const handleKeyDown = (e, index) => {
+  const handleKeyDown = (e, index, field) => {
     if (e.key === "Enter") {
-      handleBlur(index);
+      handleBlur(index, field);
     } else if (e.key === "Escape") {
-      setEditingIndex(null);
+      setEditingCell({ index: null, field: null });
     }
   };
 
   useEffect(() => {
-    const storedCategories = localStorage.getItem("userCategories");
-    if (storedCategories) {
-      setCategories(JSON.parse(storedCategories));
-    }
+    getCategories();
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("userCategories", JSON.stringify(categories));
+    console.log("categories changed", categories);
   }, [categories]);
 
   const addCategory = (e) => {
     e.preventDefault();
     if (newCategory.trim() !== "" && timeAmount.trim() !== "") {
-      setCategories([
-        ...categories,
-        {
-          category: newCategory.trim(),
-          time: timeAmount.trim(),
-          unit: timeUnit,
-        },
-      ]);
+      const minutes =
+        timeUnit === "hours"
+          ? parseInt(timeAmount.trim()) * 60
+          : parseInt(timeAmount.trim());
+
+      const parsedCategory = {
+        category: newCategory.trim(),
+        minutes: minutes,
+        totalHours: Math.floor(minutes / 60),
+        remainderMinutes: minutes % 60,
+      };
+      setCategories([...categories, parsedCategory]);
+      console.log(categories);
       setNewCategory("");
       setTimeAmount("");
     }
@@ -123,53 +193,80 @@ const CategorySettings = () => {
         <hr className="border-t border-gray-300 my-4" />
       </div>
 
-      {/* content */}
+      {/* Saved Categories */}
       <div className="flex flex-col pl-4 mt-5 items-center">
         <ul className="pt-3 px-4 mb-4 w-full">
           {categories.map((item, index) => (
             <li
               key={index}
               className="grid
-              grid-cols-[minmax(0,1fr)_auto_auto_auto] 
-              text-white
-              items-center // used for vertical centering
-              py-5 border-b border-gray-500
-              gap-2
-              "
+          grid-cols-[minmax(0,1fr)_auto_auto_auto_auto_auto]
+          text-white
+          items-center
+          py-5 border-b border-gray-500
+          gap-2
+          "
             >
-              <span
-                className="
-  py-1
-  text-gray-200
-  pr-5
-  
-  "
-              >
-                {item.category}
-              </span>
-              {editingIndex === index ? (
+              <span className="py-1 text-gray-200 pr-5">{item.category}</span>
+
+              {/* Editable Hours */}
+              {editingCell.index === index && editingCell.field === "hours" ? (
                 <input
-                  ref={editedTextRef}
-                  type="text"
-                  value={editedText}
+                  ref={editedInputRef}
+                  type="number"
+                  value={
+                    editedValues.hasOwnProperty(`${index}-hours`)
+                      ? editedValues[`${index}-hours`]
+                      : item.totalHours
+                  }
                   onChange={handleTextChange}
-                  onBlur={() => handleBlur(index)}
-                  onKeyDown={(e) => handleKeyDown(e, index)}
+                  onBlur={() => handleBlur(index, "hours")}
+                  onKeyDown={(e) => handleKeyDown(e, index, "hours")}
                   className="bg-gray-700 rounded-full px-2 py-1 mr-1 outline-none focus:ring-2 focus:ring-blue-500"
-                  style={{ width: `${Math.max(editedText.length * 2, 80)}px` }}
+                  style={{ width: `40px` }}
                 />
               ) : (
                 <div
-                  onClick={() => handleTimeClick(index, item.time)}
-                  className="bg-gray-800 rounded-full px-2 py-1 mr-2 mb-1 cursor-pointer hover:bg-gray-700 transition-colors"
-                  style={{ width: `${Math.max(item.time.length * 8, 80)}px` }}
+                  onClick={() =>
+                    handleTimeClick(index, "hours", item.totalHours)
+                  }
+                  className="bg-gray-800 rounded-full px-2 py-1 mr-1 mb-1 cursor-pointer hover:bg-gray-700 transition-colors"
+                  style={{ width: `40px` }}
                 >
-                  {item.time}
+                  {item.totalHours}
                 </div>
               )}
-              <span className="sm:px-4 px-1">
-                {item.unit === "minutes" ? "min" : "hr"}
-              </span>
+              <span className="sm:px-1 px-1">hrs</span>
+
+              {/* Editable Minutes */}
+              {editingCell.index === index &&
+              editingCell.field === "minutes" ? (
+                <input
+                  ref={editedInputRef}
+                  type="number"
+                  value={
+                    editedValues.hasOwnProperty(`${index}-minutes`)
+                      ? editedValues[`${index}-minutes`]
+                      : item.remainderMinutes
+                  }
+                  onChange={handleTextChange}
+                  onBlur={() => handleBlur(index, "minutes")}
+                  onKeyDown={(e) => handleKeyDown(e, index, "minutes")}
+                  className="bg-gray-700 rounded-full px-2 py-1 mr-1 outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ width: `40px` }}
+                />
+              ) : (
+                <div
+                  onClick={() =>
+                    handleTimeClick(index, "minutes", item.remainderMinutes)
+                  }
+                  className="bg-gray-800 rounded-full px-2 py-1 mr-1 mb-1 cursor-pointer hover:bg-gray-700 transition-colors"
+                  style={{ width: `40px` }}
+                >
+                  {item.remainderMinutes}
+                </div>
+              )}
+              <span className="sm:px-1 px-1">min</span>
               <button
                 aria-label="Remove Category"
                 onClick={() => removeCategory(item.category)}
@@ -201,7 +298,7 @@ const CategorySettings = () => {
             </li>
           ))}
         </ul>
-
+        {/* New Category */}
         <form
           onSubmit={addCategory}
           className="mt-2 flex flex-col md:flex-row gap-1"
