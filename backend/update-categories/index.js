@@ -15,7 +15,7 @@ const corsheaders = {
 
 const allowedOrigins = [
   "https://year-progress-bar.com",
-  "https://year-progress-bar.com",
+  "https://localhost:5173",
 ];
 const client = new DynamoDBClient({ region: "us-west-1" });
 const tableName = "pb_categories";
@@ -24,13 +24,13 @@ const tableName = "pb_categories";
 async function handleUpdates(updates) {
   if (updates && updates.length > 0) {
     const updatePromises = updates.map(async (item) => {
-      const { category_uid, time } = item;
+      const { category_uid, minutes } = item;
       const params = {
         TableName: tableName,
         Key: { category_uid: { S: category_uid } },
-        UpdateExpression: "SET #t = :time",
-        ExpressionAttributeNames: { "#t": "time" },
-        ExpressionAttributeValues: { ":time": { N: time.toString() } },
+        UpdateExpression: "SET #t = :minutes",
+        ExpressionAttributeNames: { "#t": "minutes" },
+        ExpressionAttributeValues: { ":minutes": { N: minutes.toString() } },
         ReturnValues: "ALL_NEW",
       };
       const command = new UpdateItemCommand(params);
@@ -56,7 +56,7 @@ async function handleAdds(adds, userId) {
       console.log("log add", {
         category_uid: { S: `${userId}:${item.category}` },
         category: { S: item.category },
-        time: { N: item.time.toString() },
+        minutes: { N: item.minutes.toString() },
         user_id: { S: userId },
         created_at: { S: createdAt },
       });
@@ -65,7 +65,7 @@ async function handleAdds(adds, userId) {
           Item: {
             category_uid: { S: `${userId}:${item.category}` },
             category: { S: item.category },
-            time: { N: item.time.toString() },
+            minutes: { N: item.minutes.toString() },
             user_id: { S: userId },
             created_at: { S: createdAt },
           },
