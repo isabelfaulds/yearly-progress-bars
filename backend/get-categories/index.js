@@ -10,7 +10,7 @@ const corsheaders = {
 
 const allowedOrigins = [
   "https://year-progress-bar.com",
-  "https://year-progress-bar.com",
+  "https://localhost:5173",
 ];
 const dynamodb = new DynamoDBClient({ region: "us-west-1" });
 
@@ -52,6 +52,7 @@ exports.handler = async (event) => {
     const formattedCategories = result.Items.map((item) => ({
       category_uid: item.category_uid.S,
       category: item.category.S,
+      minutes: item.minutes.N,
     }));
 
     return {
