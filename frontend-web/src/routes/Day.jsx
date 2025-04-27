@@ -3,8 +3,10 @@ import { ArrowPathRoundedSquareIcon } from "@heroicons/react/24/outline";
 import NavButton from "../components/NavButton.jsx";
 import { DateTime } from "luxon";
 import RadarChart from "../components/RadarChart.jsx";
+import { useLocation } from "react-router-dom";
 
 const Day = () => {
+  const location = useLocation();
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.toLocaleDateString("en-US", { month: "long" });
@@ -133,6 +135,14 @@ const Day = () => {
       console.error("Sync failed:", error);
     }
   };
+
+  useEffect(() => {
+    console.log("Updated - Categories");
+    if (location.state?.refreshCategories) {
+      getCategories();
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     getCategories();

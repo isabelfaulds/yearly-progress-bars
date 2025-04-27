@@ -226,7 +226,7 @@ const CategorySettings = () => {
         <button
           onClick={() => {
             postCategories();
-            navigate(-1);
+            navigate("/day-view", { state: { refreshCategories: true } });
           }}
           className="p-2
           text-white rounded-full rounded-full
