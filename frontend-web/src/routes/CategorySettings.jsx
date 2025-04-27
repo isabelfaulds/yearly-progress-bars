@@ -14,6 +14,7 @@ const CategorySettings = () => {
   const [timeUnit, setTimeUnit] = useState("minutes");
   const [editingCell, setEditingCell] = useState({ index: null, field: null }); // { index: row index, field: 'minutes' | 'hours' }
   const [editedValues, setEditedValues] = useState({}); // Store edited values for each row and field
+  const [deletes, setDeletes] = useState([]);
   const editedInputRef = useRef(null);
 
   function titleCase(str) {
@@ -45,8 +46,50 @@ const CategorySettings = () => {
           category: titleCase(item.category),
           totalHours: Math.floor(item.minutes / 60),
           remainderMinutes: item.minutes % 60,
+          changeStatus: null,
         }));
         setCategories(formattedCategories);
+      }
+    } catch (error) {
+      console.error("Sync failed:", error);
+    }
+  }
+
+  async function postCategories() {
+    try {
+      const payload = { add: [], update: [], delete: deletes };
+      categories.forEach((cat) => {
+        if (cat.changeStatus === "add") {
+          payload.add.push({
+            category: cat.category.toLowerCase(),
+            minutes: cat.minutes,
+          });
+        } else if (cat.changeStatus === "update") {
+          payload.update.push({
+            category_uid: cat.category_uid,
+            minutes: cat.minutes,
+          });
+        }
+      });
+      if (
+        payload.add.length > 0 ||
+        payload.update.length > 0 ||
+        payload.delete.length > 0
+      ) {
+        const categoryResponse = await fetch(
+          import.meta.env.VITE_CLOUDFRONT_CATEGORIES,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify(payload),
+          }
+        );
+        if (categoryResponse.status === 200) {
+          console.log("Categories - Updated");
+        }
       }
     } catch (error) {
       console.error("Sync failed:", error);
@@ -92,11 +135,15 @@ const CategorySettings = () => {
             newMinutes = cat.totalHours * 60 + newRemainderMinutes;
           }
 
+          let newStatus =
+            cat.changeStatus !== "add" ? "update" : cat.changeStatus;
+
           return {
             ...cat,
             minutes: newMinutes,
             totalHours: Math.floor(newMinutes / 60),
             remainderMinutes: newMinutes % 60,
+            changeStatus: newStatus,
           };
         }
         return cat;
@@ -135,6 +182,7 @@ const CategorySettings = () => {
         minutes: minutes,
         totalHours: Math.floor(minutes / 60),
         remainderMinutes: minutes % 60,
+        changeStatus: "add",
       };
       setCategories([...categories, parsedCategory]);
       setNewCategory("");
@@ -142,9 +190,24 @@ const CategorySettings = () => {
     }
   };
 
-  const removeCategory = (categoryToRemove) => {
+  const deleteCategory = (categoryToDelete) => {
+    let changeStatusToDelete = null;
+    let categoryIndexToDelete = -1;
+    let categoryUIDToDelete = null;
+
+    categories.forEach((cat, index) => {
+      if (cat.category === categoryToDelete) {
+        changeStatusToDelete = cat.changeStatus;
+        categoryIndexToDelete = index;
+        categoryUIDToDelete = cat.category_uid;
+      }
+    });
+
+    if (changeStatusToDelete !== "add" && categoryUIDToDelete !== null) {
+      setDeletes([...deletes, { category_uid: categoryUIDToDelete }]);
+    }
     setCategories(
-      categories.filter((cat) => cat.category !== categoryToRemove)
+      categories.filter((cat) => cat.category !== categoryToDelete)
     );
   };
 
@@ -161,7 +224,10 @@ const CategorySettings = () => {
           Daily Settings
         </div>
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            postCategories();
+            navigate(-1);
+          }}
           className="p-2
           text-white rounded-full rounded-full
           outline-1 
@@ -172,8 +238,10 @@ const CategorySettings = () => {
           hover:shadow-xl
           hover:ring-1
           hover:ring-gray-600
+          flex items-center
           "
         >
+          <span className="mr-2">Save</span>
           <ChevronRightIcon
             className="text-gray-00 h-6 w-6
           hover:shadow-xl "
@@ -259,8 +327,8 @@ const CategorySettings = () => {
               )}
               <span className="sm:px-1 px-1">min</span>
               <button
-                aria-label="Remove Category"
-                onClick={() => removeCategory(item.category)}
+                aria-label="Delete Category"
+                onClick={() => deleteCategory(item.category)}
                 className="bg-gradient-to-r from-gray-300 to-blue-300
         text-white
         font-medium
