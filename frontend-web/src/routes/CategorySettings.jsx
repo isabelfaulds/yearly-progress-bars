@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { ChevronRightIcon } from "@heroicons/react/24/solid";
 import { MinusCircleIcon } from "@heroicons/react/24/solid";
 import StyledSubmitButton from "../components/SubmitButton";
 import StyledSelect from "../components/StyledSelect";
 import StyledInput from "../components/StyledSubmit";
-import { useNavigate } from "react-router-dom";
 
 const CategorySettings = () => {
   const navigate = useNavigate();
@@ -16,6 +17,16 @@ const CategorySettings = () => {
   const [editedValues, setEditedValues] = useState({}); // Store edited values for each row and field
   const [deletes, setDeletes] = useState([]);
   const editedInputRef = useRef(null);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const handleSaveAndNavigate = async () => {
+    try {
+      await postCategories();
+      navigate("/day-view", { state: { refreshTimestamp: Date.now() } });
+    } catch (error) {
+      console.error("Error saving categories:", error);
+    }
+  };
 
   function titleCase(str) {
     return str
@@ -89,6 +100,7 @@ const CategorySettings = () => {
         );
         if (categoryResponse.status === 200) {
           console.log("Categories - Updated");
+          setHasChanges(true);
         }
       }
     } catch (error) {
@@ -166,7 +178,7 @@ const CategorySettings = () => {
   }, []);
 
   useEffect(() => {
-    console.log("categories changed", categories);
+    console.log("Categories - Changed");
   }, [categories]);
 
   const addCategory = (e) => {
@@ -224,10 +236,7 @@ const CategorySettings = () => {
           Daily Settings
         </div>
         <button
-          onClick={() => {
-            postCategories();
-            navigate(-1);
-          }}
+          onClick={handleSaveAndNavigate}
           className="p-2
           text-white rounded-full rounded-full
           outline-1 
