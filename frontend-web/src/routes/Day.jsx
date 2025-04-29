@@ -3,15 +3,29 @@ import { ArrowPathRoundedSquareIcon } from "@heroicons/react/24/outline";
 import NavButton from "../components/NavButton.jsx";
 import { DateTime } from "luxon";
 import RadarChart from "../components/RadarChart.jsx";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Day = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.toLocaleDateString("en-US", { month: "long" });
   const weekday = currentDate.toLocaleDateString("en-US", { weekday: "long" });
   const year = currentDate.toLocaleDateString("en-US", { year: "numeric" });
+
+  useEffect(() => {
+    const refreshDataWithDelay = async () => {
+      if (location?.state?.refreshTimestamp) {
+        console.log("Refreshed");
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        getCategories();
+        navigate(location.pathname, { replace: true, state: {} }); // reset
+      }
+    };
+
+    refreshDataWithDelay();
+  }, [location, getCategories, navigate]);
 
   function titleCase(str) {
     return str
@@ -135,14 +149,6 @@ const Day = () => {
       console.error("Sync failed:", error);
     }
   };
-
-  useEffect(() => {
-    console.log("Updated - Categories");
-    if (location.state?.refreshCategories) {
-      getCategories();
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
 
   useEffect(() => {
     getCategories();

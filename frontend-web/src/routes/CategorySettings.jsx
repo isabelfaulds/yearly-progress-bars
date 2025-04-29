@@ -16,6 +16,7 @@ const CategorySettings = () => {
   const [editedValues, setEditedValues] = useState({}); // Store edited values for each row and field
   const [deletes, setDeletes] = useState([]);
   const editedInputRef = useRef(null);
+  const [hasChanges, setHasChanges] = useState(false);
 
   function titleCase(str) {
     return str
@@ -89,6 +90,7 @@ const CategorySettings = () => {
         );
         if (categoryResponse.status === 200) {
           console.log("Categories - Updated");
+          setHasChanges(true);
         }
       }
     } catch (error) {
@@ -166,7 +168,7 @@ const CategorySettings = () => {
   }, []);
 
   useEffect(() => {
-    console.log("categories changed", categories);
+    console.log("Categories - Changed");
   }, [categories]);
 
   const addCategory = (e) => {
@@ -226,7 +228,7 @@ const CategorySettings = () => {
         <button
           onClick={() => {
             postCategories();
-            navigate("/day-view", { state: { refreshCategories: true } });
+            navigate("/day-view", { state: { refreshTimestamp: Date.now() } });
           }}
           className="p-2
           text-white rounded-full rounded-full
