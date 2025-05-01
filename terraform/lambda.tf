@@ -376,6 +376,36 @@ resource "aws_lambda_permission" "allow_apigateway_get_calendar_events" {
 }
 
 
+### patch calendar events
+resource "aws_s3_bucket_object" "patch_calendar_events" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/patch-calendar-events/patch-calendar-events.zip"
+  key    = "patch-calendar-events.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "patch_calendar_events" {
+  function_name = "node-patch-calendar-events"
+  s3_bucket     = aws_s3_bucket_object.patch_calendar_events.bucket
+  s3_key        = aws_s3_bucket_object.patch_calendar_events.key
+
+  handler = "index.handler"
+  runtime = "nodejs22.x"  
+  depends_on = [aws_s3_bucket_object.patch_calendar_events]
+
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+}
+
+resource "aws_lambda_permission" "allow_apigateway_patch_calendar_events" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.patch_calendar_events.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/PATCH/*/*"
+}
+
 #### get categories
 resource "aws_s3_bucket_object" "get_categories" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
