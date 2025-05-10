@@ -69,7 +69,7 @@ exports.handler = async (event) => {
       };
     }
 
-    let event_uid = event.pathParameters.event_uid;
+    let event_uid = decodeURIComponent(event.pathParameters.event_uid);
     if (!event_uid) {
       return {
         statusCode: 400,
