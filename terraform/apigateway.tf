@@ -643,12 +643,11 @@ resource "aws_api_gateway_resource" "calendar_event" {
 
 resource "aws_api_gateway_method" "calendar_events_patch_method" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
-  resource_id   = aws_api_gateway_resource.calendar_event.id  # Note: Changed to the new resource
+  resource_id   = aws_api_gateway_resource.calendar_event.id 
   http_method   = "PATCH"
   authorization = "CUSTOM"
   authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
   
-  # Add request_parameters to specify the path parameter
   request_parameters = {
     "method.request.path.event_uid" = true
   }
@@ -663,7 +662,6 @@ resource "aws_api_gateway_integration" "calendar_events_patch_lambda_integration
   uri                     = aws_lambda_function.patch_calendar_events.invoke_arn
   passthrough_behavior    = "WHEN_NO_MATCH"
   
-  # Add request_parameters to map the path parameter to the Lambda event
   request_parameters = {
     "integration.request.path.event_uid" = "method.request.path.event_uid"
   }
@@ -682,6 +680,64 @@ resource "aws_api_gateway_method_response" "calendar_events_patch_response" {
     "method.response.header.Access-Control-Allow-Credentials" = true,
   }
 }
+
+
+resource "aws_api_gateway_method" "calendar_event_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_event.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "calendar_event_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.calendar_event.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+
+  passthrough_behavior = "WHEN_NO_MATCH"
+
+  depends_on = [aws_api_gateway_method.calendar_event_options_method]
+}
+
+resource "aws_api_gateway_method_response" "calendar_event_options_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_event.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.calendar_event_options_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "calendar_event_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_event.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.calendar_event_options_integration,
+    aws_api_gateway_method_response.calendar_event_options_method_response
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,PATCH'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
 
 
 #### gapi events

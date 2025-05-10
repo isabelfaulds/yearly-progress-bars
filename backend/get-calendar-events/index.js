@@ -9,8 +9,21 @@ const corsheaders = {
 };
 const { unmarshall } = require("@aws-sdk/util-dynamodb");
 
-const allowedOrigins = ["https://localhost:5173", "https://localhost:5173"];
+const allowedOrigins = [
+  "https://year-progress-bar.com",
+  "https://localhost:5173",
+];
 const dynamodb = new DynamoDBClient({ region: "us-west-1" });
+
+function titleCase(str) {
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map(function (word) {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
 
 exports.handler = async (event) => {
   let accessControlAllowOrigin = allowedOrigins[0];
@@ -53,12 +66,13 @@ exports.handler = async (event) => {
     // Formatting
     const formattedEvents = result.Items.map((item) => ({
       event_uid: item.event_uid.S,
-      category: "Placeholder",
+      category: item.category?.S ? titleCase(item.category.S) : "Placeholder",
       start_date: item.event_startdate.S,
       start_time: item.event_starttime.S,
       event_name: item.event_name.S,
       minutes: Number(item.minutes.N),
     }));
+    console.log("Returning Formatted Events:", formattedEvents);
 
     return {
       statusCode: 200,
