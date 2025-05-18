@@ -466,3 +466,29 @@ resource "aws_lambda_permission" "allow_apigateway_update_categories" {
   source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/categories"
 }
 
+### categorize event
+resource "aws_s3_bucket_object" "gpt_categorize_event" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/categorize-event/categorize-event.zip"
+  key    = "categorize-event.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "gpt_categorize_event" {
+  function_name = "go-categorize-event"
+  s3_bucket     = aws_s3_bucket_object.gpt_categorize_event.bucket
+  s3_key        = aws_s3_bucket_object.gpt_categorize_event.key
+
+  handler = "bootstrap"
+  runtime = "provided.al2"  
+  depends_on = [aws_s3_bucket_object.gpt_categorize_event]
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+  environment {
+    variables = {
+        OPENAPI_KEY = var.openai_key
+    }
+  }
+}

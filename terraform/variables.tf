@@ -27,3 +27,8 @@ variable "client_secret" {
   description = "client secret"
   type = string
 }
+
+variable "openai_key" {
+  description = "open ai key"
+  type = string
+}
