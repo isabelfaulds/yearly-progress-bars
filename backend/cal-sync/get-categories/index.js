@@ -47,7 +47,7 @@ exports.handler = async (event) => {
     };
 
     const result = await dynamodb.send(new QueryCommand(params));
-
+    console.log(result.Items);
     // Formatting
     const formattedCategories = result.Items.map((item) => ({
       category_uid: item.category_uid.S,
