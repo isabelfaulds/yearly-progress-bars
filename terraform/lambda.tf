@@ -348,7 +348,7 @@ resource "aws_lambda_permission" "allow_apigateway_gapi_pull" {
 ### get calendar events
 resource "aws_s3_bucket_object" "get_calendar_events" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
-  source = "../backend/get-calendar-events/get-calendar-events.zip"
+  source = "../backend/cal-sync/get-calendar-events/get-calendar-events.zip"
   key    = "get-calendar-events.zip"
   content_type  = "application/zip"
 }
