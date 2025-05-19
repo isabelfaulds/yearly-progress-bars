@@ -48,6 +48,8 @@ exports.handler = async (event) => {
   if (allowedOrigins.includes(origin)) {
     accessControlAllowOrigin = origin;
   }
+  console.log(origin);
+  console.log(accessControlAllowOrigin);
   // get token
   const userId = event.headers["user-id"];
   const tokenResponse = await dynamodb.send(

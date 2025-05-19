@@ -313,7 +313,7 @@ resource "aws_lambda_permission" "allow_apigateway_success_response" {
 ### gapi-day pull
 resource "aws_s3_bucket_object" "node_gapi_day_pull" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
-  source = "../backend/gapi-day-pull/gapi-day-pull.zip"
+  source = "../backend/cal-sync/gapi-day-pull/gapi-day-pull.zip"
   key    = "gapi-day-pull.zip"
   content_type  = "application/zip"
 }
