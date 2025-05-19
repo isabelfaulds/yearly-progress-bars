@@ -152,8 +152,8 @@ exports.handler = async (event) => {
       headers: {
         "Access-Control-Allow-Origin": accessControlAllowOrigin,
         ...corsheaders,
-        "Set-Cookie": `refreshToken=${refreshCookieToken}; Path=/; HttpOnly; Max-Age=36000; Secure; SameSite=None; Domain=year-progress-bar.com`,
-        "set-cookie": `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None; Domain=year-progress-bar.com`,
+        "Set-Cookie": `refreshToken=${refreshCookieToken}; Path=/; Max-Age=36000; HttpOnly; SameSite=None; Secure; domain=year-progress-bar.com`,
+        "set-cookie": `accessToken=${cookieToken}; Path=/; Max-Age=3600; HttpOnly; SameSite=None; Secure; domain=year-progress-bar.com`,
       },
     };
   }
