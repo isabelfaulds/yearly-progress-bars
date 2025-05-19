@@ -138,7 +138,7 @@ resource "aws_lambda_permission" "allow_apigateway_invocation_invalidation" {
 ### token refresh
 resource "aws_s3_bucket_object" "node_auth_token_refresh" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
-  source = "../backend/auth-token-refresh/auth-token-refresh.zip"
+  source = "../backend/auth/auth-token-refresh/auth-token-refresh.zip"
   key    = "auth-token-refresh.zip"
   content_type  = "application/zip"
 }
