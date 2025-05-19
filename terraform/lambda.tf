@@ -439,7 +439,7 @@ resource "aws_lambda_permission" "allow_apigateway_get_categories" {
 #### update categories
 resource "aws_s3_bucket_object" "update_categories" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
-  source = "../backend/update-categories/update-categories.zip"
+  source = "../backend/cal-sync/update-categories/update-categories.zip"
   key    = "update-categories.zip"
   content_type  = "application/zip"
 }
