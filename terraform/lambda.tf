@@ -409,7 +409,7 @@ resource "aws_lambda_permission" "allow_apigateway_patch_calendar_events" {
 #### get categories
 resource "aws_s3_bucket_object" "get_categories" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
-  source = "../backend/get-categories/get-categories.zip"
+  source = "../backend/cal-sync/get-categories/get-categories.zip"
   key    = "get-categories.zip"
   content_type  = "application/zip"
 }
