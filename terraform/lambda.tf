@@ -379,7 +379,7 @@ resource "aws_lambda_permission" "allow_apigateway_get_calendar_events" {
 ### patch calendar events
 resource "aws_s3_bucket_object" "patch_calendar_events" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
-  source = "../backend/patch-calendar-events/patch-calendar-events.zip"
+  source = "../backend/cal-sync/patch-calendar-events/patch-calendar-events.zip"
   key    = "patch-calendar-events.zip"
   content_type  = "application/zip"
 }
