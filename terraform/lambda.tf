@@ -109,7 +109,7 @@ resource "aws_lambda_permission" "allow_apigateway_invocation" {
 
 resource "aws_s3_bucket_object" "auth_token_invalidation_zip" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
-  source = "../backend/auth-token-invalidation/auth-token-invalidation.zip"
+  source = "../backend/auth/auth-token-invalidation/auth-token-invalidation.zip"
   key    = "auth-token-invalidation.zip"
   content_type  = "application/zip"
 }
