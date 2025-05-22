@@ -180,7 +180,7 @@ resource "aws_cloudwatch_log_group" "lambda_log_group" {
 ### token authorizer
 resource "aws_s3_bucket_object" "node_auth_token_authorizer" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
-  source = "../backend/auth-token-authorizer/auth-token-authorizer.zip"
+  source = "../backend/auth/auth-token-authorizer/auth-token-authorizer.zip"
   key    = "auth-token-authorizer.zip"
   content_type  = "application/zip"
 }
