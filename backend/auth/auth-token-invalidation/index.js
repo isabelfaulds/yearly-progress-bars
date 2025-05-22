@@ -37,7 +37,7 @@ async function getUserID(accessToken) {
     }
   } catch (error) {
     console.error("Error getting user ID:", error);
-    return null; // Handle the error appropriately
+    return null;
   }
 }
 
