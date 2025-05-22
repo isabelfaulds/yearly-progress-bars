@@ -73,7 +73,7 @@ resource "aws_s3_bucket" "pbars_lambdas_bucket" {
 
 resource "aws_s3_bucket_object" "auth_token_creation_zip" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
-  source = "../backend/auth-token-creation/auth-token-creation.zip"
+  source = "../backend/auth/auth-token-creation/auth-token-creation.zip"
   key    = "auth-token-creation.zip"
   content_type  = "application/zip"
 }

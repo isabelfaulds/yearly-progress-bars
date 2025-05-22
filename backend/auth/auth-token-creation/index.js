@@ -1,10 +1,6 @@
 const admin = require("firebase-admin");
 const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
-const {
-  DynamoDBClient,
-  PutItemCommand,
-  GetItemCommand,
-} = require("@aws-sdk/client-dynamodb");
+const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 const jwt = require("jsonwebtoken");
 const s3Client = new S3Client({ region: "us-west-1" });
 const dynamoClient = new DynamoDBClient({ region: "us-west-1" });
