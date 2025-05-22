@@ -469,7 +469,7 @@ resource "aws_lambda_permission" "allow_apigateway_update_categories" {
 ### categorize event
 resource "aws_s3_bucket_object" "gpt_categorize_event" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
-  source = "../backend/categorize-event/categorize-event.zip"
+  source = "../backend/categorization/categorize-event/categorize-event.zip"
   key    = "categorize-event.zip"
   content_type  = "application/zip"
 }
