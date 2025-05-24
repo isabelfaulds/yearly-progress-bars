@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ArrowPathRoundedSquareIcon } from "@heroicons/react/24/outline";
+import { SparklesIcon } from "@heroicons/react/24/outline";
 import NavButton from "../components/NavButton.jsx";
 import { DateTime } from "luxon";
 import RadarChart from "../components/RadarChart.jsx";
@@ -107,7 +108,11 @@ const Day = () => {
           ...item,
           category: titleCase(item.category),
         }));
-        setTodayCategories(formattedCategories);
+
+        setTodayCategories([
+          { category_uid: "placeholder", category: "Placeholder", minutes: 0 },
+          ...formattedCategories,
+        ]);
       }
     } catch (error) {
       console.error("Sync failed:", error);
@@ -256,6 +261,52 @@ const Day = () => {
     }
   };
 
+  // Trigger event categorization
+  const handleCategorize = async () => {
+    try {
+      const unlabeledEvents = calendarEvents
+        .filter((event) => event.category === "Placeholder")
+        .map((event) => ({
+          eventName: event.event_name,
+          eventUID: event.event_uid,
+        }));
+      const categoriesArr = todayCategories
+        .filter((item) => item.category_uid !== "placeholder")
+        .map((item) => item.category.toLowerCase());
+      const eventResponse = await fetch(
+        import.meta.env.VITE_CLOUDFRONT_CATEGORIZE,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            events: unlabeledEvents,
+            categories: categoriesArr,
+          }),
+        }
+      );
+      if (eventResponse.status === 200) {
+        const responseData = await eventResponse.json();
+        const labeledEvents = responseData.LabeledEvents;
+        setCalendarEvents((prevEvents) =>
+          prevEvents.map((event) => {
+            const labeledMatch = labeledEvents.find(
+              (le) => le.eventUID === event.event_uid
+            );
+            return labeledMatch
+              ? { ...event, category: titleCase(labeledMatch.category) }
+              : event;
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Categorization failed:", error);
+    }
+  };
+
+  // Scroll category select drop down as needed
   useEffect(() => {
     if (highlightedIndex >= 0 && dropdownItemRefs.current[highlightedIndex]) {
       dropdownItemRefs.current[highlightedIndex].scrollIntoView({
@@ -302,19 +353,31 @@ const Day = () => {
           </div>
         </div>
         <div className="p-8 rounded-lg shadow-lg">
-          <RadarChart events={calendarEvents} categories={todayCategories} />
+          <RadarChart
+            events={calendarEvents}
+            categories={todayCategories.filter(
+              (item) => item.category_uid !== "placeholder"
+            )}
+          />
         </div>
       </div>
       {/* Second column: button and events */}
 
       <div className="flex flex-col  md:w-1/2 md:pl-4 md:mt-80">
-        <div className="flex justify-end items-end">
+        <div className="flex justify-end items-end space-x-3">
           <button
             onClick={handleSync}
             className="bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
           >
             Sync Events
             <ArrowPathRoundedSquareIcon className="h-6 w-6 text-blue-500 ml-2" />
+          </button>
+          <button
+            onClick={handleCategorize}
+            className="bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
+          >
+            Categorize
+            <SparklesIcon className="h-6 w-6 text-blue-500 ml-2" />
           </button>
         </div>
         {/* events */}

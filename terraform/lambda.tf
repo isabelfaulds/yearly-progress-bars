@@ -470,6 +470,7 @@ resource "aws_lambda_permission" "allow_apigateway_update_categories" {
 resource "aws_s3_bucket_object" "gpt_categorize_event" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
   source = "../backend/categorization/categorize-event/categorize-event.zip"
+  etag = filemd5("../backend/categorization/categorize-event/categorize-event.zip")
   key    = "categorize-event.zip"
   content_type  = "application/zip"
 }
@@ -491,4 +492,11 @@ resource "aws_lambda_function" "gpt_categorize_event" {
         OPENAPI_KEY = var.openai_key
     }
   }
+}
+
+resource "aws_lambda_permission" "allow_apigateway_labeling_categories" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.gpt_categorize_event.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/*/*"
 }
