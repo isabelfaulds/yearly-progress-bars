@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import Chart from "chart.js/auto";
 
-function calculateCategoryPercentages(graphEvents, eventCategories) {
+function calculateCategoryPercentages(graphEvents, eventCategories, days) {
   const categoryTotals = {};
   const categoryPercentages = [];
 
@@ -17,7 +17,7 @@ function calculateCategoryPercentages(graphEvents, eventCategories) {
 
   eventCategories.forEach((category) => {
     const totalTime = categoryTotals[category.category] || 0;
-    const categoryTimeLimit = category.minutes;
+    const categoryTimeLimit = category.minutes * days;
     const percentage = Math.min((totalTime / categoryTimeLimit) * 100, 100);
     categoryPercentages[category.category] = percentage;
   });
@@ -25,12 +25,12 @@ function calculateCategoryPercentages(graphEvents, eventCategories) {
   return categoryPercentages;
 }
 
-const RadarChart = ({ events, categories }) => {
+const RadarChart = ({ events, categories, days = 1 }) => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
 
   useEffect(() => {
-    const todayResult = calculateCategoryPercentages(events, categories);
+    const todayResult = calculateCategoryPercentages(events, categories, days);
     const categoryKeys = Object.keys(todayResult);
     const categoryValues = Object.values(todayResult);
 
@@ -93,7 +93,7 @@ const RadarChart = ({ events, categories }) => {
     return () => {
       chartInstance.current?.destroy();
     };
-  }, [events, categories]);
+  }, [events, categories, days]);
 
   return (
     <canvas

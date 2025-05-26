@@ -3,6 +3,8 @@ import CustomDayPicker from "../components/DayPicker.jsx";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { addDays, format, isBefore, isEqual } from "date-fns";
 import { FunnelIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
+import LineChart from "../components/LineChart.jsx";
+import CategoryTotals from "../components/CategoryTotals.jsx";
 
 function titleCase(str) {
   return str
@@ -254,6 +256,9 @@ const RangeView = () => {
     console.log("refreshed", startDate.date, endDate.date);
   }, []);
 
+  const daysInCurrentRange = getDaysBetweenDates(startDate.date, endDate.date);
+  const numberOfDays = daysInCurrentRange.length;
+
   // Grab needed dates from map
   const getAllEventsInDateRange = useCallback(() => {
     const allEvents = [];
@@ -263,7 +268,6 @@ const RangeView = () => {
     );
     for (const day of daysInCurrentRange) {
       if (eventsByDate.has(day)) {
-        console.log("in eventsByDate");
         allEvents.push(...eventsByDate.get(day));
       }
     }
@@ -278,30 +282,33 @@ const RangeView = () => {
   return (
     <div
       className="
-        flex flex-col w-screen min-h-screen h-auto m-0 md:flex-row
+      // scrollable full background display
+        w-screen min-h-screen h-auto m-0
         bg-[#000000] bg-cover bg-center
-        pt-5 pl-5 pr-5 px-4 pb-5 sm:pt-12 sm:pl-20 sm:px-20 text-white
+        // global margins
+        pt-5 pl-5 pr-5 pb-5 sm:pt-12 sm:pl-20 text-white
+        flex flex-col 
       "
     >
-      <div className="flex flex-col md:w-3/4 md:pr-4 items-start ">
+      <div className="flex flex-col">
         {/* Date Range Display & Toggle */}
-        <div className="flex flex-row">
+        <div className="flex flex-row ">
           <div className="bg-gradient-to-tl from-blue-300 to-orange-100 rounded-full w-12 h-12 flex items-center justify-center text-2xl font-bold text-gray-800 mr-4">
             {startDate.day}
           </div>
           <div
-            className="text-l mb-2 pl-2
+            className="text-sm md:text-l mb-2 pl-2
             bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center cursor-pointer"
             onClick={toggleCalendar}
           >
             {`${startDate.weekday}, ${startDate.month} ${startDate.day}, ${startDate.year} - ${endDate.weekday}, ${endDate.month} ${endDate.day}, ${endDate.year}`}
           </div>
         </div>
-
         {/* Calendar Popup */}
         {isCalendarOpen && (
-          <div ref={calendarRef} className="relative z-10 mt-4">
-            <div className="absolute top-0 left-0 mt-2">
+          // Overlay over content
+          <div ref={calendarRef} className="relative z-10">
+            <div className="absolute top-0 left-0">
               <CustomDayPicker
                 initialRange={currentSelectedRange}
                 onRangeChange={handleRangeUpdate}
@@ -309,36 +316,39 @@ const RangeView = () => {
             </div>
           </div>
         )}
-
         {/* Categories Filter Button */}
-        <button
-          className="text-l ml-2 mt-2 mb-2 pl-2
-            bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center cursor-pointer"
-          onClick={toggleCategories}
-        >
-          <FunnelIcon className="h-6 w-6 text-blue-500 ml-2 mr-2" />
-          Categories
-        </button>
-
+        <div className="items-start">
+          <button
+            className="text-sm md:text-l ml-2 mt-2 mb-2 pl-2
+            bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex cursor-pointer"
+            onClick={toggleCategories}
+          >
+            <FunnelIcon className="h-6 w-6 text-blue-500 ml-2 mr-2 " />
+            Categories
+          </button>
+        </div>
         {/* Categories Filter */}
         {isCategoriesOpen && (
-          <div
-            ref={categoriesRef}
-            className="
+          // Overlay over content
+          <div className="relative z-10">
+            <div className="absolute top-0 left-0">
+              <div
+                ref={categoriesRef}
+                className="
                   relative z-10 rounded-lg
                   bg-gray-700 shadow-lg
                   overflow-y-auto max-h-48 mt-2
                   grid grid-cols-2 gap-2 p-2 
             "
-          >
-            {categories.map((categoryItem, itemIndex) => {
-              const isCategorySelected = selectedCategoriesMap.has(
-                categoryItem.category
-              );
-              return (
-                <div
-                  key={categoryItem.category}
-                  className={`
+              >
+                {categories.map((categoryItem, itemIndex) => {
+                  const isCategorySelected = selectedCategoriesMap.has(
+                    categoryItem.category
+                  );
+                  return (
+                    <div
+                      key={categoryItem.category}
+                      className={`
                     px-4 py-2 cursor-pointer transition-colors rounded-md text-sm
                     flex items-center justify-between
                     ${
@@ -347,34 +357,58 @@ const RangeView = () => {
                         : "hover:bg-gray-600"
                     }
                   `}
-                  onClick={() => handleCategoryToggle(categoryItem)}
-                >
-                  <span className="truncate">{categoryItem.category}</span>
-                  <CheckCircleIcon
-                    className={`w-5 h-5 text-white ml-2 ${
-                      isCategorySelected ? "opacity-100" : "opacity-0"
-                    }`}
-                  />
-                </div>
-              );
-            })}
+                      onClick={() => handleCategoryToggle(categoryItem)}
+                    >
+                      <span className="truncate">{categoryItem.category}</span>
+                      <CheckCircleIcon
+                        className={`w-5 h-5 text-white ml-2 ${
+                          isCategorySelected ? "opacity-100" : "opacity-0"
+                        }`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
-        <div>
-          event
-          {filteredEventsForVisuals.map((event) => (
-            <div key={event.event_uid} style={{ marginBottom: "5px" }}>
-              Event UID: {event.event_uid} (Category: {event.category})
-            </div>
-          ))}
-        </div>
-        {/*TODO: Line Chart */}
-        {/* <LineChart events={calendarEvents}
-        categories={catgories.filter((item) => selectedCategoriesMap.has(item.category_uid))} /> */}
+        {/* Charts */}
+        <div className="flex flex-col md:flex-row items-center">
+          {/* Line Chart */}
+          {/* Keep chart in its own stable container, else drops */}
+          <div className="p-4 rounded-lg shadow-lg h-[350px] md:h-[400px] w-full md:w-2/3">
+            <LineChart
+              events={filteredEventsForVisuals}
+              categories={categories.filter((item) =>
+                selectedCategoriesMap.has(item.category)
+              )}
+              daysArray={daysInCurrentRange}
+            />
+          </div>
 
-        {/*TODO: Radar Chart */}
-        {/* <RadarChart events={calendarEvents}
-        categories={catgories.filter((item) => selectedCategoriesMap.has(item.category_uid))}/> */}
+          {/* Radar Chart */}
+          {/* Keep chart in its own stable container, else drops */}
+          <div className="p-4 rounded-lg shadow-lg w-full md:w-1/3 mt-4 md:mt-0 h-80 md:h-96">
+            <RadarChart
+              events={filteredEventsForVisuals}
+              categories={categories.filter((item) =>
+                selectedCategoriesMap.has(item.category)
+              )}
+              days={numberOfDays}
+            />
+          </div>
+          {/* /Charts */}
+        </div>
+
+        {/* Totals Table  */}
+        <div className="mx-auto md:w-1/2 flex flex-row ">
+          <CategoryTotals
+            events={filteredEventsForVisuals}
+            categories={categories.filter((item) =>
+              selectedCategoriesMap.has(item.category)
+            )}
+          ></CategoryTotals>
+        </div>
       </div>
     </div>
   );
