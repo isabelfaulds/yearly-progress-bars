@@ -336,7 +336,7 @@ const RangeView = () => {
                 ref={categoriesRef}
                 className="
                   relative z-10 rounded-lg
-                  bg-gray-700 shadow-lg
+                  bg-gray-800 shadow-lg
                   overflow-y-auto max-h-48 mt-2
                   grid grid-cols-2 gap-2 p-2 
             "
@@ -353,7 +353,7 @@ const RangeView = () => {
                     flex items-center justify-between
                     ${
                       isCategorySelected
-                        ? "bg-blue-600 hover:bg-blue-700"
+                        ? "bg-blue-800 hover:bg-blue-400"
                         : "hover:bg-gray-600"
                     }
                   `}
