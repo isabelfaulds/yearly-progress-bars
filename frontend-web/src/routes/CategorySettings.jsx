@@ -232,7 +232,7 @@ const CategorySettings = () => {
     >
       {/* Header */}
       <div className="flex flex-row items-center justify-between w-full pr-2">
-        <div className="text-white pl-8 text-2xl sm:text-2xl  py-4 font-sans">
+        <div className="text-white pl-8 text-2xl sm:text-2xl py-4">
           Daily Settings
         </div>
         <button

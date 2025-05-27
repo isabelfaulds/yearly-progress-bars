@@ -1,4 +1,3 @@
-import "./index-output.css";
 import ProgressBar from "./routes/ProgressBar";
 import Day from "./routes/Day";
 import Settings from "./routes/BarSettings";

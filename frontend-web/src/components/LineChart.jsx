@@ -3,6 +3,7 @@ import { Chart, registerables, Colors } from "chart.js";
 import { format } from "date-fns";
 
 Chart.register(...registerables, Colors);
+Chart.defaults.font.family = "Inter";
 
 function calculateDatasets(events, categories, daysArray) {
   const categoriesMap = new Map();

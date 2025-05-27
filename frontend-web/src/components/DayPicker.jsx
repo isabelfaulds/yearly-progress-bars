@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { DayPicker, getDefaultClassNames } from "react-day-picker";
-import "react-day-picker/dist/style.css";
 import { addDays } from "date-fns";
 
 const CustomDayPicker = ({ onRangeChange, initialRange }) => {
@@ -36,7 +35,7 @@ const CustomDayPicker = ({ onRangeChange, initialRange }) => {
         endMonth={new Date()}
         classNames={{
           today: "font-bold text-blue-400",
-          day: "rdp-day hover:bg-blue-300 hover:rounded-full",
+          day: "rdp-day hover:bg-blue-400 hover:rounded-full",
           selected: "hover:!rounded-none text-black",
           chevron: "fill-blue-400",
         }}

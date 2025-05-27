@@ -1,6 +1,8 @@
 import { useRef, useEffect } from "react";
 import Chart from "chart.js/auto";
 
+Chart.defaults.font.family = "Inter";
+
 function calculateCategoryPercentages(graphEvents, eventCategories, days) {
   const categoryTotals = {};
   const categoryPercentages = [];

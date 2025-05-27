@@ -35,7 +35,7 @@ const CategoryTotals = ({ events, categories }) => {
         </thead>
         <tbody>
           {sortedCategoryTimes.map(([category, timeData]) => (
-            <tr key={category} className=" text-sm  tracking-wider">
+            <tr key={category} className="font-lexend text-sm  tracking-wider">
               <td className="py-3 text-white">{category}</td>
               <td className="py-3 text-white text-right">
                 {timeData.formattedTime}
