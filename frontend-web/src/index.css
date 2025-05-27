@@ -1,7 +1,13 @@
 /*! tailwindcss v4.0.3 | MIT License | https://tailwindcss.com */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap");
+/*@import url before tailwind */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Lexend:wght@100..900&display=swap");
 @import "tailwindcss";
 
+@theme {
+  --color-coolgray: #111727;
+  --font-inter: "Inter", sans-serif;
+  --font-lexend: "Lexend", sans-serif;
+}
 @layer theme, base, components, utilities;
 @layer theme {
   :root,
@@ -130,8 +136,8 @@
     --color-blue-400: oklch(0.707 0.165 254.624);
     --color-blue-500: oklch(0.623 0.214 259.815);
     --color-blue-600: oklch(0.546 0.245 262.881);
-    --color-blue-700: oklch(0.488 0.243 264.376);
     --color-blue-800: oklch(0.424 0.199 265.638);
+    --color-blue-700: oklch(0.488 0.243 264.376);
     --color-blue-900: oklch(0.379 0.146 265.522);
     --color-blue-950: oklch(0.282 0.091 267.935);
     --color-indigo-50: oklch(0.962 0.018 272.314);
