@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, getDefaultClassNames } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { addDays } from "date-fns";
 
 const CustomDayPicker = ({ onRangeChange, initialRange }) => {
   const [range, setRange] = useState(initialRange);
+  const defaultClassNames = getDefaultClassNames();
+  console.log("defaultclassnames", defaultClassNames);
 
   // Default 7 days before today
   const defaultSelected = {
@@ -36,6 +38,7 @@ const CustomDayPicker = ({ onRangeChange, initialRange }) => {
           today: "font-bold text-blue-400",
           day: "rdp-day hover:bg-blue-300 hover:rounded-full",
           selected: "hover:!rounded-none text-black",
+          chevron: "fill-blue-400",
         }}
       />
     </div>

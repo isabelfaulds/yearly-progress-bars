@@ -670,6 +670,15 @@ body {
   border-radius: 14px;
   transition: width 1s;
 }
+/* react day picker */
+.rdp-root {
+  --rdp-accent-color: rgb(
+    59,
+    108,
+    187
+  ); /* The accent color used for selected days and UI elements. */
+  --rdp-accent-background-color: #c6c6d7; /* The accent background color used for selected days and UI elements. */
+}
 @media (max-width: 600px) {
   .progress-bar {
     height: 20px;
