@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "../index-output.css";
+import "../index.css";
 import { Bars2Icon } from "@heroicons/react/24/solid";
 import { min } from "mathjs";
 
