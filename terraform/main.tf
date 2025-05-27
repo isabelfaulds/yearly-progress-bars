@@ -157,6 +157,11 @@ resource "aws_cloudfront_distribution" "pbars_cloudfront" {
     min_ttl = 0  # Minimum TTL for caching
     default_ttl = 86400  # Default TTL for caching (1 day)
     max_ttl = 86400  # Maximum TTL for caching
+
+    function_association { # www redirect js
+      event_type = "viewer-request"
+      function_arn = aws_cloudfront_function.www_redirect.arn
+    }
   }
 
   # Edges for Americas, Europe, Asia 
@@ -201,6 +206,14 @@ resource "aws_route53_record" "google_site_verification" {
   records = ["gv-65kx35byon4ykz.dv.googlehosted.com"]  # Google domain verification
 }
 
+# www redirect
+resource "aws_cloudfront_function" "www_redirect" {
+  name    = "www-redirect"
+  runtime = "cloudfront-js-2.0"
+  comment = "Redirect www to root domain"
+  publish = true
+  code    = file("../backend/www-redirect/www-redirect.js")
+}
 
 #### S3 Frontend Files
 
