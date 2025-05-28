@@ -5,6 +5,7 @@ import NavButton from "../components/NavButton.jsx";
 import { DateTime } from "luxon";
 import RadarChart from "../components/RadarChart.jsx";
 import { useLocation, useNavigate } from "react-router-dom";
+import useMediaQuery from "../hooks/useMediaQuery";
 
 const Day = () => {
   const location = useLocation();
@@ -14,6 +15,7 @@ const Day = () => {
   const month = currentDate.toLocaleDateString("en-US", { month: "long" });
   const weekday = currentDate.toLocaleDateString("en-US", { weekday: "long" });
   const year = currentDate.toLocaleDateString("en-US", { year: "numeric" });
+  const isMediumScreenOrLarger = useMediaQuery("(min-width: 768px)");
 
   // Refresh After Settings Category Update
   useEffect(() => {
@@ -448,7 +450,7 @@ const Day = () => {
       </div>
 
       <div className=" fixed top-4 sm:bottom-4  md:top-auto right-4 p-1 rounded-full ">
-        <NavButton />
+        <NavButton direction={isMediumScreenOrLarger ? "up" : "down"} />
       </div>
     </div>
   );

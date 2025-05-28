@@ -5,6 +5,7 @@ import { addDays, format, isBefore, isEqual } from "date-fns";
 import { FunnelIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
 import LineChart from "../components/LineChart.jsx";
 import CategoryTotals from "../components/CategoryTotals.jsx";
+import NavButton from "../components/NavButton.jsx";
 
 function titleCase(str) {
   return str
@@ -409,6 +410,9 @@ const RangeView = () => {
             )}
           ></CategoryTotals>
         </div>
+      </div>
+      <div className="fixed bottom-4 right-4 p-1 rounded-full ">
+        <NavButton direction="up" />
       </div>
     </div>
   );
