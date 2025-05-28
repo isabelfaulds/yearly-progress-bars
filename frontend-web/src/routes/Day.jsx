@@ -6,6 +6,23 @@ import { DateTime } from "luxon";
 import RadarChart from "../components/RadarChart.jsx";
 import { useLocation, useNavigate } from "react-router-dom";
 import useMediaQuery from "../hooks/useMediaQuery";
+import { useCategories } from "../hooks/useCategories.jsx";
+import { useQueryClient } from "@tanstack/react-query";
+
+const baseContainerClasses = `bg-[#000000]
+    /* Layout */
+    flex flex-col
+    w-screen min-h-screen h-auto m-0
+    md:flex-row
+
+    /* Background */
+    bg-[#000000] bg-cover bg-center
+
+    /* Spacing */
+    pt-5 pl-5 pr-5 px-4 pb-5
+    sm:pt-12 sm:pl-20 sm:px-20
+
+    text-white`;
 
 const Day = () => {
   const location = useLocation();
@@ -16,20 +33,20 @@ const Day = () => {
   const weekday = currentDate.toLocaleDateString("en-US", { weekday: "long" });
   const year = currentDate.toLocaleDateString("en-US", { year: "numeric" });
   const isMediumScreenOrLarger = useMediaQuery("(min-width: 768px)");
+  const queryClient = useQueryClient();
 
   // Refresh After Settings Category Update
   useEffect(() => {
     const refreshDataWithDelay = async () => {
       if (location?.state?.refreshTimestamp) {
-        console.log("Refreshed");
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        getCategories();
+        queryClient.invalidateQueries(["categories"]);
+        console.log("Refreshed - Categories");
         navigate(location.pathname, { replace: true, state: {} }); // reset
       }
     };
 
     refreshDataWithDelay();
-  }, [location, getCategories, navigate]);
+  }, [location, queryClient, navigate]);
 
   function titleCase(str) {
     return str
@@ -91,38 +108,18 @@ const Day = () => {
     }
   }
 
-  // Get all categories
-  async function getCategories() {
-    try {
-      const categoryResponse = await fetch(
-        import.meta.env.VITE_CLOUDFRONT_CATEGORIES,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-      if (categoryResponse.status === 200) {
-        const responseData = await categoryResponse.json();
-        const formattedCategories = responseData.categories.map((item) => ({
-          ...item,
-          category: titleCase(item.category),
-        }));
-
-        setTodayCategories([
-          { category_uid: "placeholder", category: "Placeholder", minutes: 0 },
-          ...formattedCategories,
-        ]);
-      }
-    } catch (error) {
-      console.error("Sync failed:", error);
-    }
-  }
-
   const [calendarEvents, setCalendarEvents] = useState([]);
+  const { data: categories, isLoading, error } = useCategories();
   const [todayCategories, setTodayCategories] = useState([]);
+
+  useEffect(() => {
+    if (categories) {
+      setTodayCategories([
+        { category_uid: "placeholder", category: "Placeholder", minutes: 0 },
+        ...categories,
+      ]);
+    }
+  }, [categories]);
 
   const [editingIndex, setEditingIndex] = useState(null);
   const [editedText, setEditedText] = useState("");
@@ -323,27 +320,28 @@ const Day = () => {
   }, [filteredCategories]);
 
   useEffect(() => {
-    getCategories();
     getEvents();
   }, []);
 
+  if (isLoading) {
+    return (
+      <div className={baseContainerClasses}>
+        <div>Loading Day View...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.log("Error - Loading : ", error.message);
+    return (
+      <div className={baseContainerClasses}>
+        <div>Error Loading</div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className="bg-[#000000]
-    /* Layout */
-    flex flex-col
-    w-screen min-h-screen h-auto m-0
-    md:flex-row
-
-    /* Background */
-    bg-[#000000] bg-cover bg-center
-
-    /* Spacing */
-    pt-5 pl-5 pr-5 px-4 pb-5
-    sm:pt-12 sm:pl-20 sm:px-20
-
-    text-white"
-    >
+    <div className={baseContainerClasses}>
       <div className="flex flex-col md:w-3/4 md:pr-4 items-start ">
         {/* First column: graph, title */}
         <div className="flex flex-row">
