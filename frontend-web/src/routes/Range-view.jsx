@@ -6,16 +6,16 @@ import { FunnelIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
 import LineChart from "../components/LineChart.jsx";
 import CategoryTotals from "../components/CategoryTotals.jsx";
 import NavButton from "../components/NavButton.jsx";
+import { useCategories } from "../hooks/useCategories.jsx";
 
-function titleCase(str) {
-  return str
-    .toLowerCase()
-    .split(" ")
-    .map(function (word) {
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    })
-    .join(" ");
-}
+const baseContainerClasses = `
+  // scrollable full background display
+  w-screen min-h-screen h-auto m-0
+  bg-[#000000] bg-cover bg-center
+  // global margins
+  pt-5 pl-5 pr-5 pb-5 sm:pt-12 sm:pl-20 text-white
+  flex flex-col
+`;
 
 // array of all days
 function getDaysBetweenDates(startDate, endDate) {
@@ -62,10 +62,19 @@ const RangeView = () => {
   const categoriesRef = useRef(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
-  const [categories, setCategories] = useState([]);
+  const { data: categories, isLoading, error } = useCategories();
   // selected categories
   const [selectedCategoriesMap, setSelectedCategoriesMap] = useState(new Map());
   const [eventsByDate, setEventsByDate] = useState(new Map());
+
+  useEffect(() => {
+    if (categories) {
+      const initialSelectedMap = new Map();
+      categories.forEach((cat) => initialSelectedMap.set(cat.category, cat));
+      setSelectedCategoriesMap(initialSelectedMap);
+    }
+    console.log("Updated - categories: ", categories);
+  }, [categories]);
 
   // memoized if passed to children
   const fetchAndCacheEventsForDateRange = useCallback(
@@ -220,43 +229,6 @@ const RangeView = () => {
     };
   }, [isCalendarOpen, isCategoriesOpen]);
 
-  // Get Categories, Reset Selected
-  async function getCategories() {
-    try {
-      const categoryResponse = await fetch(
-        import.meta.env.VITE_CLOUDFRONT_CATEGORIES,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-      if (categoryResponse.status === 200) {
-        const responseData = await categoryResponse.json();
-        const formattedCategories = responseData.categories.map((item) => ({
-          ...item,
-          category: titleCase(item.category),
-        }));
-
-        setCategories([...formattedCategories]);
-
-        const initialSelectedMap = new Map();
-        formattedCategories.forEach((cat) =>
-          initialSelectedMap.set(cat.category, cat)
-        );
-        setSelectedCategoriesMap(initialSelectedMap);
-      }
-    } catch (error) {
-      console.error("Sync failed:", error);
-    }
-  }
-  useEffect(() => {
-    getCategories();
-    console.log("refreshed", startDate.date, endDate.date);
-  }, []);
-
   const daysInCurrentRange = getDaysBetweenDates(startDate.date, endDate.date);
   const numberOfDays = daysInCurrentRange.length;
 
@@ -280,17 +252,25 @@ const RangeView = () => {
     (event) => event.category && selectedCategoriesMap.has(event.category)
   );
 
+  if (isLoading) {
+    return (
+      <div className={baseContainerClasses}>
+        <div>Loading Range View...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.log("Error - Loading : ", error.message);
+    return (
+      <div className={baseContainerClasses}>
+        <div>Error Loading</div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className="
-      // scrollable full background display
-        w-screen min-h-screen h-auto m-0
-        bg-[#000000] bg-cover bg-center
-        // global margins
-        pt-5 pl-5 pr-5 pb-5 sm:pt-12 sm:pl-20 text-white
-        flex flex-col 
-      "
-    >
+    <div className={baseContainerClasses}>
       <div className="flex flex-col">
         {/* Date Range Display & Toggle */}
         <div className="flex flex-row ">
