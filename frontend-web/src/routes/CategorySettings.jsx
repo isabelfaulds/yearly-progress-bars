@@ -7,10 +7,43 @@ import { MinusCircleIcon } from "@heroicons/react/24/solid";
 import StyledSubmitButton from "../components/SubmitButton";
 import StyledSelect from "../components/StyledSelect";
 import StyledInput from "../components/StyledSubmit";
+import { useCategories } from "../hooks/useCategories.jsx";
+import { useQueryClient } from "@tanstack/react-query";
+
+const baseContainerClasses = `bg-[#000000] bg-cover bg-center 
+    w-screen min-h-screen m-0 flex flex-col
+    pt-10 pl-1 px-4
+    sm:pt-12  sm:px-20`;
+
+function titleCase(str) {
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map(function (word) {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
 
 const CategorySettings = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { data: dbCategories, isLoading, error } = useCategories();
   const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    if (dbCategories) {
+      const formattedCategories = dbCategories.map((item) => ({
+        ...item,
+        category: titleCase(item.category),
+        totalHours: Math.floor(item.minutes / 60),
+        remainderMinutes: item.minutes % 60,
+        changeStatus: null,
+      }));
+      setCategories([...formattedCategories]);
+    }
+  }, [dbCategories]);
+
   const [newCategory, setNewCategory] = useState("");
   const [timeAmount, setTimeAmount] = useState("");
   const [timeUnit, setTimeUnit] = useState("minutes");
@@ -18,54 +51,16 @@ const CategorySettings = () => {
   const [editedValues, setEditedValues] = useState({}); // Store edited values for each row and field
   const [deletes, setDeletes] = useState([]);
   const editedInputRef = useRef(null);
-  const [hasChanges, setHasChanges] = useState(false);
 
   const handleSaveAndNavigate = async () => {
     try {
       await postCategories();
-      navigate("/day-view", { state: { refreshTimestamp: Date.now() } });
+      queryClient.invalidateQueries(["categories"]);
+      navigate(-1);
     } catch (error) {
       console.error("Error saving categories:", error);
     }
   };
-
-  function titleCase(str) {
-    return str
-      .toLowerCase()
-      .split(" ")
-      .map(function (word) {
-        return word.charAt(0).toUpperCase() + word.slice(1);
-      })
-      .join(" ");
-  }
-
-  async function getCategories() {
-    try {
-      const categoryResponse = await fetch(
-        import.meta.env.VITE_CLOUDFRONT_CATEGORIES,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-      if (categoryResponse.status === 200) {
-        const responseData = await categoryResponse.json();
-        const formattedCategories = responseData.categories.map((item) => ({
-          ...item,
-          category: titleCase(item.category),
-          totalHours: Math.floor(item.minutes / 60),
-          remainderMinutes: item.minutes % 60,
-          changeStatus: null,
-        }));
-        setCategories(formattedCategories);
-      }
-    } catch (error) {
-      console.error("Sync failed:", error);
-    }
-  }
 
   async function postCategories() {
     try {
@@ -100,8 +95,7 @@ const CategorySettings = () => {
           }
         );
         if (categoryResponse.status === 200) {
-          console.log("Categories - Updated");
-          setHasChanges(true);
+          console.log("Posted - Categories");
         }
       }
     } catch (error) {
@@ -174,14 +168,6 @@ const CategorySettings = () => {
     }
   };
 
-  useEffect(() => {
-    getCategories();
-  }, []);
-
-  useEffect(() => {
-    console.log("Categories - Changed");
-  }, [categories]);
-
   const addCategory = (e) => {
     e.preventDefault();
     if (newCategory.trim() !== "" && timeAmount.trim() !== "") {
@@ -224,13 +210,25 @@ const CategorySettings = () => {
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className={baseContainerClasses}>
+        <div>Loading Settings...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.log("Error - Loading : ", error.message);
+    return (
+      <div className={baseContainerClasses}>
+        <div>Error Loading</div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className="bg-[#000000] bg-cover bg-center 
-    w-screen min-h-screen m-0 flex flex-col
-    pt-10 pl-1 px-4
-    sm:pt-12  sm:px-20"
-    >
+    <div className={baseContainerClasses}>
       {/* Header */}
       <div className="flex flex-row items-center justify-between w-full pr-2">
         <div className="text-white pl-8 text-2xl sm:text-2xl py-4">
