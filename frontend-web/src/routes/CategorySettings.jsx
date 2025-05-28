@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import NavButton from "../components/NavButton.jsx";
 
 import { ChevronRightIcon } from "@heroicons/react/24/solid";
 import { MinusCircleIcon } from "@heroicons/react/24/solid";
@@ -394,6 +395,9 @@ const CategorySettings = () => {
           </StyledSelect>
           <StyledSubmitButton>Add</StyledSubmitButton>
         </form>
+      </div>
+      <div className="fixed bottom-4 right-4 p-1 rounded-full ">
+        <NavButton direction="up" />
       </div>
     </div>
   );
