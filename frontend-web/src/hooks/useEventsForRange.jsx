@@ -32,7 +32,7 @@ export const useEventsForRange = (startDate, endDate) => {
 
   return {
     eventsByDate,
-    isLoading: queries.some((q) => q.isLoading),
-    isError: queries.some((q) => q.isError),
+    eventsIsLoading: queries.some((q) => q.isLoading),
+    eventsIsError: queries.some((q) => q.isError),
   };
 };
