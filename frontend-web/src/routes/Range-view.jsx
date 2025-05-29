@@ -7,6 +7,7 @@ import LineChart from "../components/LineChart.jsx";
 import CategoryTotals from "../components/CategoryTotals.jsx";
 import NavButton from "../components/NavButton.jsx";
 import { useCategories } from "../hooks/useCategories.jsx";
+import { useEventsForRange } from "../hooks/useEventsForRange.jsx";
 
 const baseContainerClasses = `
   // scrollable full background display
@@ -65,7 +66,10 @@ const RangeView = () => {
   const { data: categories, isLoading, error } = useCategories();
   // selected categories
   const [selectedCategoriesMap, setSelectedCategoriesMap] = useState(new Map());
-  const [eventsByDate, setEventsByDate] = useState(new Map());
+  const { eventsByDate, eventsIsLoading, eventsIsError } = useEventsForRange(
+    startDate.date,
+    endDate.date
+  );
 
   useEffect(() => {
     if (categories) {
@@ -75,75 +79,6 @@ const RangeView = () => {
     }
     console.log("Updated - categories: ", categories);
   }, [categories]);
-
-  // memoized if passed to children
-  const fetchAndCacheEventsForDateRange = useCallback(
-    async (startDateObj, endDateObj) => {
-      const eventDays = getDaysBetweenDates(startDateObj, endDateObj);
-      console.log("Days to potentially fetch events for:", eventDays);
-
-      setEventsByDate((prevEventsByDate) => {
-        const newEventsMap = new Map(prevEventsByDate); // Copy cache
-        const fetchPromises = []; // Track promises
-        for (const day of eventDays) {
-          // If day not in eventsMap, fetch
-          if (!newEventsMap.has(day)) {
-            console.log(`Fetching events for ${day}...`);
-            const fetchPromise = fetch(
-              import.meta.env.VITE_CLOUDFRONT_CALENDAR_EVENTS +
-                `?event_date=${day}`,
-              {
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-              }
-            )
-              .then((response) => {
-                if (response.status === 200) {
-                  return response.json();
-                } else {
-                  console.warn(
-                    `Failed to fetch events for ${day}: Status ${response.status}`
-                  );
-                  return { events: [] }; // Return an empty if fail
-                }
-              })
-              .then((data) => {
-                console.log(`Received events for ${day}:`, data.events);
-                newEventsMap.set(day, data.events); // Store events for the day
-              })
-              .catch((error) => {
-                console.error(`Error fetching events for ${day}:`, error);
-                newEventsMap.set(day, []); // Store an empty array for errors
-              });
-            fetchPromises.push(fetchPromise);
-          } else {
-            console.log(`Events for ${day} already in cache.`);
-          }
-        }
-
-        // Wait for all fetches to complete then update
-        if (fetchPromises.length > 0) {
-          Promise.allSettled(fetchPromises).then(() => {
-            // Reset final combined state, force re-render
-            setEventsByDate((finalMap) => new Map(newEventsMap));
-            console.log("Update - eventsByDate");
-          });
-        } else {
-          // If nothing new, will return prev copy
-        }
-        return newEventsMap;
-      });
-    },
-    []
-  );
-
-  // Refresh date map on date selection changes
-  useEffect(() => {
-    if (startDate.date && endDate.date) {
-      fetchAndCacheEventsForDateRange(startDate.date, endDate.date);
-    }
-  }, [startDate, endDate, fetchAndCacheEventsForDateRange]);
 
   // Update Start & End on changes from DayPicker
   const handleRangeUpdate = (newRange) => {
