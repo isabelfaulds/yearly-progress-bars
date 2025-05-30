@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import NavButton from "../components/NavButton.jsx";
 
-import { ChevronRightIcon } from "@heroicons/react/24/solid";
-import { MinusCircleIcon } from "@heroicons/react/24/solid";
+import { ChevronRightIcon, MinusCircleIcon } from "@heroicons/react/24/solid";
+import {} from "@heroicons/react/24/solid";
 import StyledSubmitButton from "../components/SubmitButton";
 import StyledSelect from "../components/StyledSelect";
 import StyledInput from "../components/StyledSubmit";
 import { useCategories } from "../hooks/useCategories.jsx";
 import { useQueryClient } from "@tanstack/react-query";
+import CatIconComponent from "../assets/cat.svg?react";
+import { CubeIcon } from "@heroicons/react/24/outline";
 
 const baseContainerClasses = `bg-[#000000] bg-cover bg-center 
     w-screen min-h-screen m-0 flex flex-col
@@ -30,6 +32,7 @@ const CategorySettings = () => {
   const queryClient = useQueryClient();
   const { data: dbCategories, isLoading, error } = useCategories();
   const [categories, setCategories] = useState([]);
+  const [cubeIconSelect, setCubeIconSelect] = useState(false);
 
   useEffect(() => {
     if (dbCategories) {
@@ -102,6 +105,10 @@ const CategorySettings = () => {
       console.error("Sync failed:", error);
     }
   }
+
+  const handleCategoryIconToggle = () => {
+    setCubeIconSelect(!cubeIconSelect);
+  };
 
   const handleTimeClick = (index, field, currentValue) => {
     setEditingCell({ index, field });
@@ -232,7 +239,7 @@ const CategorySettings = () => {
       {/* Header */}
       <div className="flex flex-row items-center justify-between w-full pr-2">
         <div className="text-white pl-8 text-2xl sm:text-2xl py-4">
-          Daily Settings
+          Category Settings
         </div>
         <button
           onClick={handleSaveAndNavigate}
@@ -241,8 +248,8 @@ const CategorySettings = () => {
           outline-1 
           outline-gray-400
           shadow-lg
-          bg-gray-600
-        hover:bg-gradient-to-r hover:from-gray-400 hover:to-gray-600
+          bg-gray-700
+        hover:bg-gradient-to-r hover:from-gray-600 hover:to-gray-700
           hover:shadow-xl
           hover:ring-1
           hover:ring-gray-600
@@ -260,8 +267,49 @@ const CategorySettings = () => {
         <hr className="border-t border-gray-300 my-4" />
       </div>
 
+      {/* Navigation Icon */}
+      <div className="flex items-center gap-3 pl-8">
+        <span className="text-gray-300 font-medium">Nav Icon Style</span>
+        <button
+          onClick={handleCategoryIconToggle}
+          className={`relative w-24 h-12 rounded-full p-0 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+      ${cubeIconSelect ? "bg-gray-700" : "bg-gray-700"}
+    `}
+        >
+          {/* Track */}
+          <div className="relative w-full h-full">
+            {/* Thumb with sliding animation */}
+            <div
+              className={`absolute top-1/2 transform -translate-y-1/2 h-10 w-10 rounded-full bg-blue-600 shadow-md transition-all duration-300 flex items-center justify-center
+          ${cubeIconSelect ? "left-1" : "left-[calc(100%-2.75rem)]"}
+        `}
+            >
+              {cubeIconSelect ? (
+                <CubeIcon className="w-6 h-6 text-white" />
+              ) : (
+                <CatIconComponent className="w-6 h-6 text-white" />
+              )}
+            </div>
+
+            {/* Not Selected Icon */}
+            <div className="flex justify-between w-full h-full px-2">
+              <CubeIcon
+                className={`mt-3 ml-2 w-6 h-6 transition-opacity ${
+                  cubeIconSelect ? "opacity-0" : "opacity-70"
+                }`}
+              />
+              <CatIconComponent
+                className={`mt-3 mr-2 w-6 h-6 transition-opacity ${
+                  !cubeIconSelect ? "opacity-0" : "opacity-70"
+                }`}
+              />
+            </div>
+          </div>
+        </button>
+      </div>
+
       {/* Saved Categories */}
-      <div className="flex flex-col pl-4 mt-5 items-center">
+      <div className="flex flex-col pl-4 mt-1 items-center">
         <ul className="pt-3 px-4 mb-4 w-full">
           {categories.map((item, index) => (
             <li

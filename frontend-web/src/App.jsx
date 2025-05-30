@@ -37,7 +37,7 @@ function App() {
           <Routes>
             <Route path="/" element={<ProgressBar />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/day-view/settings" element={<CategorySettings />} />
+            <Route path="/categories/settings" element={<CategorySettings />} />
             <Route path="/login" element={<Login />} />
             <Route path="/day-view" element={<Day />} />
             <Route path="/range-view" element={<RangeView />} />

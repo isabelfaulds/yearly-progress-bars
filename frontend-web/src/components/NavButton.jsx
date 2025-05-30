@@ -4,9 +4,10 @@ import {
   Bars4Icon,
   CogIcon,
   CalendarDateRangeIcon,
+  CubeIcon,
 } from "@heroicons/react/24/outline";
 import { SunIcon } from "@heroicons/react/24/solid";
-
+import CatIconComponent from "../assets/cat.svg?react";
 import { useNavigate } from "react-router-dom";
 
 function NavButton({ direction = "down" }) {
@@ -79,7 +80,13 @@ function NavButton({ direction = "down" }) {
             <CalendarDateRangeIcon className="w-7 h-7 md:w-10 md:h-10  p-1 text-white rounded-full hover:border-2 bg-gray-800" />
           </button>
           <button
-            onClick={() => handleNavigation("/day-view/settings")}
+            onClick={() => handleNavigation("/categories")}
+            className="mb-2"
+          >
+            <CubeIcon className="w-7 h-7 md:w-10 md:h-10 p-1 text-white rounded-full hover:border-2 bg-gray-800" />
+          </button>
+          <button
+            onClick={() => handleNavigation("/categories/settings")}
             className="mb-2"
           >
             <CogIcon className="w-7 h-7 md:w-10 md:h-10 p-1 text-white rounded-full hover:border-2 bg-gray-800" />
