@@ -92,7 +92,7 @@ function chartjsDatasets(categoryDatasets) {
   return datasets;
 }
 
-const LineChart = ({ events, categories, daysArray }) => {
+const LineChart = ({ events, categories, daysArray, showLegend = true }) => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
   console.log("daysArray", daysArray);
@@ -117,6 +117,7 @@ const LineChart = ({ events, categories, daysArray }) => {
       fullSize: true,
       plugins: {
         legend: {
+          display: showLegend,
           position: "bottom",
           align: "start",
           labels: {
