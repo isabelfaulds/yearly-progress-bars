@@ -1,3 +1,5 @@
+import { EllipsisHorizontalIcon } from "@heroicons/react/24/solid";
+
 const fallbackImages = [
   "https://generic-fallback-card-images-us-west-1.s3.us-west-1.amazonaws.com/muted-abstract-shapes-gemini-1.jpg",
   "https://generic-fallback-card-images-us-west-1.s3.us-west-1.amazonaws.com/muted-dark-abstract-background-gpt.jpg",
@@ -7,24 +9,40 @@ function getRandomFallback() {
   return fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
 }
 
-function NoteCard({ note }) {
+function NoteCard({ note, onOptionsClick }) {
   const imageUrl = note.imageUrl || getRandomFallback();
+
+  const handleOptionsClick = (e) => {
+    e.stopPropagation(); // Prevent card navigation
+    onOptionsClick(note);
+  };
+
+  const handleCardClick = () => {
+    window.open(note.url, "_blank", "noopener,noreferrer");
+  };
+
   return (
-    <a
-      href={note.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block rounded-lg overflow-hidden shadow-lg bg-gray-800 hover:bg-gray-700 transition-colors duration-200
-                  flex flex-col cursor-pointer"
+    <div
+      onClick={handleCardClick}
+      className="relative min-h-[275px] h-full rounded-lg overflow-hidden shadow-lg bg-gray-800 hover:bg-gray-700 transition-colors duration-200
+                 flex flex-col cursor-pointer"
     >
-      {/* Image container - pb for square and cover */}
+      {/* ... Edit Button */}
+      <EllipsisHorizontalIcon
+        onClick={handleOptionsClick}
+        className="h-6 w-6 absolute bg-gray-700 rounded-full top-2 right-2 z-10 text-white/70 hover:text-white transition"
+      />
+
+      {/* Image container */}
       <div className="relative w-full pb-[100%] overflow-hidden">
         <img
           src={imageUrl}
           alt={note.title}
-          className="absolute inset-0 w-full h-full"
+          className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
+
+      {/* Text content */}
       <div className="p-4 flex-grow flex flex-col justify-between">
         <h3
           className="font-semibold text-lg text-white truncate mb-1"
@@ -44,7 +62,7 @@ function NoteCard({ note }) {
           {new URL(note.url).hostname}
         </span>
       </div>
-    </a>
+    </div>
   );
 }
 

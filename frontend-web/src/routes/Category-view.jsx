@@ -11,6 +11,7 @@ import NoteCard from "../components/NoteCard.jsx";
 import AddNoteCard from "../components/AddNoteCard";
 import StyledInput from "../components/StyledSubmit.jsx";
 import StyledSubmitButton from "../components/SubmitButton.jsx";
+import { TrashIcon } from "@heroicons/react/24/outline";
 
 const baseContainerClasses = `
   // scrollable full background display
@@ -74,20 +75,26 @@ const CategoryView = () => {
   // Refs for popup containers
   const calendarRef = useRef(null);
   const categoriesRef = useRef(null);
+  const optionsRef = useRef(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+  const [itemOptionsOpen, setItemOptionsOpen] = useState(-1);
   const [newItem, setNewItem] = useState("");
+  const [newTitle, setNewTitle] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+
   const { data: categories, isLoading, error } = useCategories();
   const { eventsByDate, eventsIsLoading, eventsIsError } = useEventsForRange(
     startDate.date,
     endDate.date
   );
+
   // TODO: Remove dummy data
   const [items, setItems] = useState([
     {
       id: "1",
-      title: "My Awesome Link",
+      title: "Some Sample Link",
       description: "Omegas",
       url: "https://example.com/1",
     },
@@ -156,16 +163,18 @@ const CategoryView = () => {
   };
 
   const submitAddItem = () => {
-    console.log("submitAddItem - newItem", newItem);
+    console.log("Update - new saved item", newItem);
     setItems([
       ...items,
       {
         id: "5",
-        title: "New Link",
-        description: "Omegas3",
+        title: newTitle,
+        description: newDescription,
         url: newItem,
       },
     ]);
+    setNewTitle("");
+    setNewDescription("");
   };
 
   // Navigate categories
@@ -174,9 +183,20 @@ const CategoryView = () => {
     navigate(`/categories/${categoryToSlug(clickedCategory.category)}`);
   };
 
-  // Hide Selectors on Outside Clicks
+  const handleOptionsClick = (clickedItem) => {
+    setItemOptionsOpen(clickedItem.id);
+  };
+
+  const handleDelete = (clickedIndex) => {
+    console.log(`Delete - Item ${clickedIndex}`);
+    setItems((items) => items.filter((item) => item.id !== clickedIndex));
+  };
+
+  // Close Selectors on Outside Clicks
   useEffect(() => {
     const handlePointerDownOutside = (event) => {
+      if (optionsRef.current && !optionsRef.current.contains(event.target))
+        setItemOptionsOpen(-1);
       if (
         calendarRef.current &&
         !calendarRef.current.contains(event.target) &&
@@ -330,13 +350,31 @@ const CategoryView = () => {
       <div className="m-2 mt-3">
         <div className="font-lexend mb-3">Saved Items</div>
         {isAddItemOpen && (
-          <div className="w-full m-2">
-            <StyledInput
-              type="text"
-              placeholder="Save a URL https://...    "
-              onChange={(e) => setNewItem(e.target.value)}
-            />
-            <StyledSubmitButton onClick={submitAddItem}>Add</StyledSubmitButton>
+          <div className="w-full m-2 mb-3">
+            <div className="m-1">
+              <StyledInput
+                type="text"
+                placeholder="Save a URL https://...    "
+                onChange={(e) => setNewItem(e.target.value)}
+              />
+              <StyledSubmitButton onClick={submitAddItem}>
+                Add
+              </StyledSubmitButton>
+            </div>
+            <div className="m-1">
+              <div className="m-2">
+                <StyledInput
+                  type="text"
+                  placeholder="(Optional) Title"
+                  onChange={(e) => setNewTitle(e.target.value)}
+                />
+                <StyledInput
+                  type="text"
+                  placeholder="(Optional) Notes"
+                  onChange={(e) => setNewDescription(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
         )}
         {/* Saved Items Grid */}
@@ -347,7 +385,27 @@ const CategoryView = () => {
         >
           <AddNoteCard onAddClick={() => setIsAddItemOpen(!isAddItemOpen)} />
           {items.map((item) => (
-            <NoteCard key={item.id} note={item} />
+            <div key={item.id} className="relative">
+              <NoteCard
+                key={item.id}
+                note={item}
+                onOptionsClick={handleOptionsClick}
+              />
+              {itemOptionsOpen === item.id && (
+                <div className="absolute top-10 right-2 bg-gray-800 text-white rounded shadow-md">
+                  {/* Your dropdown menu */}
+                  <button
+                    ref={optionsRef}
+                    className="hover:bg-gray-700 p-2"
+                    onClick={() => handleDelete(item.id)}
+                  >
+                    <div className="flex flex-row">
+                      <TrashIcon className="h-5 mr-2" /> Delete
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </div>
