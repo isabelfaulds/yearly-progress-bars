@@ -9,8 +9,6 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
-
-	// "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
@@ -22,7 +20,7 @@ var allowedOrigins = []string{
 }
 
 var corsHeaders = map[string]string{
-	"Access-Control-Allow-Methods":      "POST",
+	"Access-Control-Allow-Methods":      "PATCH,GET,OPTIONS",
 	"Access-Control-Allow-Headers":      "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
 	"Access-Control-Allow-Credentials":  "true",
 	"Content-Type":                      "application/json",
@@ -86,6 +84,11 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 	)
 	if err != nil {
 		log.Fatalf("unable to load SDK config, %v", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: 500,
+			Headers: returnHeaders,
+			Body: fmt.Sprintf(`{"message": "Error in dynamodb configuration: %v"}`, err),
+		}, nil
 	}
 	dbClient := dynamodb.NewFromConfig(cfg)
 	tableName := "pb_users"
@@ -119,7 +122,6 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 
 	}
 
-	// Load AWS configuration
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Headers: returnHeaders,

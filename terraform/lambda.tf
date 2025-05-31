@@ -524,6 +524,13 @@ resource "aws_lambda_function" "patch_settings" {
   memory_size = 128
 }
 
+resource "aws_lambda_permission" "allow_apigateway_patch_settings" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.patch_settings.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/PATCH/*"
+}
+
 ### get user
 resource "aws_s3_bucket_object" "get_settings" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
@@ -545,4 +552,11 @@ resource "aws_lambda_function" "get_settings" {
   role = aws_iam_role.lambda_execution_role.arn
   timeout = 100
   memory_size = 128
+}
+
+resource "aws_lambda_permission" "allow_apigateway_get_settings" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_settings.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/GET/*"
 }

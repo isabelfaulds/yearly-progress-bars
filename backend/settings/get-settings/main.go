@@ -21,7 +21,7 @@ var allowedOrigins = []string{
 }
 
 var corsHeaders = map[string]string{
-	"Access-Control-Allow-Methods":      "POST",
+	"Access-Control-Allow-Methods":      "GET,OPTIONS",
 	"Access-Control-Allow-Headers":      "Content-Type, Authorization, Origin, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
 	"Access-Control-Allow-Credentials":  "true",
 	"Content-Type":                      "application/json",
@@ -72,6 +72,11 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 	)
 	if err != nil {
 		log.Fatalf("unable to load SDK config, %v", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: 500,
+			Headers: returnHeaders,
+			Body: fmt.Sprintf(`{"message": "Error in dynamodb configuration: %v"}`, err),
+		}, nil
 	}
 	dbClient := dynamodb.NewFromConfig(cfg)
 	tableName := "pb_users"
@@ -121,7 +126,7 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Headers: returnHeaders,
-		Body:       fmt.Sprintf(`{"categoryIconStyle": %s}`, iconStyle),
+		Body:       fmt.Sprintf(`{"categoryIconStyle": "%s"}`, iconStyle),
 	}, nil
 }
 

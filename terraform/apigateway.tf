@@ -1108,7 +1108,7 @@ resource "aws_api_gateway_integration" "user_settings_patch_lambda_integration" 
   credentials             = null
   request_parameters = {}
   request_templates = {}
-  uri = aws_lambda_function.gpt_categorize_event.invoke_arn
+  uri = aws_lambda_function.patch_settings.invoke_arn
   passthrough_behavior = "WHEN_NO_MATCH" 
 }
 
@@ -1144,7 +1144,7 @@ resource "aws_api_gateway_integration" "user_settings_get_lambda_integration" {
   credentials             = null
   request_parameters = {}
   request_templates = {}
-  uri = aws_lambda_function.gpt_categorize_event.invoke_arn
+  uri = aws_lambda_function.get_settings.invoke_arn
   passthrough_behavior = "WHEN_NO_MATCH" 
 }
 
@@ -1212,7 +1212,7 @@ resource "aws_api_gateway_integration_response" "user_settings_options_integrati
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,PATCH'",
     "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
