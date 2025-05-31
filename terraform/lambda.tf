@@ -500,3 +500,26 @@ resource "aws_lambda_permission" "allow_apigateway_labeling_categories" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/*/*"
 }
+
+### patch user
+resource "aws_s3_bucket_object" "patch_settings" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/settings/patch-settings/patch-settings.zip"
+  etag = filemd5("../backend/settings/patch-settings/patch-settings.zip")
+  key    = "patch-settings.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "patch_settings" {
+  function_name = "go-patch-settings"
+  s3_bucket     = aws_s3_bucket_object.patch_settings.bucket
+  s3_key        = aws_s3_bucket_object.patch_settings.key
+
+  handler = "bootstrap"
+  runtime = "provided.al2"  
+  depends_on = [aws_s3_bucket_object.patch_settings]
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+}
