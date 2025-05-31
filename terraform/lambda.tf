@@ -523,3 +523,26 @@ resource "aws_lambda_function" "patch_settings" {
   timeout = 100
   memory_size = 128
 }
+
+### get user
+resource "aws_s3_bucket_object" "get_settings" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/settings/get-settings/get-settings.zip"
+  etag = filemd5("../backend/settings/get-settings/get-settings.zip")
+  key    = "get-settings.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "get_settings" {
+  function_name = "go-get-settings"
+  s3_bucket     = aws_s3_bucket_object.get_settings.bucket
+  s3_key        = aws_s3_bucket_object.get_settings.key
+
+  handler = "bootstrap"
+  runtime = "provided.al2"  
+  depends_on = [aws_s3_bucket_object.get_settings]
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+}
