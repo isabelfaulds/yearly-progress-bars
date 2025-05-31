@@ -9,8 +9,10 @@ import {
 import { SunIcon } from "@heroicons/react/24/solid";
 import CatIconComponent from "../assets/cat.svg?react";
 import { useNavigate } from "react-router-dom";
+import { useCategoryIconPreference } from "../hooks/useCatIconPreference.jsx";
 
 function NavButton({ direction = "down" }) {
+  const { isCatIcon } = useCategoryIconPreference();
   const [showIcons, setShowIcons] = useState(false);
   const buttonRef = useRef(null);
   const menuRef = useRef(null);
@@ -83,7 +85,11 @@ function NavButton({ direction = "down" }) {
             onClick={() => handleNavigation("/categories")}
             className="mb-2"
           >
-            <CubeIcon className="w-7 h-7 md:w-10 md:h-10 p-1 text-white rounded-full hover:border-2 bg-gray-800" />
+            {isCatIcon ? (
+              <CatIconComponent className="w-7 h-7 md:w-10 md:h-10 p-1 text-white rounded-full hover:border-2 bg-gray-800" />
+            ) : (
+              <CubeIcon className="w-7 h-7 md:w-10 md:h-10 p-1 text-white rounded-full hover:border-2 bg-gray-800" />
+            )}
           </button>
           <button
             onClick={() => handleNavigation("/categories/settings")}
