@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import NavButton from "../components/NavButton.jsx";
+import { useCategoryIconPreference } from "../hooks/useCatIconPreference.jsx";
 
 import { ChevronRightIcon, MinusCircleIcon } from "@heroicons/react/24/solid";
 import {} from "@heroicons/react/24/solid";
@@ -32,7 +33,12 @@ const CategorySettings = () => {
   const queryClient = useQueryClient();
   const { data: dbCategories, isLoading, error } = useCategories();
   const [categories, setCategories] = useState([]);
+  const { isCatIcon, toggleIcon } = useCategoryIconPreference();
   const [cubeIconSelect, setCubeIconSelect] = useState(false);
+
+  useEffect(() => {
+    setCubeIconSelect(!isCatIcon);
+  }, [isCatIcon]);
 
   useEffect(() => {
     if (dbCategories) {
@@ -54,9 +60,14 @@ const CategorySettings = () => {
   const [editedValues, setEditedValues] = useState({}); // Store edited values for each row and field
   const [deletes, setDeletes] = useState([]);
   const editedInputRef = useRef(null);
+  const [categoryIconUpdate, setCategoryIconUpdate] = useState(false);
 
   const handleSaveAndNavigate = async () => {
     try {
+      if (categoryIconUpdate) {
+        toggleIcon();
+        console.log("Updated - Category Icon");
+      }
       await postCategories();
       queryClient.invalidateQueries(["categories"]);
       navigate(-1);
@@ -98,7 +109,7 @@ const CategorySettings = () => {
           }
         );
         if (categoryResponse.status === 200) {
-          console.log("Posted - Categories");
+          console.log("Updated - Categories");
         }
       }
     } catch (error) {
@@ -108,6 +119,7 @@ const CategorySettings = () => {
 
   const handleCategoryIconToggle = () => {
     setCubeIconSelect(!cubeIconSelect);
+    setCategoryIconUpdate(!categoryIconUpdate);
   };
 
   const handleTimeClick = (index, field, currentValue) => {
