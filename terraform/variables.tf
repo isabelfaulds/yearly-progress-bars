@@ -32,3 +32,8 @@ variable "openai_key" {
   description = "open ai key"
   type = string
 }
+
+variable "if_ip_address" {
+  description = "if ip address"
+  type = string
+}
