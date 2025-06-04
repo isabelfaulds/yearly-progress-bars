@@ -50,7 +50,7 @@ data "aws_ami" "amazon_linux_2" {
   most_recent = true
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"] # al2 naming convention
+    values = ["amzn2-ami-hvm-*-arm64-gp2"] # al2 naming convention for arm64
   }
   filter {
     name   = "virtualization-type"
@@ -61,7 +61,7 @@ data "aws_ami" "amazon_linux_2" {
 
 resource "aws_instance" "airflow_ec2" {
   ami                    = data.aws_ami.amazon_linux_2.id
-  instance_type          = "t3.micro" 
+  instance_type          = "r6gd.medium" 
   subnet_id              = aws_subnet.main.id
   vpc_security_group_ids = [aws_security_group.airflow_sg.id]
   associate_public_ip_address = true
@@ -95,4 +95,29 @@ resource "aws_ec2_instance_connect_endpoint" "connect_endpoint" {
 
 output "ec2_instance_connect_endpoint_dns" {
   value = aws_ec2_instance_connect_endpoint.connect_endpoint.dns_name
+}
+
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+  tags = {
+    Name = "airflow-igw"
+  }
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
+  }
+
+  tags = {
+    Name = "airflow-public-rt"
+  }
+}
+
+resource "aws_route_table_association" "public_subnet_association" {
+  subnet_id      = aws_subnet.main.id
+  route_table_id = aws_route_table.public.id
 }
