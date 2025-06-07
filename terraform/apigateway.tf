@@ -1217,3 +1217,148 @@ resource "aws_api_gateway_integration_response" "user_settings_options_integrati
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
+
+resource "aws_api_gateway_resource" "saved_items" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_rest_api.user_data_api.root_resource_id
+  path_part   = "saved_items"
+}
+
+
+resource "aws_api_gateway_method" "saved_items_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "saved_items_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.saved_items.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+  passthrough_behavior = "WHEN_NO_MATCH"
+  depends_on = [aws_api_gateway_method.saved_items_options_method]
+}
+
+resource "aws_api_gateway_method_response" "saved_items_options_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.saved_items_options_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "saved_items_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.saved_items_options_integration,
+    aws_api_gateway_method_response.saved_items_options_method_response
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+# store saved item method
+resource "aws_api_gateway_method" "post_saved_item_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+  request_parameters = {
+    "method.request.header.user-id" = true
+  }
+}
+
+# ddb insertions
+resource "aws_api_gateway_integration" "post_saved_item_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.post_saved_item_method.resource_id
+  http_method = aws_api_gateway_method.post_saved_item_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS" 
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  uri = "arn:aws:apigateway:us-west-1:dynamodb:action/PutItem"
+  passthrough_behavior = "WHEN_NO_MATCH"
+
+
+# 400 if improper template
+  request_templates = {
+    "application/json" = <<EOF
+    #set($inputRoot = $input.path('$'))
+    #set($userId = $input.params().header.get('user-id'))
+    #set($url = $inputRoot.url)
+    {
+      "TableName": "pb_saved_items",
+      "Item": {
+        "saved_item_uid": { "S": "$userId:$url" }
+        ,"user_id" : { "S": "$userId" }
+        #if($inputRoot.category && $inputRoot.category != "")
+          ,"category_uid": { "S": "$userId:$inputRoot.category" }
+        #end
+        #if( $inputRoot.title && $inputRoot.title != "" )
+          ,"title": { "S": "$inputRoot.title" }
+        #end
+        #if( $inputRoot.description && $inputRoot.description != "")
+          ,"description": { "S": "$inputRoot.description" }
+        #end
+      }
+    }
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "post_saved_item_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "POST"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.post_saved_item_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+
+resource "aws_api_gateway_integration_response" "saved_items_post_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "POST"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.post_saved_item_integration,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
