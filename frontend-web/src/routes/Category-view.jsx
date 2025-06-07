@@ -12,6 +12,7 @@ import AddNoteCard from "../components/AddNoteCard";
 import StyledInput from "../components/StyledSubmit.jsx";
 import StyledSubmitButton from "../components/SubmitButton.jsx";
 import { TrashIcon } from "@heroicons/react/24/outline";
+import { useItems, useCreateItem } from "../hooks/useSavedItem.jsx";
 
 const baseContainerClasses = `
   // scrollable full background display
@@ -89,34 +90,8 @@ const CategoryView = () => {
     startDate.date,
     endDate.date
   );
-
-  // TODO: Remove dummy data
-  const [items, setItems] = useState([
-    {
-      id: "1",
-      title: "Some Sample Link",
-      description: "Omegas",
-      url: "https://example.com/1",
-    },
-    {
-      id: "2",
-      title: "React Docs",
-      description: "Circadian Rhythm",
-      url: "https://react.dev",
-    },
-    {
-      id: "3",
-      title: "Tailwind CSS Guide",
-      description: "Everything you need to know about Tailwind.",
-      url: "https://tailwindcss.com",
-    },
-    {
-      id: "4",
-      title: "Another Link",
-      description: "Just another saved item.",
-      url: "https://example.org",
-    },
-  ]);
+  const { data: savedItems } = useItems(categorySlug);
+  const { mutate: addNewItem } = useCreateItem(categorySlug);
 
   // Update Start & End from DayPicker
   const handleRangeUpdate = (newRange) => {
@@ -163,16 +138,20 @@ const CategoryView = () => {
   };
 
   const submitAddItem = () => {
-    console.log("Update - new saved item", newItem);
-    setItems([
-      ...items,
-      {
-        id: "5",
-        title: newTitle,
-        description: newDescription,
-        url: newItem,
-      },
-    ]);
+    const payload = {
+      category: categorySlug,
+      url: newItem,
+    };
+    if (newTitle) {
+      payload.title = newTitle;
+    }
+    if (newDescription) {
+      payload.description = newDescription;
+    }
+    console.log("Update - new saved item", payload);
+
+    addNewItem(payload);
+    setNewItem("");
     setNewTitle("");
     setNewDescription("");
   };
@@ -384,20 +363,20 @@ const CategoryView = () => {
       lg:grid-cols-4 gap-4 w-2/3 mx-auto"
         >
           <AddNoteCard onAddClick={() => setIsAddItemOpen(!isAddItemOpen)} />
-          {items.map((item) => (
-            <div key={item.id} className="relative">
+          {savedItems.map((item) => (
+            <div key={item.saved_item_uid} className="relative">
               <NoteCard
-                key={item.id}
+                key={item.saved_item_uid}
                 note={item}
                 onOptionsClick={handleOptionsClick}
               />
-              {itemOptionsOpen === item.id && (
+              {itemOptionsOpen === item.saved_item_uid && (
                 <div className="absolute top-10 right-2 bg-gray-800 text-white rounded shadow-md">
                   {/* Your dropdown menu */}
                   <button
                     ref={optionsRef}
                     className="hover:bg-gray-700 p-2"
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => handleDelete(item.saved_item_uid)}
                   >
                     <div className="flex flex-row">
                       <TrashIcon className="h-5 mr-2" /> Delete
