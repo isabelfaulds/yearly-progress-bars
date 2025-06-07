@@ -1323,7 +1323,7 @@ resource "aws_api_gateway_integration" "post_saved_item_integration" {
         #if( $inputRoot.description && $inputRoot.description != "")
           ,"description": { "S": "$inputRoot.description" }
         #end
-      }
+      },
     }
 EOF
   }
@@ -1361,6 +1361,16 @@ resource "aws_api_gateway_integration_response" "saved_items_post_integration_re
     "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
+  response_templates = {
+          "application/json" = <<EOF
+      #set($inputRoot = $input.path('$'))
+      #set($userId = $input.params().header.get('user-id'))
+      #set($url = $inputRoot.url)
+      {
+        "user_id": "$userId",
+      }
+      EOF
+        }
 }
 
 # Get items
