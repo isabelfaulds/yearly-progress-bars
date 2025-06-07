@@ -9,8 +9,27 @@ function getRandomFallback() {
   return fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
 }
 
+const ensureAbsoluteUrl = (url) => {
+  if (!url || typeof url !== "string") {
+    return url;
+  }
+  // Checking http , https etc protocols
+  if (/^[a-z]+:\/\//i.test(url)) {
+    return url; // Already has a protocol
+  }
+  // Otherwise, prepending
+  return `https://${url}`;
+};
+
 function NoteCard({ note, onOptionsClick }) {
-  const imageUrl = note.imageUrl || getRandomFallback();
+  const image = note.image || getRandomFallback();
+  const url = ensureAbsoluteUrl(note.url);
+  // Get the hostname
+  let hostname = new URL(url).hostname;
+  // Remove 'www.'
+  if (hostname.startsWith("www.")) {
+    hostname = hostname.substring(4);
+  }
 
   const handleOptionsClick = (e) => {
     e.stopPropagation(); // Prevent card navigation
@@ -18,7 +37,7 @@ function NoteCard({ note, onOptionsClick }) {
   };
 
   const handleCardClick = () => {
-    window.open(note.url, "_blank", "noopener,noreferrer");
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -36,7 +55,7 @@ function NoteCard({ note, onOptionsClick }) {
       {/* Image container */}
       <div className="relative w-full pb-[100%] overflow-hidden">
         <img
-          src={imageUrl}
+          src={image}
           alt={note.title}
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -59,7 +78,7 @@ function NoteCard({ note, onOptionsClick }) {
           </p>
         )}
         <span className="text-blue-400 text-xs mt-2 truncate" title={note.url}>
-          {new URL(note.url).hostname}
+          {hostname}
         </span>
       </div>
     </div>
