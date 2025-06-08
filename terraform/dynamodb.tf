@@ -134,3 +134,41 @@ resource "aws_dynamodb_table" "saved_items" {
     enabled = true
   }
 }
+
+resource "aws_dynamodb_table" "milestones" {
+  name = "pb_milestones"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key = "milestone_user_datetime_uid"
+
+  attribute {
+    name = "milestone_user_datetime_uid"
+    type = "S"
+  }
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "category_uid"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "UserIndex"
+    hash_key        = "user_id"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "UserCategoryIndex"
+    hash_key        = "category_uid"
+    projection_type = "ALL"
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+
+}
