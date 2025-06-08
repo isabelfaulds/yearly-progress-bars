@@ -5,6 +5,7 @@ import CategorySettings from "./routes/CategorySettings";
 import RangeView from "./routes/Range-view";
 import CategoryView from "./routes/Category-view";
 import Login from "./routes/Login";
+import CategoriesRoot from "./routes/Categories-root";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -41,6 +42,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/day-view" element={<Day />} />
             <Route path="/range-view" element={<RangeView />} />
+            <Route path="/categories" element={<CategoriesRoot />} />
             <Route
               path="/categories/:categorySlug"
               element={<CategoryView />}
