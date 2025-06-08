@@ -268,7 +268,7 @@ const CategoryView = () => {
                   grid grid-cols-2 gap-2 p-2 
             "
                 >
-                  {categories.map((categoryItem, itemIndex) => (
+                  {categories?.map((categoryItem, itemIndex) => (
                     <div
                       key={categoryItem.category}
                       className="px-4 py-2 cursor-pointer transition-colors rounded-md text-sm
@@ -363,7 +363,7 @@ const CategoryView = () => {
       lg:grid-cols-4 gap-4 w-2/3 mx-auto"
         >
           <AddNoteCard onAddClick={() => setIsAddItemOpen(!isAddItemOpen)} />
-          {savedItems.map((item) => (
+          {savedItems?.map((item) => (
             <div key={item.saved_item_uid} className="relative">
               <NoteCard
                 key={item.saved_item_uid}
