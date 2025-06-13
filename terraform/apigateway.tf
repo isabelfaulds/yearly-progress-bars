@@ -1642,3 +1642,101 @@ resource "aws_api_gateway_integration_response" "get_milestones_by_index_integra
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
+
+
+resource "aws_api_gateway_method" "post_milestone_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+  }
+}
+
+# ddb insertions
+resource "aws_api_gateway_integration" "post_milestone_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.post_milestone_method.resource_id
+  http_method = aws_api_gateway_method.post_milestone_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS" 
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  uri = "arn:aws:apigateway:us-west-1:dynamodb:action/PutItem"
+  passthrough_behavior = "WHEN_NO_MATCH"
+
+
+# 400 if improper template
+  request_templates = {
+    "application/json" = <<EOF
+    #set($inputRoot = $input.path('$'))
+    #set($userId = $input.params().header.get('user-id'))
+    #set($dateTime = $inputRoot.dateTime)
+    #set($interest = $inputRoot.interestScore)
+    #set($milestone = $inputRoot.milestone)
+    #set($timeframe = $inputRoot.timeFrameWeeks)
+
+    {
+      "TableName": "pb_milestones",
+      "Item": {
+        "milestone_user_datetime_uid": { "S": "$userId:$dateTime" }
+        ,"user_id" : { "S": "$userId" }
+        ,"created_date" : {"S" : "$dateTime"}
+        , "milestone" : { "S" : "$milestone" }
+        ,"interest" : { "N" : "$interest.toString()" }
+        #if($inputRoot.category && $inputRoot.category != "")
+          ,"category_uid": { "S": "$userId:$inputRoot.category" }
+        #end
+        #if( $inputRoot.timeframe && $inputRoot.timeFrameWeeks != "" )
+          ,"timeframe_weeks": { "N": "$timeframe.toString()" }
+        #end
+      }
+    }
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "post_milestone_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method   = "POST"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.post_milestone_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "post_milestone_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method   = "POST"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.post_milestone_integration,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+  response_templates = {
+          "application/json" = <<EOF
+      #set($inputRoot = $input.path('$'))
+      #set($userId = $input.params().header.get('user-id'))
+      #set($url = $inputRoot.url)
+      {
+        "user_id": "$userId",
+      }
+      EOF
+        }
+}
