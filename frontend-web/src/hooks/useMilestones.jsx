@@ -16,7 +16,12 @@ export const fetchMilestones = async (category = null) => {
   try {
     const responseData = await response.json();
     console.log("responseData", responseData);
-    return responseData.milestones || [];
+    return (
+      responseData.milestones.map((item) => ({
+        ...item,
+        category: item.category_uid.split(":").slice(1).join(":"),
+      })) || []
+    );
   } catch (err) {
     console.error("Failed to parse JSON from milestones response", err);
     throw err;

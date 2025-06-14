@@ -1616,12 +1616,12 @@ resource "aws_api_gateway_integration_response" "get_milestones_by_index_integra
   response_templates = {
     "application/json" = <<EOF
         #set($milestones = $input.path('$.Items'))
-        #set($minutes= $item.minutes_invested.N)
-        #set($timeframe=$item.timeframe_weeks.N)
-        #set($completed=$item.completed.BOOL)
         {
           "milestones": [
           #foreach($item in $milestones)
+            #set($minutes= $item.minutes_invested.N)
+            #set($timeframe=$item.timeframe_weeks.N)
+            #set($completed=$item.completed.BOOL)
             {
               "milestone_user_datetime_uid": "$item.milestone_user_datetime_uid.S",
               "milestone": "$item.milestone.S",
@@ -1641,7 +1641,6 @@ resource "aws_api_gateway_integration_response" "get_milestones_by_index_integra
           #end
           ]
         }
-
         EOF
   }
 
