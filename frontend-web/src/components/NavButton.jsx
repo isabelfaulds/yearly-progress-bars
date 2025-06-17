@@ -5,6 +5,7 @@ import {
   CogIcon,
   CalendarDateRangeIcon,
   CubeIcon,
+  TrophyIcon,
 } from "@heroicons/react/24/outline";
 import { SunIcon } from "@heroicons/react/24/solid";
 import CatIconComponent from "../assets/cat.svg?react";
@@ -90,6 +91,12 @@ function NavButton({ direction = "down" }) {
             ) : (
               <CubeIcon className="w-7 h-7 md:w-10 md:h-10 p-1 text-white rounded-full hover:border-2 bg-gray-800" />
             )}
+          </button>
+          <button
+            onClick={() => handleNavigation("/milestones")}
+            className="mb-2"
+          >
+            <TrophyIcon className="w-7 h-7 md:w-10 md:h-10  p-1 text-white rounded-full hover:border-2 bg-gray-800" />
           </button>
           <button
             onClick={() => handleNavigation("/categories/settings")}

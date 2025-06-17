@@ -10,6 +10,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./hooks/useAuth";
+import Milestones from "./routes/Milestones";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +44,7 @@ function App() {
             <Route path="/day-view" element={<Day />} />
             <Route path="/range-view" element={<RangeView />} />
             <Route path="/categories" element={<CategoriesRoot />} />
+            <Route path="/milestones" element={<Milestones />} />
             <Route
               path="/categories/:categorySlug"
               element={<CategoryView />}
