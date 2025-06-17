@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import mkcert from "vite-plugin-mkcert";
 import svgr from "vite-plugin-svgr";
+import path from "path";
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), mkcert(), svgr()],
@@ -11,7 +12,9 @@ export default defineConfig({
     host: "localhost",
     port: 5173,
   },
-  alias: {
-    "@": path.resolve(__dirname, "./src"),
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
   },
 });
