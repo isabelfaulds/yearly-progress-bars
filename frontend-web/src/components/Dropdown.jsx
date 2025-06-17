@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input.jsx";
 
-const SearachableDropdown = ({ values, placeholder = "" }) => {
+const SearachableDropdown = ({ values, placeholder = "", onSelect }) => {
   // Update Category key navigation
   const [editedText, setEditedText] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -9,13 +9,28 @@ const SearachableDropdown = ({ values, placeholder = "" }) => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  const handleOptionSelection = useCallback(
+    (selectedOption) => {
+      setEditedText(selectedOption.label);
+      setOpen(false);
+      setHighlightedIndex(-1);
+      setFilteredValues(values);
+      if (onSelect) {
+        onSelect(selectedOption); // Notify parent, pass obj
+      }
+    },
+    [onSelect, values]
+  );
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       // On enter select highlighted or first
       if (highlightedIndex >= 0 && filteredValues.length > highlightedIndex) {
         setEditedText(filteredValues[highlightedIndex].label);
+        handleOptionSelection(filteredValues[highlightedIndex]);
       } else if (filteredValues.length > 0) {
         setEditedText(filteredValues[0].label);
+        handleOptionSelection(filteredValues[0]);
       } else {
         // On enter and no options, exit
         handleBlur();

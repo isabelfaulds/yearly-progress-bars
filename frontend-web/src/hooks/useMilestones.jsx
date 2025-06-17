@@ -5,17 +5,14 @@ export const fetchMilestones = async (category = null) => {
   if (category) {
     fetchUrl = `${fetchUrl}/?category=${String(category).toLowerCase()}`;
   }
-  console.log("fetchUrl", fetchUrl);
   const response = await fetch(fetchUrl, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
   });
-  console.log("response", response);
   if (!response.ok) throw new Error(`Failed to fetch milestones`);
   try {
     const responseData = await response.json();
-    console.log("responseData", responseData);
     return (
       responseData.milestones.map((item) => ({
         ...item,
