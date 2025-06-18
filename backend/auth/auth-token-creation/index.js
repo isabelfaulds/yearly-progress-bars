@@ -44,7 +44,7 @@ async function addUserAndTokens(
         Item: {
           user_id: { S: userID },
           email: { S: email },
-          datetime: { S: datetime },
+          userDatetime: { S: datetime },
         },
       })
     );
@@ -58,7 +58,7 @@ async function addUserAndTokens(
           provider: { S: "firebase" },
           accessToken: { S: gapiToken },
           refreshToken: { S: refreshToken },
-          datetime: { S: datetime },
+          tokenTimestamp: { S: datetime },
           expiresIn: { N: "3600" },
         },
       })
@@ -72,7 +72,7 @@ async function addUserAndTokens(
           user_id: { S: userID },
           accessToken: { S: cookieToken },
           refreshToken: { S: refreshCookieToken },
-          datetime: { S: datetime },
+          tokenTimestamp: { S: datetime },
           accessTokenexpiresIn: { N: "3600" },
           refreshTokenexpiresIn: { N: "36000" },
         },
@@ -94,21 +94,12 @@ exports.handler = async (event) => {
     accessControlAllowOrigin = origin;
   }
 
-  if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": accessControlAllowOrigin,
-        ...corsHeaders,
-      },
-      body: "",
-    };
-  }
-
   let requestBody = event.body;
   if (typeof requestBody === "string") {
     requestBody = JSON.parse(requestBody);
   }
+  console.log("Request Body:", requestBody);
+
   const userID = requestBody.userID;
   const email = requestBody.email;
   const token = requestBody.token;
@@ -116,7 +107,6 @@ exports.handler = async (event) => {
   const refreshToken = requestBody.refreshToken;
   const datetime = requestBody.datetime;
   const expiresIn = requestBody.expiresIn;
-  console.log("Request Body:", requestBody);
   console.log("token", token);
 
   if (!admin.apps.length) {
