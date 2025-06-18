@@ -33,3 +33,46 @@ export const useMilestones = (category = null) => {
     retry: 2, // Auto-retry failed fetches
   });
 };
+
+export const createMilestone = async (newMilestoneData) => {
+  const currentDateTime = new Date().toISOString();
+  const updatedMilestoneData = {
+    ...newMilestoneData,
+    dateTime: currentDateTime,
+    interestScore: 5,
+  };
+  console.log("updatedMilestoneData", updatedMilestoneData);
+  const response = await fetch(
+    `${import.meta.env.VITE_CLOUDFRONT_MILESTONES}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(updatedMilestoneData),
+    }
+  );
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to create milestone");
+  }
+  const responseData = response.json();
+  return {
+    ...newMilestoneData,
+    category_uid: `${responseData.user_id}:${newMilestoneData.category}`,
+    milestone_user_datetime_uid: `${responseData.user_id}:${currentDateTime}`,
+  };
+};
+
+export const useCreateMilestone = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createMilestone,
+    onSuccess: (newMilestone) => {
+      queryClient.setQueryData(["milestones"], (oldMilestones) => {
+        return oldMilestones
+          ? [...oldMilestones, newMilestone]
+          : [newMilestone];
+      });
+    },
+  });
+};
