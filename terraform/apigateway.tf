@@ -1692,7 +1692,7 @@ resource "aws_api_gateway_integration" "post_milestone_integration" {
       "Item": {
         "milestone_user_datetime_uid": { "S": "$userId:$dateTime" }
         ,"user_id" : { "S": "$userId" }
-        ,"created_date" : {"S" : "$dateTime"}
+        ,"created_timestamp" : {"S" : "$dateTime"}
         , "milestone" : { "S" : "$milestone" }
         ,"interest" : { "N" : "$interest.toString()" }
         #if($inputRoot.category && $inputRoot.category != "")
@@ -1744,7 +1744,7 @@ resource "aws_api_gateway_integration_response" "post_milestone_integration_resp
       #set($userId = $input.params().header.get('user-id'))
       #set($url = $inputRoot.url)
       {
-        "user_id": "$userId",
+        "user_id": "$userId"
       }
       EOF
         }

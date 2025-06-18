@@ -1,6 +1,6 @@
 import NavButton from "../components/NavButton.jsx";
 import { useCategories } from "../hooks/useCategories.jsx";
-import { useMilestones } from "../hooks/useMilestones.jsx";
+import { useMilestones, useCreateMilestone } from "../hooks/useMilestones.jsx";
 import { useEffect, useState, useRef } from "react";
 import {
   Table,
@@ -42,14 +42,14 @@ const Milestones = () => {
     error: milestoneError,
   } = useMilestones(null);
 
+  const { mutate: addNewMilestone } = useCreateMilestone();
   const [globalFilter, setGlobalFilter] = useState("");
   const [isAddMilestoneOpen, setIsAddMilestoneOpen] = useState(false);
   const [newMilestone, setNewMilestone] = useState({
     milestone: "",
-    category_uid: null,
     category: null,
-    timeframe_weeks: null,
-    timeframe_months: null,
+    timeFrameWeeks: null,
+    timeFrameMonths: null,
   });
   const columns = [
     {
@@ -78,8 +78,24 @@ const Milestones = () => {
     setNewMilestone((prevMilestone) => ({
       ...prevMilestone,
       category: e.label,
-      category_uid: e.value,
     }));
+  };
+
+  const submitAddMilestone = () => {
+    if (typeof newMilestone.category === "string") {
+      newMilestone.category = newMilestone.category.toLowerCase();
+    }
+    console.log("Create - new milestone", newMilestone);
+    const payload = Object.fromEntries(
+      Object.entries(newMilestone).filter(
+        ([key, value]) => value !== null && value !== undefined
+      )
+    );
+    addNewMilestone(payload);
+    const nullifiedMilestone = Object.fromEntries(
+      Object.keys(newMilestone).map((key) => [key, null])
+    );
+    setNewMilestone(nullifiedMilestone);
   };
 
   const table = useReactTable({
@@ -91,11 +107,6 @@ const Milestones = () => {
     onGlobalFilterChange: setGlobalFilter,
     getColumnCanResize: () => true,
   });
-
-  // TODO: Update with hook for post
-  const handleNewMilestone = () => {
-    console.log("handled", newMilestone);
-  };
 
   if (isLoading) {
     return (
@@ -234,7 +245,7 @@ const Milestones = () => {
                   onValueChange={(e) =>
                     setNewMilestone((prevMilestone) => ({
                       ...prevMilestone,
-                      timeframe_weeks: e,
+                      timeFrameWeeks: e,
                     }))
                   }
                 />
@@ -244,12 +255,12 @@ const Milestones = () => {
                   onValueChange={(e) =>
                     setNewMilestone((prevMilestone) => ({
                       ...prevMilestone,
-                      timeframe_months: e,
+                      timeFrameMonths: e,
                     }))
                   }
                 />
                 <Button
-                  onClick={handleNewMilestone}
+                  onClick={submitAddMilestone}
                   className="font-lexand font-light w-1/5 border-gray-400 border rounded-full"
                 >
                   Save
