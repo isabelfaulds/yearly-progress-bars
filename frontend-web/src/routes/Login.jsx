@@ -1,11 +1,11 @@
 import React from "react";
 import "firebase/auth";
-import { useAuthContext } from "../hooks/useAuth";
-import { Button } from "@/components/ui/button.jsx";
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
+import LoginStep0 from "@/components/login-pages/LoginStep0";
 import LoginStep1 from "@/components/login-pages/LoginStep1";
+import LoginStep2 from "@/components/login-pages/LoginStep2";
+import LoginStep3 from "@/components/login-pages/LoginStep3";
 
 const baseContainerClasses = `
   // scrollable full background display
@@ -17,16 +17,36 @@ const baseContainerClasses = `
 `;
 
 const Login = () => {
-  const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
 
-  const { isSignedIn, handleGoogleSignIn, handleSignOut } = useAuthContext();
+  const handleNextStep = () => {
+    setCurrentStep((prevStep) => prevStep + 1);
+  };
+
   return (
     <div className={`${baseContainerClasses} `}>
       <div className="login-container">
-        {currentStep === 1 && (
+        {currentStep === 0 && (
           <div className="initial-container">
-            <LoginStep1 />
+            <LoginStep0 onNext={handleNextStep} />
+          </div>
+        )}
+        {currentStep === 1 && (
+          <div className="login-container">
+            <div className="text-sm">Step 1 of 3</div>
+            <LoginStep1 onNext={handleNextStep} />
+          </div>
+        )}
+        {currentStep === 2 && (
+          <div className="login-container">
+            <div className="text-sm">Step 2 of 3</div>
+            <LoginStep2 onNext={handleNextStep} />
+          </div>
+        )}
+        {currentStep === 3 && (
+          <div className="login-container">
+            <div className="text-sm">Step 3 of 3</div>
+            <LoginStep3 />
           </div>
         )}
       </div>
