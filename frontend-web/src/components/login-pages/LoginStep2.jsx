@@ -1,16 +1,206 @@
 import { Button } from "@/components/ui/button.jsx";
+import { Input } from "@/components/ui/input.jsx";
+import { useState } from "react";
+import { NumberInput } from "../ui/number-input";
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const LoginStep2 = ({ onNext }) => {
   const handleSave = () => {
+    postCategories();
     onNext();
   };
+  const [categories, setNewCategories] = useState([]);
+  const [newCategory, setNewCategory] = useState({
+    category: "",
+    hours: "",
+    minutes: "",
+  });
+
+  const columns = [
+    { accessorKey: "category", header: "Category" },
+    { accessorKey: "hours", header: "Hours" },
+    { accessorKey: "remainderMinutes", header: "Minutes" },
+  ];
+  const table = useReactTable({
+    data: categories || [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getColumnCanResize: () => true,
+  });
+
+  const handleCategorySave = () => {
+    const totalMinutes = newCategory.hours * 60 + newCategory.minutes * 1;
+    console.log(newCategory.hours * 60, totalMinutes);
+    const totalHours = Math.floor(totalMinutes / 60);
+    const remainderMinutes = totalMinutes % 60;
+    setNewCategories((prevCategories) => [
+      ...prevCategories,
+      {
+        category: newCategory.category,
+        hours: totalHours === 0 ? null : totalHours,
+        minutes: totalMinutes === 0 ? null : totalMinutes,
+        remainderMinutes: remainderMinutes === 0 ? null : remainderMinutes,
+      },
+    ]);
+    setNewCategory({
+      category: "",
+      hours: "",
+      minutes: "",
+    });
+  };
+
+  async function postCategories() {
+    try {
+      const payload = { add: [] };
+      categories.forEach((cat) => {
+        payload.add.push({
+          category: cat.category.toLowerCase(),
+          minutes: cat.minutes,
+        });
+      });
+      if (payload.add.length > 0) {
+        const categoryResponse = await fetch(
+          import.meta.env.VITE_CLOUDFRONT_CATEGORIES,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify(payload),
+          }
+        );
+        if (categoryResponse.status === 200) {
+          console.log("Updated - Categories");
+        }
+      }
+    } catch (error) {
+      console.error("Sync failed:", error);
+    }
+  }
+
   return (
     <div className="initial-container">
       <div className="mb-10">
-        <div className="text-xl mb-10">Sign up for Progress Bars</div>
+        <div className="text-xl mb-4">Define some initial categories</div>
+        <div className="text-[14px]">Make changes later in Settings</div>
       </div>
-      <div className="">Define any initial categories for visualizing</div>
-      <div className="">Make edits later in Settings</div>
+
+      <div className="flex flex-col gap-1">
+        <div>
+          <div className="text-left mb-1 text-[15px]">Category</div>
+          <Input
+            type="title"
+            value={newCategory.category}
+            className="rounded-md mb-4"
+            placeholder="Category"
+            onChange={(e) =>
+              setNewCategory((prevCategory) => ({
+                ...prevCategory,
+                category: e.target.value,
+              }))
+            }
+          />
+          <div className="text-[14px]">Can be generic or specific</div>
+        </div>
+        <div>
+          <div className="mt-4 text-left mb-1 text-[15px]">
+            {" "}
+            Ideal Daily Amount{" "}
+          </div>
+          <div className="flex flex-row gap-3 m-3">
+            <NumberInput
+              placeholder="Hours"
+              value={newCategory.hours}
+              max={24}
+              onChange={(e) =>
+                setNewCategory((prevCategory) => ({
+                  ...prevCategory,
+                  hours: e.target.value,
+                }))
+              }
+            />
+            <NumberInput
+              placeholder="Minutes"
+              value={newCategory.minutes}
+              // max={60}
+              onChange={(e) =>
+                setNewCategory((prevCategory) => ({
+                  ...prevCategory,
+                  minutes: e.target.value,
+                }))
+              }
+            />
+            <Button onClick={handleCategorySave}>Add</Button>
+          </div>
+        </div>
+        {/* TODO: Frequency */}
+      </div>
+      <div className="mt-6 table-container">
+        <Table>
+          <TableHeader className="bg-coolgray sticky top-0 z-10">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className={`text-left px-4 py-2 bg-coolgray
+                            ${header.column.columnDef.className || ""}`}
+                    style={{
+                      width: header.getSize(),
+                    }}
+                  >
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody className="min-w-full">
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className={`px-4 py-2 ${
+                        cell.column.columnDef.className || ""
+                      }`}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                ></TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <div className="m-3 flex flex-col gap-3 mx-auto">
         <Button onClick={handleSave} className="mx-auto p-2 max-w-1/3">
