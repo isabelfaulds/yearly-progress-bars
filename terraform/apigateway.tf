@@ -1749,3 +1749,125 @@ resource "aws_api_gateway_integration_response" "post_milestone_integration_resp
       EOF
         }
 }
+
+### list calendars
+
+resource "aws_api_gateway_resource" "cal_list" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_resource.calendar_sync_gcal.id
+  path_part   = "list"
+}
+
+
+resource "aws_api_gateway_method" "cal_list_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "cal_list_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.cal_list.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+  passthrough_behavior = "WHEN_NO_MATCH"
+  depends_on = [aws_api_gateway_method.cal_list_options_method]
+}
+
+resource "aws_api_gateway_method_response" "cal_list_options_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.cal_list_options_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "cal_list_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.cal_list_options_integration,
+    aws_api_gateway_method_response.cal_list_options_method_response
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+# Get calendars
+resource "aws_api_gateway_method" "get_calendars_list_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "GET"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+  }
+
+}
+
+resource "aws_api_gateway_integration" "get_calendars_list_lambda_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.get_calendars_list_method.resource_id
+  http_method = aws_api_gateway_method.get_calendars_list_method.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  credentials             = null
+  uri = aws_lambda_function.sync_gcal_list.invoke_arn
+}
+
+resource "aws_api_gateway_method_response" "get_calendars_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "GET"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.get_calendars_list_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "get_calendars_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "GET"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.get_calendars_list_lambda_integration,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+  
+}
+
