@@ -560,3 +560,40 @@ resource "aws_lambda_permission" "allow_apigateway_get_settings" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/GET/*"
 }
+
+
+### list calendars
+resource "aws_s3_bucket_object" "sync_gcal_list" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/cal-sync/gapi-list/gapi-list.zip"
+  etag = filemd5("../backend/cal-sync/gapi-list/gapi-list.zip")
+  key    = "gapi-list.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "sync_gcal_list" {
+  function_name = "go-gcal-list"
+  s3_bucket     = aws_s3_bucket_object.sync_gcal_list.bucket
+  s3_key        = aws_s3_bucket_object.sync_gcal_list.key
+
+  handler = "bootstrap"
+  runtime = "provided.al2"  
+  depends_on = [aws_s3_bucket_object.sync_gcal_list]
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+  environment {
+    variables = {
+        CLIENT_ID = var.client_id
+        CLIENT_SECRET = var.client_secret
+    }
+  }
+}
+
+resource "aws_lambda_permission" "allow_apigateway_gcal_list" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.sync_gcal_list.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/GET/calendar/sync/gcal/list"
+}
