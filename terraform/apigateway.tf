@@ -172,7 +172,7 @@ resource "aws_api_gateway_integration_response" "auth_options_integration_respon
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
-    "method.response.header.Access-Control-Allow-Origin" = "'https://localhost:5173'"
+    "method.response.header.Access-Control-Allow-Origin" = "'https://year-progress-bar.com'"
     "method.response.header.Access-Control-Allow-Credentials": "'true'"
   }
 
@@ -180,7 +180,7 @@ resource "aws_api_gateway_integration_response" "auth_options_integration_respon
     "application/json" = jsonencode({
       statusCode = 200
       headers = {
-        "Access-Control-Allow-Origin"      = "'https://localhost:5173'"
+        "Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'"
         "Access-Control-Allow-Methods"     = "POST, OPTIONS"
         "Access-Control-Allow-Headers"     = "'Content-Type'"
         "Access-Control-Allow-Credentials" = "'true'" # Client expects string
@@ -287,7 +287,7 @@ resource "aws_api_gateway_integration_response" "auth_logout_options_integration
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
@@ -391,7 +391,7 @@ resource "aws_api_gateway_integration_response" "auth_refresh_options_integratio
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
@@ -493,7 +493,7 @@ resource "aws_api_gateway_integration_response" "auth_check_options_integration_
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -628,7 +628,7 @@ resource "aws_api_gateway_integration_response" "calendar_events_options_integra
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -733,7 +733,7 @@ resource "aws_api_gateway_integration_response" "calendar_event_options_integrat
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,PATCH'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -838,7 +838,7 @@ resource "aws_api_gateway_integration_response" "sync_gcal_options_integration_r
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -935,7 +935,7 @@ resource "aws_api_gateway_integration_response" "categories_options_integration_
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1079,7 +1079,7 @@ resource "aws_api_gateway_integration_response" "labeling_categories_options_int
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1213,7 +1213,7 @@ resource "aws_api_gateway_integration_response" "user_settings_options_integrati
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,PATCH'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1274,7 +1274,7 @@ resource "aws_api_gateway_integration_response" "saved_items_options_integration
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1358,7 +1358,7 @@ resource "aws_api_gateway_integration_response" "saved_items_post_integration_re
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
   response_templates = {
@@ -1467,7 +1467,7 @@ EOF
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1528,7 +1528,7 @@ resource "aws_api_gateway_integration_response" "milestones_options_integration_
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST,PATCH,DELETE'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1647,7 +1647,7 @@ resource "aws_api_gateway_integration_response" "get_milestones_by_index_integra
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST,PATCH,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1735,7 +1735,7 @@ resource "aws_api_gateway_integration_response" "post_milestone_integration_resp
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
   response_templates = {
@@ -1807,8 +1807,8 @@ resource "aws_api_gateway_integration_response" "cal_list_options_integration_re
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
-    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1864,10 +1864,101 @@ resource "aws_api_gateway_integration_response" "get_calendars_integration_respo
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
-    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
   
 }
 
+### post preferences
+
+resource "aws_api_gateway_method" "post_calendars_list_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+  }
+}
+
+resource "aws_api_gateway_integration" "post_calendar_list" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.post_calendars_list_method.resource_id
+  http_method = aws_api_gateway_method.post_calendars_list_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS" 
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  uri = "arn:aws:apigateway:us-west-1:dynamodb:action/PutItem"
+  passthrough_behavior = "WHEN_NO_MATCH"
+
+
+# 400 if improper template
+  request_templates = {
+    "application/json" = <<EOF
+    #set($inputRoot = $input.path('$'))
+    #set($userId = $input.params().header.get('user-id'))
+    #set($calendarID = $inputRoot.calendarID)
+    #set($defaultCategory = $inputRoot.defaultCategory)
+    #set($sync = $inputRoot.sync)
+    #set($summary = $inputRoot.summary)
+
+
+    {
+      "TableName": "pb_calendars",
+      "Item": {
+        "calendar_uid" : {"S" : "$userId:$calendarID"}
+        ,"user_id" : { "S": "$userId" }
+        ,"sync" : {"BOOL" : $sync}
+        ,"calendar_name" : { "S": "$summary" }
+        #if($inputRoot.defaultCategory && $inputRoot.defaultCategory != "")
+          , "default_category_uid" : { "S" : "$userId:$inputRoot.defaultCategory" }
+          , "default_category" : { "S" : "$inputRoot.defaultCategory" }
+        #end
+
+      }
+    }
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "post_calendar_list_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "POST"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.post_calendars_list_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "post_calendar_list_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "POST"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.post_calendar_list,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+  response_templates = {
+          "application/json" = <<EOF
+      {"message": "Updated calendar settings"}
+      EOF
+        }
+}
