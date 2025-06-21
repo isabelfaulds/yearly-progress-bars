@@ -42,7 +42,6 @@ const LoginStep2 = ({ onNext }) => {
 
   const handleCategorySave = () => {
     const totalMinutes = newCategory.hours * 60 + newCategory.minutes * 1;
-    console.log(newCategory.hours * 60, totalMinutes);
     const totalHours = Math.floor(totalMinutes / 60);
     const remainderMinutes = totalMinutes % 60;
     setNewCategories((prevCategories) => [

@@ -15,8 +15,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 import { getColumns } from "./columns";
+import { Scroll } from "lucide-react";
 
 const CalendarTable = forwardRef(({ data, categories }, ref) => {
   const [internalData, setInternalData] = useState(data || []);
@@ -44,48 +46,55 @@ const CalendarTable = forwardRef(({ data, categories }, ref) => {
   }));
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : typeof header.column.columnDef.header === "function"
-                    ? // Render header content , components
-                      header.column.columnDef.header(header.getContext())
-                    : header.column.columnDef.header}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id} // react table id
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {/* Render cell content , components */}
-                    {cell.column.columnDef.cell(cell.getContext())}
-                  </TableCell>
+    <div className="rounded-md m-3 font-lex">
+      <ScrollArea className="rounded-md w-full relative overflow-x-auto">
+        <Table className="rounded-md min-w-[600px]">
+          <TableHeader className="bg-slate-800 px-4">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : typeof header.column.columnDef.header === "function"
+                      ? // Render header content , components
+                        header.column.columnDef.header(header.getContext())
+                      : header.column.columnDef.header}
+                  </TableHead>
                 ))}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id} // react table id
+                  data-state={row.getIsSelected() && "selected"}
+                  className="bg-coolgray"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {/* Render cell content , components */}
+                      {cell.column.columnDef.cell(cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
     </div>
   );
 });

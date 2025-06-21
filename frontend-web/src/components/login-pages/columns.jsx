@@ -65,7 +65,9 @@ export const getColumns = (categories = [], setInternalData) => {
       accessorKey: "summary",
       header: "Calendar Name",
       cell: ({ row }) => (
-        <div className="font-lexend">{row.original.summary}</div>
+        <div className="font-lexend items-cente max-w-[120px] sm:max-w-[225px] md:max-w-[400px] lg:md:max-w-[800px] break-words whitespace-normal">
+          {row.original.summary}
+        </div>
       ),
     },
 
@@ -86,29 +88,31 @@ export const getColumns = (categories = [], setInternalData) => {
         };
 
         return (
-          <Select onValueChange={handleDropdownChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue
-                placeholder={calendarItem.defaultCategory || "None set"}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.length > 0 ? (
-                categories.map((category) => (
-                  <SelectItem
-                    key={category.category_uid}
-                    value={category.category || "Placeholder"}
-                  >
-                    {category.category || "Placeholder"}
+          <div className="flex items-center justify-center">
+            <Select onValueChange={handleDropdownChange}>
+              <SelectTrigger className="w-[180px]  data-[placeholder]:text-gray-400">
+                <SelectValue
+                  placeholder={calendarItem.defaultCategory || "None set"}
+                />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-600 text-white">
+                {categories.length > 0 ? (
+                  categories.map((category) => (
+                    <SelectItem
+                      key={category.category_uid}
+                      value={category.category || "Placeholder"}
+                    >
+                      {category.category || "Placeholder"}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-categories" disabled>
+                    Loading categories...
                   </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="no-categories" disabled>
-                  Loading categories...
-                </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
         );
       },
       enableSorting: false,

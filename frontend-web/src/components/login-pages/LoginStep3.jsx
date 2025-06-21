@@ -67,17 +67,16 @@ const LoginStep3 = () => {
 
   return (
     <div className="initial-container">
-      <div className="mb-10">
+      <div className="mb-10 font-lexend">
         <div className="text-xl mb-10">Set Calendar Preferences</div>
       </div>
       <div className="m-3">Choose Calendars to Sync</div>
-      <div className="m-2">
+      <div className="m-2 mb-4">
         Select calendars and set any preferred defaults, make changes later in
         Settings{" "}
       </div>
-
       <CalendarTable data={calendars} categories={categories} ref={tableRef} />
-      <div className="m-3 flex flex-col gap-3 mx-auto">
+      <div className="mt-4 m-3 flex flex-col gap-3 mx-auto">
         <Button onClick={handleFinish} className="mx-auto p-2 max-w-1/3">
           Finish
         </Button>
