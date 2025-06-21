@@ -172,3 +172,29 @@ resource "aws_dynamodb_table" "milestones" {
   }
 
 }
+
+resource "aws_dynamodb_table" "calendars" {
+  name = "pb_calendars"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "calendar_uid"
+
+  attribute {
+    name = "calendar_uid"
+    type = "S"
+  }
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "UserIndex"
+    hash_key        = "user_id"
+    projection_type = "ALL"
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+}
