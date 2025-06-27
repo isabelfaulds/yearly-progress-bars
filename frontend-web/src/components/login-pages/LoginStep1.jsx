@@ -27,7 +27,10 @@ const LoginStep1 = ({ onNext }) => {
         <div className="text-xl mb-10">Sign up for Progress Bars</div>
         <p>
           By creating an account you agree to the{" "}
-          <Link to="/about/tos" className="text-blue-200 hover:underline">
+          <Link
+            to="/about/terms-of-service"
+            className="text-blue-200 hover:underline"
+          >
             Terms of Service
           </Link>{" "}
           and{" "}
