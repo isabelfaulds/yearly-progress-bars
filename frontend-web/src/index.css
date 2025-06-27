@@ -5,6 +5,8 @@
 @import "tw-animate-css";
 /*---break--- */
 @custom-variant dark (&:is(.dark *));
+/* markdown rendering */
+@plugin "@tailwindcss/typography";
 
 @theme {
   --color-coolgray: #111727;
