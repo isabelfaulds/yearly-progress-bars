@@ -6,6 +6,7 @@ import RangeView from "./routes/Range-view";
 import CategoryView from "./routes/Category-view";
 import Login from "./routes/Login";
 import TermsService from "./routes/about/Terms-Service";
+import PrivacyPolicy from "./routes/about/Privacy-Policy";
 import CategoriesRoot from "./routes/Categories-root";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
@@ -51,6 +52,7 @@ function App() {
               element={<CategoryView />}
             />
             <Route path="/about/terms-of-service" element={<TermsService />} />
+            <Route path="/about/privacy-policy" element={<PrivacyPolicy />} />
           </Routes>
         </Router>
       </AuthProvider>
