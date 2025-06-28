@@ -198,3 +198,40 @@ resource "aws_dynamodb_table" "calendars" {
     enabled = true
   }
 }
+
+resource "aws_dynamodb_table" "pb_milestone_sessions" {
+  name = "pb_milestone_sessions"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "milestone_session_uid"
+
+  attribute {
+    name = "milestone_session_uid"
+    type = "S"
+  }
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "category_uid"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "UserIndex"
+    hash_key        = "user_id"
+    projection_type = "ALL"
+  }
+  
+  global_secondary_index {
+    name            = "UserCategoryIndex"
+    hash_key        = "category_uid"
+    projection_type = "ALL"
+  }
+
+  server_side_encryption {
+    enabled = true
+  }  
+}
