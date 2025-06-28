@@ -501,6 +501,35 @@ resource "aws_lambda_permission" "allow_apigateway_labeling_categories" {
   source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/*/*"
 }
 
+### label milestone
+resource "aws_s3_bucket_object" "gpt_milestones_event" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/categorization/milestone-event/milestone-event.zip"
+  etag = filemd5("../backend/categorization/milestone-event/milestone-event.zip")
+  key    = "milestone-event.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "gpt_milestones_event" {
+  function_name = "go-milestones-event"
+  s3_bucket     = aws_s3_bucket_object.gpt_milestones_event.bucket
+  s3_key        = aws_s3_bucket_object.gpt_milestones_event.key
+
+  handler = "bootstrap"
+  runtime = "provided.al2"  
+  depends_on = [aws_s3_bucket_object.gpt_milestones_event]
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+  environment {
+    variables = {
+        OPENAPI_KEY = var.openai_key
+    }
+  }
+}
+
+
 ### patch user
 resource "aws_s3_bucket_object" "patch_settings" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
