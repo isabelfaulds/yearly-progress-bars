@@ -4,7 +4,7 @@ resource "aws_sqs_queue" "event_milestone_queue" {
   max_message_size                  = 262144 # 256 KB
   message_retention_seconds         = 345600 # 4 days (345600 seconds)
   receive_wait_time_seconds         = 20 # Longer polling 20 seconds
-  visibility_timeout_seconds        = 30 # Default visibility timeout
+  visibility_timeout_seconds        = 300
 
 }
 
