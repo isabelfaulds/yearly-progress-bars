@@ -32,3 +32,8 @@ variable "openai_key" {
   description = "open ai key"
   type = string
 }
+
+variable "milestone_event_queue" {
+  description = "Milestone event queue"
+  type = string
+}

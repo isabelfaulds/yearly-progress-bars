@@ -47,6 +47,16 @@ resource "aws_iam_policy" "s3_dynamodb_full_access_policy" {
         Action   = "dynamodb:*"
         Resource = "*"
       },
+      {
+        Effect   = "Allow"
+        Action   = [
+          "sqs:SendMessage",
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ]
+        Resource = "${aws_sqs_queue.event_milestone_queue.arn}"
+      }
       
     ]
   })
@@ -490,6 +500,7 @@ resource "aws_lambda_function" "gpt_categorize_event" {
   environment {
     variables = {
         OPENAPI_KEY = var.openai_key
+        MILESTONE_EVENTS_SQS_QUEUE_URL = var.milestone_event_queue
     }
   }
 }
@@ -527,6 +538,13 @@ resource "aws_lambda_function" "gpt_milestones_event" {
         OPENAPI_KEY = var.openai_key
     }
   }
+}
+
+resource "aws_lambda_event_source_mapping" "gpt_milestones_event_queue_trigger" {
+  event_source_arn = aws_sqs_queue.event_milestone_queue.arn
+  function_name    = aws_lambda_function.gpt_milestones_event.arn
+  enabled          = true
+  batch_size       = 10
 }
 
 

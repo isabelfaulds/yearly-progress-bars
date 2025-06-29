@@ -14,9 +14,23 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 )
+
+var sqsClient *sqs.Client
+var queueURL string
+
+func init() {
+    cfg, err := config.LoadDefaultConfig(context.TODO())
+    if err != nil {
+        log.Fatalf("unable to load SDK config, %v", err)
+    }
+
+    sqsClient = sqs.NewFromConfig(cfg)
+    queueURL = os.Getenv("MILESTONE_EVENTS_SQS_QUEUE_URL")
+}
 
 // Original Event
 type UserEvent struct {
@@ -74,6 +88,24 @@ func formatUserPrompt(eventName string, categories string) string {
     return fmt.Sprintf("Classify the following calendar event name: \"%s\" into one of the categories: %s or 'uncategorized'", eventName, categories)
 }
 
+func sendToMilestoneQueue(eventUID string) error {
+    payload := map[string]string{
+        "EventUID": eventUID,
+    }
+
+    jsonBody, err := json.Marshal(payload)
+    if err != nil {
+        return err
+    }
+
+    _, err = sqsClient.SendMessage(context.TODO(), &sqs.SendMessageInput{
+        QueueUrl:    aws.String(queueURL),
+        MessageBody: aws.String(string(jsonBody)),
+    })
+
+    return err
+}
+
 func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// set response headers
 	accessControlAllowOrigin := allowedOrigins[0]
@@ -105,7 +137,7 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
     userEvents := body.UserEvents
     log.Println("Events:", userEvents)
 	for i, evt := range userEvents {
-	log.Printf("Event %d: Name='%s', UID='%s'", i, evt.EventName, evt.EventUID)
+		log.Printf("Event %d: Name='%s', UID='%s'", i, evt.EventName, evt.EventUID)
 	}
     formattedCategories := formatCategoryList(body.Categories)
 	log.Println("Categories:", formattedCategories)
@@ -127,6 +159,12 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 
 	var labeledEvents []LabeledUserEvent
 	for _, value := range userEvents {
+		err := sendToMilestoneQueue(value.EventUID)
+		if err != nil {
+			log.Printf("Failed to send event %s to milestone queue: %v", value.EventUID, err)
+		} else {
+			log.Printf("Sent event %s to milestone label queue", value.EventName)
+		}
 
 		// gpt query
 		fmt.Println("Value", value.EventName)
