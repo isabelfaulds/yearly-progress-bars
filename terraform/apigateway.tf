@@ -43,7 +43,9 @@ resource "aws_iam_policy" "apigateway_logging_dynamo_policy" {
         Resource =[
         aws_dynamodb_table.user_tokens.arn,
         aws_dynamodb_table.calendar_events.arn,
-        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events/index/UserIdDateIndex"
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events/index/UserIdDateIndex",
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestones/index/UserIndex"
+        
         ]
       },
     ]
