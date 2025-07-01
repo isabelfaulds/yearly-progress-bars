@@ -29,12 +29,10 @@ type CalendarEvent struct {
 	Event_UID    string `dynamodbav:"event_uid"`      // partition_key
 	User_ID string `dynamodbav:"user_id"` 
 	Category  string `dynamodbav:"category,omitempty"` // attributes
-	Category_UID string    `dynamodbav:"category_uid,omitempty"`
 	Event_Name string    `dynamodbav:"event_name,omitempty"`
 	Event_Startdate string `dynamodbav:"event_startdate,omitempty"`
 	Minutes int    `dynamodbav:"minutes,omitempty"`
 }
-
 
 // Milestone
 type UserMilesone struct {
@@ -173,11 +171,12 @@ func HandleRequest(ctx context.Context, sqsEvent events.SQSEvent) error {
 		}
 
 		// Fetch milestones for category
-		fmt.Printf("INFO: Event %s has category set. Checking for milestones.", calendarEvent.Event_UID)
+		fmt.Printf("INFO: Event %s has category set %s. Checking for milestones.", calendarEvent.Event_UID, calendarEvent.Category)
 		fmt.Println("INFO: Event", calendarEvent)
-		categoryMilestones, err := QueryMilestonesByCategoryUID(ctx, calendarEvent.Category_UID)
+		fmt.Println("INFO: Category UID",  calendarEvent.User_ID+":"+calendarEvent.Category)
+		categoryMilestones, err := QueryMilestonesByCategoryUID(ctx, calendarEvent.User_ID+":"+calendarEvent.Category)
 		if err != nil {
-			log.Printf("ERROR: Failed to query milestones for Category_UID %s (Message ID: %s): %v\n", calendarEvent.Category_UID, messageID, err)
+			log.Printf("ERROR: Failed to query milestones for Category_UID %s (Message ID: %s): %v\n", calendarEvent.User_ID+":"+calendarEvent.Category, messageID, err)
 			batchItemFailures = append(batchItemFailures, events.SQSBatchItemFailure{ ItemIdentifier: messageID })
 			continue
 		}
@@ -220,7 +219,7 @@ func HandleRequest(ctx context.Context, sqsEvent events.SQSEvent) error {
 						"event_name": &types.AttributeValueMemberS{Value: calendarEvent.Event_Name},
 						"user_id": &types.AttributeValueMemberS{Value: calendarEvent.User_ID},
 						"category": &types.AttributeValueMemberS{Value: calendarEvent.Category},
-						"category_uid": &types.AttributeValueMemberS{Value: calendarEvent.Category_UID},
+						"category_uid": &types.AttributeValueMemberS{Value: calendarEvent.User_ID+":"+calendarEvent.Category},
 						"event_startdate": &types.AttributeValueMemberS{Value: calendarEvent.Event_Startdate},
 						"minutes":      &types.AttributeValueMemberN{Value: strconv.Itoa(calendarEvent.Minutes)},
 					},
