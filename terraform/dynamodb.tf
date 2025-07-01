@@ -155,6 +155,11 @@ resource "aws_dynamodb_table" "milestones" {
     type = "S"
   }
 
+  attribute {
+    name = "milestone_user_datetime_uid"
+    type = "S"
+  }
+
   global_secondary_index {
     name            = "UserIndex"
     hash_key        = "user_id"
@@ -164,6 +169,12 @@ resource "aws_dynamodb_table" "milestones" {
   global_secondary_index {
     name            = "UserCategoryIndex"
     hash_key        = "category_uid"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "MilestoneIndex"
+    hash_key        = "milestone_user_datetime_uid"
     projection_type = "ALL"
   }
 
