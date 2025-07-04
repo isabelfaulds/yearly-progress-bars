@@ -251,3 +251,29 @@ resource "aws_dynamodb_table" "pb_milestone_sessions" {
     enabled = true
   }  
 }
+
+resource "aws_dynamodb_table" "day_totals" {
+  name = "pb_day_totals"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "user_date_uid"
+
+  attribute {
+    name = "user_date_uid"
+    type = "S"
+  }
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "UserIndex"
+    hash_key        = "user_id"
+    projection_type = "ALL"
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+}
