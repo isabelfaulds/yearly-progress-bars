@@ -3,10 +3,10 @@ import { ArrowPathRoundedSquareIcon } from "@heroicons/react/24/outline";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import NavButton from "../components/NavButton.jsx";
 import { DateTime } from "luxon";
-import RadarChart from "../components/RadarChart.jsx";
+import RadarChart from "../components/charts/RadarChart.jsx";
 import useMediaQuery from "../hooks/useMediaQuery";
 import { useCategories } from "../hooks/useCategories.jsx";
-import StreakChart from "@/components/StreakChart.jsx";
+import StreakChart from "@/components/charts/StreakChart.jsx";
 import { useMetricsDaily } from "../hooks/useMetricsDaily.jsx";
 
 const baseContainerClasses = `bg-[#000000]
