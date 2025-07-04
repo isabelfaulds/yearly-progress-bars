@@ -1,6 +1,7 @@
 import NavButton from "../components/NavButton.jsx";
 import { useCategories } from "../hooks/useCategories.jsx";
 import { useMilestones, useCreateMilestone } from "../hooks/useMilestones.jsx";
+import { useMilestoneSessions } from "@/hooks/useMilestoneSession.jsx";
 import { useEffect, useState, useRef } from "react";
 import {
   Table,
@@ -29,7 +30,7 @@ const baseContainerClasses = `
   w-screen min-h-screen h-auto m-0
   bg-[#000000] bg-cover bg-center
   // global margins
-  p-10 pl-15 pr-15 sm:pt-12  text-white
+  p-10 md:pl-15 md:pr-15 sm:pt-12  text-white
   flex flex-col
 `;
 
@@ -41,8 +42,8 @@ const Milestones = () => {
     isError: isMilestoneError,
     error: milestoneError,
   } = useMilestones(null);
-
   const { mutate: addNewMilestone } = useCreateMilestone();
+
   const [globalFilter, setGlobalFilter] = useState("");
   const [isAddMilestoneOpen, setIsAddMilestoneOpen] = useState(false);
   const [newMilestone, setNewMilestone] = useState({
@@ -80,6 +81,36 @@ const Milestones = () => {
       category: e.label,
     }));
   };
+
+  // Selected Milestone Stats
+  const [selectedMilestoneID, setSelectedMilestoneID] = useState(null);
+  const { data: milestoneSessions, isLoading: milestoneSessionsLoading } =
+    useMilestoneSessions(selectedMilestoneID);
+  const [numberSessions, setNumberSessions] = useState("");
+  const [totalHours, setTotalHours] = useState(0);
+  const [remainderMinutes, setReaminderMinutes] = useState(0);
+  const [selectedMilestone, setSelectedMilestone] = useState("");
+
+  const handleRowClick = (rowData) => {
+    setSelectedMilestone(rowData);
+    setSelectedMilestoneID(rowData.milestone_user_datetime_uid);
+  };
+
+  useEffect(() => {
+    console.log(milestoneSessions);
+
+    if (milestoneSessions !== undefined) {
+      console.log(milestoneSessions);
+      setNumberSessions(String(milestoneSessions.length));
+
+      const totalMinutes = milestoneSessions.reduce((sum, currentItem) => {
+        // Add the 'minutes' from the current item to the running sum
+        return sum + currentItem.minutes;
+      }, 0);
+      setTotalHours(Math.floor(totalMinutes / 60));
+      setReaminderMinutes(totalMinutes % 60);
+    }
+  }, [milestoneSessions]);
 
   const submitAddMilestone = () => {
     if (typeof newMilestone.category === "string") {
@@ -128,18 +159,18 @@ const Milestones = () => {
   return (
     <div className={baseContainerClasses}>
       <div className="flex flex-col text-white ">
-        <div className="font-lexand text-xl mb-3">Milestones</div>
+        <div className="font-lexand text-xl mb-10">Milestones</div>
         {/* Searchable Milestones Table*/}
-        <div className="font-lexand m-3 bg-coolgray rounded-lg p-3">
+        <div className="font-lexand bg-coolgray rounded-lg p-3">
           {/* Search Input */}
           <div
             className="flex flex-row gap-2 items-center min-w-full max-w-sm
                rounded-md
-               transition-all duration-200"
+               transition-all duration-200 mb-1.5"
           >
             <MagnifyingGlassIcon className="w-6 h-6 text-gray-500" />
             <input
-              placeholder="Search by name..."
+              placeholder="Search Milestones"
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               className="w-full bg-transparent outline-none text-sm text-gray-300 placeholder-gray-400"
@@ -176,7 +207,10 @@ const Milestones = () => {
                 <TableBody className="min-w-full">
                   {table.getRowModel().rows?.length ? (
                     table.getRowModel().rows.map((row) => (
-                      <TableRow key={row.id}>
+                      <TableRow
+                        key={row.id}
+                        onClick={() => handleRowClick(row.original)}
+                      >
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
@@ -270,8 +304,46 @@ const Milestones = () => {
           )}
         </div>
         {/* TODO: Bubble Stats: Time , Sessions */}
+        <div className="mt-5 flex flex-row gap-5 md:gap-30 justify-center items-center w-full md:pl-10 md:pr-10 mb-3">
+          <div className="bg-coolgray rounded-full flex flex-col justify-center font-lexend md:min-w-40 md:min-h-24 p-4 md:p-6">
+            <span className="font-extralight text-sm md:text-lg">
+              Total Time
+            </span>
+            <span className="md:text-2xl">
+              {totalHours > 0 && <span>{totalHours} hrs</span>}
+              {totalHours > 0 && remainderMinutes > 0 && <span> </span>}
+              {remainderMinutes > 0 && <span>{remainderMinutes} hrs</span>}
+            </span>
+          </div>
+          <div className="font-lexend md:text-2xl mb-2">
+            {selectedMilestone !== "" && selectedMilestone.milestone}{" "}
+          </div>
+          <div className="bg-coolgray rounded-full flex flex-col justify-center font-lexend md:min-w-40 md:min-h-24 p-4 md:p-6">
+            <span className="font-extralight text-sm md:text-lg">
+              Number Sessions
+            </span>
+            <span className="md:text-2xl">{numberSessions}</span>
+          </div>
+        </div>
         {/* TODO: Little Chart - with forecasting */}
-        {/* TODO: Sessions Logs */}
+        {/* Sessions Log */}
+        <div className="flex flex-col mt-6 md:ml-10 md:mr-10 bg-coolgray rounded-lg gap-1">
+          <div className="rounded-lg pt-3 text-lg">
+            <span className="border-b border-gray-400 pb-1 "> Sessions</span>
+          </div>
+          <div className=" pt-2 pb-4 pr-4 pl-4 text-sm">
+            {milestoneSessions ? (
+              milestoneSessions.map((item) => (
+                <div ClassName="text-white">
+                  {item.event_startdate} - {item.event_name} - {item.minutes}{" "}
+                  min
+                </div>
+              ))
+            ) : (
+              <div className=""></div>
+            )}
+          </div>
+        </div>
         {/* TODO: Saved Items */}
 
         <div className="fixed bottom-4 right-4 p-1 rounded-full ">
