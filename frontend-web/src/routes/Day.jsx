@@ -6,6 +6,8 @@ import { DateTime } from "luxon";
 import RadarChart from "../components/RadarChart.jsx";
 import useMediaQuery from "../hooks/useMediaQuery";
 import { useCategories } from "../hooks/useCategories.jsx";
+import StreakChart from "@/components/StreakChart.jsx";
+import { useMetricsDaily } from "../hooks/useMetricsDaily.jsx";
 
 const baseContainerClasses = `bg-[#000000]
     /* Layout */
@@ -112,6 +114,8 @@ const Day = () => {
   const categoryBubbleRef = useRef(null);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const dropdownItemRefs = useRef([]);
+
+  const { data: dailyTotals } = useMetricsDaily();
 
   // Edit category, open list of categories for filtering
   const handleCategoryClick = (index) => {
@@ -324,7 +328,7 @@ const Day = () => {
 
   return (
     <div className={baseContainerClasses}>
-      <div className="flex flex-col md:w-3/4 md:pr-4 items-start ">
+      <div className="flex flex-col md:w-3/4 md:pr-4 items-start mb-3">
         {/* First column: graph, title */}
         <div className="flex flex-row">
           <div className="bg-gradient-to-tl from-blue-300 to-orange-100 rounded-full w-12 h-12 flex items-center justify-center text-2xl font-bold text-gray-800 mr-4">
@@ -341,6 +345,9 @@ const Day = () => {
               (item) => item.category_uid !== "placeholder"
             )}
           />
+        </div>
+        <div className="w-full md:mt-10">
+          <StreakChart data={dailyTotals} />
         </div>
       </div>
       {/* Second column: button and events */}

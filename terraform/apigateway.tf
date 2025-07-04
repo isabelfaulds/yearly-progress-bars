@@ -2199,7 +2199,6 @@ resource "aws_api_gateway_integration" "get_daily_aggregates_integration" {
     ":user": { "S": "$userId" }
   }
 }
-    #end
     EOF
       }
 }
