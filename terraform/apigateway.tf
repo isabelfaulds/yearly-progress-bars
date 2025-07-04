@@ -2007,11 +2007,11 @@ resource "aws_api_gateway_integration" "get_milestone_sessions_integration" {
     "application/json" = <<EOF
     #set($milestone = $input.params('milestone_uid'))
     #set($userId = $input.params().header.get('user-id'))
-    #if($milstone && $milstone != "" )
+    #if($milestone && $milestone != "" )
         {
           "TableName": "pb_milestone_sessions",
           "IndexName": "UserCategoryIndex",
-          "KeyConditionExpression": "milestone_user_datetime_uid = :cat",
+          "KeyConditionExpression": "milestone_user_datetime_uid = :milestone",
           "ExpressionAttributeValues": {
             ":milestone": {"S": "$milestone"}
           }
