@@ -1,0 +1,25 @@
+/* React heat map */
+
+.react-calendar-heatmap .day {
+  transform: scale(0.65); /* shrink each day to 75% size */
+  transform-origin: center;
+  transition: transform 0.2s ease; /* optional, for smooth hover effects */
+}
+
+.color-empty {
+  fill: #111727 !important; /* light gray */
+}
+.color-scale-1 {
+  fill: url(#circleGradient1) !important;
+}
+.color-scale-2 {
+  fill: url(#circleGradient2) !important;
+}
+.color-scale-3 {
+  fill: url(#circleGradient3) !important;
+}
+
+.react-calendar-heatmap rect {
+  rx: 50%; /* round corners to 50% of width/height — makes it a circle */
+  ry: 50%;
+}
