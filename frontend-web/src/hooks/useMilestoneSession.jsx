@@ -18,7 +18,6 @@ export const fetchMilestoneSessions = async (
   if (!response.ok) throw new Error(`Failed to fetch milestone sessions`);
   try {
     const responseData = await response.json();
-    console.log("ResponseData", responseData);
     return responseData.sessions || [];
   } catch (err) {
     console.error("Failed to parse JSON from milestone sessions response", err);
