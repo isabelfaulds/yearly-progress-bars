@@ -44,7 +44,9 @@ resource "aws_iam_policy" "apigateway_logging_dynamo_policy" {
         aws_dynamodb_table.user_tokens.arn,
         aws_dynamodb_table.calendar_events.arn,
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events/index/UserIdDateIndex",
-        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestones/index/UserIndex"
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestones/index/UserIndex",
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestone_sessions/index/MilestoneIndex",
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestone_sessions/index/UserIndex"
         
         ]
       },
@@ -1963,4 +1965,183 @@ resource "aws_api_gateway_integration_response" "post_calendar_list_integration_
       {"message": "Updated calendar settings"}
       EOF
         }
+}
+
+# Get milestone sessions
+
+resource "aws_api_gateway_resource" "milestone_sessions" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_resource.milestones.id
+  path_part   = "sessions"
+}
+
+
+resource "aws_api_gateway_method" "get_milestone_sessions" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestone_sessions.id
+  http_method   = "GET"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+    "method.request.querystring.milestone_user_datetime_uid" = false # optional
+  }
+
+  request_models = {
+    "application/json" = "Empty"
+  }
+}
+
+resource "aws_api_gateway_integration" "get_milestone_sessions_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.user_data_api.id
+  resource_id             = aws_api_gateway_resource.milestone_sessions.id
+  http_method             = aws_api_gateway_method.get_milestone_sessions.http_method
+  integration_http_method = "POST"
+  type                    = "AWS"
+  uri                     = "arn:aws:apigateway:us-west-1:dynamodb:action/Query"
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  passthrough_behavior    = "WHEN_NO_MATCH"
+
+  request_templates = {
+    "application/json" = <<EOF
+    #set($milestone = $input.params('milestone_uid'))
+    #set($userId = $input.params().header.get('user-id'))
+    #if($milestone && $milestone != "" )
+        {
+          "TableName": "pb_milestone_sessions",
+          "IndexName": "UserCategoryIndex",
+          "KeyConditionExpression": "milestone_user_datetime_uid = :milestone",
+          "ExpressionAttributeValues": {
+            ":milestone": {"S": "$milestone"}
+          }
+        }
+    #else
+        {
+          "TableName": "pb_milestone_sessions",
+          "IndexName": "UserIndex",
+          "KeyConditionExpression": "user_id = :user",
+          "ExpressionAttributeValues": {
+            ":user": { "S": "$userId" }
+          }
+        }
+    #end
+    EOF
+      }
+}
+
+resource "aws_api_gateway_method_response" "get_milestone_sessions_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestone_sessions.id
+  http_method   = "GET"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.get_milestone_sessions]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "get_milestone_sessions_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.milestone_sessions.id
+  http_method = aws_api_gateway_method.get_milestone_sessions.http_method
+  status_code = "200"
+  depends_on = [
+    aws_api_gateway_integration.get_milestone_sessions_integration,
+    aws_api_gateway_method_response.get_milestone_sessions_method_response
+  ]
+  response_templates = {
+    "application/json" = <<EOF
+        #set($milestone_sessions = $input.path('$.Items'))
+        {
+          "sessions": [
+          #foreach($item in $milestone_sessions)
+            #set($minutes= $item.minutes.N)
+            #set($event_startdate= $item.event_startdate.S)
+            #set($event_name= $item.event_name.S)
+
+            {
+              "milestone_user_datetime_uid": "$item.milestone_user_datetime_uid.S",
+              "milestone_session_uid": "$item.milestone_session_uid.S",
+
+              "event_startdate" : 
+                #if ($event_startdate && $event_startdate != "") "$event_startdate"
+                #else null #end ,
+              "event_name" :
+                #if ($event_name && $event_name != "") "$event_name"
+                #else null #end,
+              "minutes" : 
+                #if ($minutes && $minutes != "") $minutes
+                #else null #end
+            }#if($foreach.hasNext),#end
+          #end
+          ]
+        }
+        EOF
+  }
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+resource "aws_api_gateway_method" "milestone_sessions_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestone_sessions.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "milestone_sessions_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.milestone_sessions.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+  passthrough_behavior = "WHEN_NO_MATCH"
+  depends_on = [aws_api_gateway_method.milestone_sessions_options_method]
+}
+
+resource "aws_api_gateway_method_response" "milestone_sessions_options_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestone_sessions.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.milestone_sessions_options_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "milestone_sessions_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestone_sessions.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.milestone_sessions_options_integration,
+    aws_api_gateway_method_response.milestone_sessions_options_method_response
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
 }
