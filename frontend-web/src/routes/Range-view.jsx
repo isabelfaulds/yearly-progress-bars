@@ -1,10 +1,10 @@
-import RadarChart from "../components/RadarChart.jsx";
+import RadarChart from "../components/charts/RadarChart.jsx";
 import CustomDayPicker from "../components/DayPicker.jsx";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { addDays, format, isBefore, isEqual } from "date-fns";
 import { FunnelIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
-import LineChart from "../components/LineChart.jsx";
-import CategoryTotals from "../components/CategoryTotals.jsx";
+import LineChart from "../components/charts/LineChart.jsx";
+import CategoryTotals from "../components/charts/CategoryTotals.jsx";
 import NavButton from "../components/NavButton.jsx";
 import { useCategories } from "../hooks/useCategories.jsx";
 import { useEventsForRange } from "../hooks/useEventsForRange.jsx";

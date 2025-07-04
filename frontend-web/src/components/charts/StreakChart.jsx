@@ -1,7 +1,7 @@
 import React from "react";
 import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
-import "./HeatMapOverrides.css";
+import "./StreakChartOverrides.css";
 
 function GradientDefs() {
   return (

@@ -1,7 +1,7 @@
 import CustomDayPicker from "../components/DayPicker.jsx";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { addDays, format, isBefore, isEqual } from "date-fns";
-import LineChart from "../components/LineChart.jsx";
+import LineChart from "../components/charts/LineChart.jsx";
 import NavButton from "../components/NavButton.jsx";
 import { useCategories } from "../hooks/useCategories.jsx";
 import { useEventsForRange } from "../hooks/useEventsForRange.jsx";
