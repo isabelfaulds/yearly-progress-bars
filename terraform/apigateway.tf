@@ -43,7 +43,13 @@ resource "aws_iam_policy" "apigateway_logging_dynamo_policy" {
         Resource =[
         aws_dynamodb_table.user_tokens.arn,
         aws_dynamodb_table.calendar_events.arn,
-        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events/index/UserIdDateIndex"
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events/index/UserIdDateIndex",
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestones/index/UserIndex",
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestone_sessions/index/MilestoneIndex",
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestone_sessions/index/UserIndex",
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_day_totals/index/UserIndex"
+
+        
         ]
       },
     ]
@@ -1213,6 +1219,1087 @@ resource "aws_api_gateway_integration_response" "user_settings_options_integrati
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,PATCH'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+resource "aws_api_gateway_resource" "saved_items" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_rest_api.user_data_api.root_resource_id
+  path_part   = "saved_items"
+}
+
+
+resource "aws_api_gateway_method" "saved_items_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "saved_items_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.saved_items.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+  passthrough_behavior = "WHEN_NO_MATCH"
+  depends_on = [aws_api_gateway_method.saved_items_options_method]
+}
+
+resource "aws_api_gateway_method_response" "saved_items_options_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.saved_items_options_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "saved_items_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.saved_items_options_integration,
+    aws_api_gateway_method_response.saved_items_options_method_response
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+# store saved item method
+resource "aws_api_gateway_method" "post_saved_item_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+  request_parameters = {
+    "method.request.header.user-id" = true
+  }
+}
+
+# ddb insertions
+resource "aws_api_gateway_integration" "post_saved_item_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.post_saved_item_method.resource_id
+  http_method = aws_api_gateway_method.post_saved_item_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS" 
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  uri = "arn:aws:apigateway:us-west-1:dynamodb:action/PutItem"
+  passthrough_behavior = "WHEN_NO_MATCH"
+
+
+# 400 if improper template
+  request_templates = {
+    "application/json" = <<EOF
+    #set($inputRoot = $input.path('$'))
+    #set($userId = $input.params().header.get('user-id'))
+    #set($url = $inputRoot.url)
+    {
+      "TableName": "pb_saved_items",
+      "Item": {
+        "saved_item_uid": { "S": "$userId:$url" }
+        ,"user_id" : { "S": "$userId" }
+        #if($inputRoot.category && $inputRoot.category != "")
+          ,"category_uid": { "S": "$userId:$inputRoot.category" }
+        #end
+        #if( $inputRoot.title && $inputRoot.title != "" )
+          ,"title": { "S": "$inputRoot.title" }
+        #end
+        #if( $inputRoot.description && $inputRoot.description != "")
+          ,"description": { "S": "$inputRoot.description" }
+        #end
+      },
+    }
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "post_saved_item_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "POST"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.post_saved_item_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+
+resource "aws_api_gateway_integration_response" "saved_items_post_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "POST"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.post_saved_item_integration,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+  response_templates = {
+          "application/json" = <<EOF
+      #set($inputRoot = $input.path('$'))
+      #set($userId = $input.params().header.get('user-id'))
+      #set($url = $inputRoot.url)
+      {
+        "user_id": "$userId",
+      }
+      EOF
+        }
+}
+
+# Get items
+resource "aws_api_gateway_method" "get_items_by_index" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "GET"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+    "method.request.querystring.category" = true
+  }
+
+  request_models = {
+    "application/json" = "Empty"
+  }
+}
+
+resource "aws_api_gateway_integration" "get_items_by_index_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.user_data_api.id
+  resource_id             = aws_api_gateway_resource.saved_items.id
+  http_method             = aws_api_gateway_method.get_items_by_index.http_method
+  integration_http_method = "POST"
+  type                    = "AWS"
+  uri                     = "arn:aws:apigateway:us-west-1:dynamodb:action/Query"
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  passthrough_behavior    = "WHEN_NO_MATCH"
+
+  request_templates = {
+    "application/json" = <<EOF
+    {
+      "TableName": "pb_saved_items",
+      "IndexName": "UserCategoryIndex",
+      "KeyConditionExpression": "category_uid = :cat AND user_id = :uid",
+      "ExpressionAttributeValues": {
+        ":cat": {
+          "S": "$input.params().header.get('user-id'):$input.params('category')"
+        },
+        ":uid": {
+          "S": "$input.params('user-id')"
+        }
+      }
+    }
+
+    EOF
+      }
+}
+
+resource "aws_api_gateway_method_response" "get_items_by_index_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.saved_items.id
+  http_method   = "GET"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.get_items_by_index]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "get_items_by_index_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.saved_items.id
+  http_method = aws_api_gateway_method.get_items_by_index.http_method
+  status_code = "200"
+  depends_on = [
+    aws_api_gateway_integration.get_items_by_index_integration,
+    aws_api_gateway_method_response.get_items_by_index_method_response
+  ]
+  response_templates = {
+    "application/json" = <<EOF
+#set($items = $input.path('$.Items'))
+{
+  "items": [
+  #foreach($item in $items)
+    {
+      "saved_item_uid": "$item.saved_item_uid.S",
+      "category_uid": "$item.category_uid.S",
+      "description": "$item.description.S",
+      "title": "$item.title.S",
+      "image": "$item.image.S"
+    }#if($foreach.hasNext),#end
+  #end
+  ]
+}
+EOF
+  }
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST,GET'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+resource "aws_api_gateway_resource" "milestones" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_rest_api.user_data_api.root_resource_id
+  path_part   = "milestones"
+}
+
+
+resource "aws_api_gateway_method" "milestones_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "milestones_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.milestones.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+  passthrough_behavior = "WHEN_NO_MATCH"
+  depends_on = [aws_api_gateway_method.milestones_options_method]
+}
+
+resource "aws_api_gateway_method_response" "milestones_options_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.milestones_options_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "milestones_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.milestones_options_integration,
+    aws_api_gateway_method_response.milestones_options_method_response
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST,PATCH,DELETE'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+
+# Get milestones
+resource "aws_api_gateway_method" "get_milestones_by_index" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method   = "GET"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+    "method.request.querystring.category" = false # optional
+  }
+
+  request_models = {
+    "application/json" = "Empty"
+  }
+}
+
+resource "aws_api_gateway_integration" "get_milestones_by_index_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.user_data_api.id
+  resource_id             = aws_api_gateway_resource.milestones.id
+  http_method             = aws_api_gateway_method.get_milestones_by_index.http_method
+  integration_http_method = "POST"
+  type                    = "AWS"
+  uri                     = "arn:aws:apigateway:us-west-1:dynamodb:action/Query"
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  passthrough_behavior    = "WHEN_NO_MATCH"
+
+  request_templates = {
+    "application/json" = <<EOF
+    #set($category = $input.params('category'))
+    #set($userId = $input.params().header.get('user-id'))
+    #if($category && $category != "" )
+        {
+          "TableName": "pb_milestones",
+          "IndexName": "UserCategoryIndex",
+          "KeyConditionExpression": "category_uid = :cat",
+          "ExpressionAttributeValues": {
+            ":cat": {"S": "$userId:$category"}
+          }
+        }
+    #else
+        {
+          "TableName": "pb_milestones",
+          "IndexName": "UserIndex",
+          "KeyConditionExpression": "user_id = :user",
+          "ExpressionAttributeValues": {
+            ":user": { "S": "$userId" }
+          }
+        }
+    #end
+    EOF
+      }
+}
+
+resource "aws_api_gateway_method_response" "get_milestones_by_index_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method   = "GET"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.get_milestones_by_index]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "get_milestones_by_index_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.milestones.id
+  http_method = aws_api_gateway_method.get_milestones_by_index.http_method
+  status_code = "200"
+  depends_on = [
+    aws_api_gateway_integration.get_milestones_by_index_integration,
+    aws_api_gateway_method_response.get_milestones_by_index_method_response
+  ]
+  response_templates = {
+    "application/json" = <<EOF
+        #set($milestones = $input.path('$.Items'))
+        {
+          "milestones": [
+          #foreach($item in $milestones)
+            #set($minutes= $item.minutes_invested.N)
+            #set($timeframe=$item.timeframe_weeks.N)
+            #set($completed=$item.completed.BOOL)
+            {
+              "milestone_user_datetime_uid": "$item.milestone_user_datetime_uid.S",
+              "milestone": "$item.milestone.S",
+              "category_uid": "$item.category_uid.S",
+              "created_timestamp": "$item.created_timestamp.S",
+              "interest" : $item.interest.N,
+              "minutes_invested" : 
+                #if ($minutes && $minutes != "") $minutes
+                #else null #end ,
+              "timeframe_weeks" : 
+                #if ($timeframe && $timeframe != "") $timeframe
+                #else null #end ,
+              "completed" :
+                #if ($completed && $completed != "") $completed
+                #else null #end
+            }#if($foreach.hasNext),#end
+          #end
+          ]
+        }
+        EOF
+  }
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST,PATCH,GET'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+
+resource "aws_api_gateway_method" "post_milestone_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+  }
+}
+
+# ddb insertions
+resource "aws_api_gateway_integration" "post_milestone_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.post_milestone_method.resource_id
+  http_method = aws_api_gateway_method.post_milestone_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS" 
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  uri = "arn:aws:apigateway:us-west-1:dynamodb:action/PutItem"
+  passthrough_behavior = "WHEN_NO_MATCH"
+
+
+# 400 if improper template
+  request_templates = {
+    "application/json" = <<EOF
+    #set($inputRoot = $input.path('$'))
+    #set($userId = $input.params().header.get('user-id'))
+    #set($dateTime = $inputRoot.dateTime)
+    #set($interest = $inputRoot.interestScore)
+    #set($milestone = $inputRoot.milestone)
+    #set($timeframe = $inputRoot.timeFrameWeeks)
+
+    {
+      "TableName": "pb_milestones",
+      "Item": {
+        "milestone_user_datetime_uid": { "S": "$userId:$dateTime" }
+        ,"user_id" : { "S": "$userId" }
+        ,"created_timestamp" : {"S" : "$dateTime"}
+        , "milestone" : { "S" : "$milestone" }
+        ,"interest" : { "N" : "$interest.toString()" }
+        #if($inputRoot.category && $inputRoot.category != "")
+          ,"category_uid": { "S": "$userId:$inputRoot.category" }
+        #end
+        #if( $inputRoot.timeframe && $inputRoot.timeFrameWeeks != "" )
+          ,"timeframe_weeks": { "N": "$timeframe.toString()" }
+        #end
+      }
+    }
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "post_milestone_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method   = "POST"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.post_milestone_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "post_milestone_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method   = "POST"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.post_milestone_integration,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+  response_templates = {
+          "application/json" = <<EOF
+      #set($inputRoot = $input.path('$'))
+      #set($userId = $input.params().header.get('user-id'))
+      #set($url = $inputRoot.url)
+      {
+        "user_id": "$userId"
+      }
+      EOF
+        }
+}
+
+### list calendars
+
+resource "aws_api_gateway_resource" "cal_list" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_resource.calendar_sync_gcal.id
+  path_part   = "list"
+}
+
+
+resource "aws_api_gateway_method" "cal_list_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "cal_list_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.cal_list.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+  passthrough_behavior = "WHEN_NO_MATCH"
+  depends_on = [aws_api_gateway_method.cal_list_options_method]
+}
+
+resource "aws_api_gateway_method_response" "cal_list_options_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.cal_list_options_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "cal_list_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.cal_list_options_integration,
+    aws_api_gateway_method_response.cal_list_options_method_response
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+# Get calendars
+resource "aws_api_gateway_method" "get_calendars_list_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "GET"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+  }
+
+}
+
+resource "aws_api_gateway_integration" "get_calendars_list_lambda_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.get_calendars_list_method.resource_id
+  http_method = aws_api_gateway_method.get_calendars_list_method.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  credentials             = null
+  uri = aws_lambda_function.sync_gcal_list.invoke_arn
+}
+
+resource "aws_api_gateway_method_response" "get_calendars_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "GET"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.get_calendars_list_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "get_calendars_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "GET"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.get_calendars_list_lambda_integration,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+  
+}
+
+### post preferences
+
+resource "aws_api_gateway_method" "post_calendars_list_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+  }
+}
+
+resource "aws_api_gateway_integration" "post_calendar_list" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.post_calendars_list_method.resource_id
+  http_method = aws_api_gateway_method.post_calendars_list_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS" 
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  uri = "arn:aws:apigateway:us-west-1:dynamodb:action/PutItem"
+  passthrough_behavior = "WHEN_NO_MATCH"
+
+
+# 400 if improper template
+  request_templates = {
+    "application/json" = <<EOF
+    #set($inputRoot = $input.path('$'))
+    #set($userId = $input.params().header.get('user-id'))
+    #set($calendarID = $inputRoot.calendarID)
+    #set($defaultCategory = $inputRoot.defaultCategory)
+    #set($sync = $inputRoot.sync)
+    #set($summary = $inputRoot.summary)
+
+
+    {
+      "TableName": "pb_calendars",
+      "Item": {
+        "calendar_uid" : {"S" : "$userId:$calendarID"}
+        ,"user_id" : { "S": "$userId" }
+        ,"sync" : {"BOOL" : $sync}
+        ,"calendar_name" : { "S": "$summary" }
+        #if($inputRoot.defaultCategory && $inputRoot.defaultCategory != "")
+          , "default_category_uid" : { "S" : "$userId:$inputRoot.defaultCategory" }
+          , "default_category" : { "S" : "$inputRoot.defaultCategory" }
+        #end
+
+      }
+    }
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "post_calendar_list_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "POST"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.post_calendars_list_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "post_calendar_list_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "POST"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.post_calendar_list,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+  response_templates = {
+          "application/json" = <<EOF
+      {"message": "Updated calendar settings"}
+      EOF
+        }
+}
+
+# Get milestone sessions
+
+resource "aws_api_gateway_resource" "milestone_sessions" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_resource.milestones.id
+  path_part   = "sessions"
+}
+
+
+resource "aws_api_gateway_method" "get_milestone_sessions" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestone_sessions.id
+  http_method   = "GET"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+    "method.request.querystring.milestone_user_datetime_uid" = false # optional
+  }
+
+  request_models = {
+    "application/json" = "Empty"
+  }
+}
+
+resource "aws_api_gateway_integration" "get_milestone_sessions_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.user_data_api.id
+  resource_id             = aws_api_gateway_resource.milestone_sessions.id
+  http_method             = aws_api_gateway_method.get_milestone_sessions.http_method
+  integration_http_method = "POST"
+  type                    = "AWS"
+  uri                     = "arn:aws:apigateway:us-west-1:dynamodb:action/Query"
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  passthrough_behavior    = "WHEN_NO_MATCH"
+
+  request_templates = {
+    "application/json" = <<EOF
+    #set($milestone = $input.params('milestone_uid'))
+    #set($userId = $input.params().header.get('user-id'))
+    #if($milestone && $milestone != "" )
+        {
+          "TableName": "pb_milestone_sessions",
+          "IndexName": "UserCategoryIndex",
+          "KeyConditionExpression": "milestone_user_datetime_uid = :milestone",
+          "ExpressionAttributeValues": {
+            ":milestone": {"S": "$milestone"}
+          }
+        }
+    #else
+        {
+          "TableName": "pb_milestone_sessions",
+          "IndexName": "UserIndex",
+          "KeyConditionExpression": "user_id = :user",
+          "ExpressionAttributeValues": {
+            ":user": { "S": "$userId" }
+          }
+        }
+    #end
+    EOF
+      }
+}
+
+resource "aws_api_gateway_method_response" "get_milestone_sessions_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestone_sessions.id
+  http_method   = "GET"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.get_milestone_sessions]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "get_milestone_sessions_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.milestone_sessions.id
+  http_method = aws_api_gateway_method.get_milestone_sessions.http_method
+  status_code = "200"
+  depends_on = [
+    aws_api_gateway_integration.get_milestone_sessions_integration,
+    aws_api_gateway_method_response.get_milestone_sessions_method_response
+  ]
+  response_templates = {
+    "application/json" = <<EOF
+        #set($milestone_sessions = $input.path('$.Items'))
+        {
+          "sessions": [
+          #foreach($item in $milestone_sessions)
+            #set($minutes= $item.minutes.N)
+            #set($event_startdate= $item.event_startdate.S)
+            #set($event_name= $item.event_name.S)
+
+            {
+              "milestone_user_datetime_uid": "$item.milestone_user_datetime_uid.S",
+              "milestone_session_uid": "$item.milestone_session_uid.S",
+
+              "event_startdate" : 
+                #if ($event_startdate && $event_startdate != "") "$event_startdate"
+                #else null #end ,
+              "event_name" :
+                #if ($event_name && $event_name != "") "$event_name"
+                #else null #end,
+              "minutes" : 
+                #if ($minutes && $minutes != "") $minutes
+                #else null #end
+            }#if($foreach.hasNext),#end
+          #end
+          ]
+        }
+        EOF
+  }
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+resource "aws_api_gateway_method" "milestone_sessions_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestone_sessions.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "milestone_sessions_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.milestone_sessions.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+  passthrough_behavior = "WHEN_NO_MATCH"
+  depends_on = [aws_api_gateway_method.milestone_sessions_options_method]
+}
+
+resource "aws_api_gateway_method_response" "milestone_sessions_options_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestone_sessions.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.milestone_sessions_options_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "milestone_sessions_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestone_sessions.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.milestone_sessions_options_integration,
+    aws_api_gateway_method_response.milestone_sessions_options_method_response
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+# Get day scores
+
+resource "aws_api_gateway_resource" "aggregates" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_resource.calendar_data_api.id
+  path_part   = "aggregates"
+}
+
+resource "aws_api_gateway_resource" "daily_agg" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_resource.aggregates.id
+  path_part   = "daily"
+}
+
+resource "aws_api_gateway_method" "get_daily_aggregates" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.daily_agg.id
+  http_method   = "GET"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+  }
+
+  request_models = {
+    "application/json" = "Empty"
+  }
+}
+
+resource "aws_api_gateway_integration" "get_daily_aggregates_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.user_data_api.id
+  resource_id             = aws_api_gateway_resource.daily_agg.id
+  http_method             = aws_api_gateway_method.get_daily_aggregates.http_method
+  integration_http_method = "POST"
+  type                    = "AWS"
+  uri                     = "arn:aws:apigateway:us-west-1:dynamodb:action/Query"
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  passthrough_behavior    = "WHEN_NO_MATCH"
+
+  request_templates = {
+    "application/json" = <<EOF
+    #set($userId = $input.params().header.get('user-id'))
+{
+  "TableName": "pb_day_totals",
+  "IndexName": "UserIndex",
+  "KeyConditionExpression": "user_id = :user",
+  "ExpressionAttributeValues": {
+    ":user": { "S": "$userId" }
+  }
+}
+    EOF
+      }
+}
+
+resource "aws_api_gateway_method_response" "get_daily_aggregates_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.daily_agg.id
+  http_method   = "GET"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.get_daily_aggregates]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "get_daily_aggregates_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.daily_agg.id
+  http_method = aws_api_gateway_method.get_daily_aggregates.http_method
+  status_code = "200"
+  depends_on = [
+    aws_api_gateway_integration.get_daily_aggregates_integration,
+  ]
+  response_templates = {
+    "application/json" = <<EOF
+        #set($day_totals = $input.path('$.Items'))
+        {
+          "day_totals": [
+          #foreach($item in $day_totals)
+            #set($calendar_date = $item.calendar_date.S)
+            #set($avg_category_score = $item.avg_category_score.N)
+            {
+              "calendar_date": "$calendar_date",
+              "avg_category_score" : $avg_category_score
+              }
+          #end
+          ]
+        }
+        EOF
+  }
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+resource "aws_api_gateway_method" "daily_aggregates_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.daily_agg.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "daily_aggregates_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.daily_agg.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+  passthrough_behavior = "WHEN_NO_MATCH"
+  depends_on = [aws_api_gateway_method.daily_aggregates_options_method]
+}
+
+resource "aws_api_gateway_method_response" "daily_aggregates_options_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.daily_agg.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.daily_aggregates_options_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "daily_aggregates_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.daily_agg.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.daily_aggregates_options_integration
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
     "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }

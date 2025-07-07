@@ -5,10 +5,14 @@ import CategorySettings from "./routes/CategorySettings";
 import RangeView from "./routes/Range-view";
 import CategoryView from "./routes/Category-view";
 import Login from "./routes/Login";
+import TermsService from "./routes/about/Terms-Service";
+import PrivacyPolicy from "./routes/about/Privacy-Policy";
+import CategoriesRoot from "./routes/Categories-root";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./hooks/useAuth";
+import Milestones from "./routes/Milestones";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,10 +45,14 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/day-view" element={<Day />} />
             <Route path="/range-view" element={<RangeView />} />
+            <Route path="/categories" element={<CategoriesRoot />} />
+            <Route path="/milestones" element={<Milestones />} />
             <Route
               path="/categories/:categorySlug"
               element={<CategoryView />}
             />
+            <Route path="/about/terms-of-service" element={<TermsService />} />
+            <Route path="/about/privacy-policy" element={<PrivacyPolicy />} />
           </Routes>
         </Router>
       </AuthProvider>

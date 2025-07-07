@@ -4,7 +4,7 @@ exports.handler = (event, context, callback) => {
   const request = event.Records[0].cf.request;
   const headers = request.headers;
 
-  if (headers.cookie) {
+  try {
     const cookies = headers.cookie[0].value.split("; ");
     const accessToken = cookies
       .find((cookie) => cookie.startsWith("accessToken="))
@@ -19,6 +19,8 @@ exports.handler = (event, context, callback) => {
       ];
       headers["user-id"] = [{ key: "user-id", value: userID }];
     }
+  } catch (error) {
+    console.log("Caught error", error);
   }
 
   callback(null, request);
