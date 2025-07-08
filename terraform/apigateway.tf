@@ -47,7 +47,7 @@ resource "aws_iam_policy" "apigateway_logging_dynamo_policy" {
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestones/index/UserIndex",
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestone_sessions/index/MilestoneIndex",
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestone_sessions/index/UserIndex",
-        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_day_totals/index/UserIndex"
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_day_metrics/index/UserIndex"
 
         
         ]
@@ -2192,7 +2192,7 @@ resource "aws_api_gateway_integration" "get_daily_aggregates_integration" {
     "application/json" = <<EOF
     #set($userId = $input.params().header.get('user-id'))
 {
-  "TableName": "pb_day_totals",
+  "TableName": "pb_day_metrics",
   "IndexName": "UserIndex",
   "KeyConditionExpression": "user_id = :user",
   "ExpressionAttributeValues": {

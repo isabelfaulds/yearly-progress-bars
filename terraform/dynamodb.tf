@@ -252,8 +252,8 @@ resource "aws_dynamodb_table" "pb_milestone_sessions" {
   }  
 }
 
-resource "aws_dynamodb_table" "day_totals" {
-  name = "pb_day_totals"
+resource "aws_dynamodb_table" "day_metrics" {
+  name = "pb_day_metrics"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "user_date_uid"
 
