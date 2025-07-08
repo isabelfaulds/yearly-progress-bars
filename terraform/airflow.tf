@@ -50,7 +50,7 @@ data "aws_ami" "amazon_linux_2" {
   most_recent = true
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-arm64-gp2"] # al2 naming convention for arm64
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"] # t instance compatible
   }
   filter {
     name   = "virtualization-type"
@@ -61,10 +61,14 @@ data "aws_ami" "amazon_linux_2" {
 
 resource "aws_instance" "airflow_ec2" {
   ami                    = data.aws_ami.amazon_linux_2.id
-  instance_type          = "r6gd.medium" 
+    # docker recommended 2 vcpus
+    # 4 gb disc space after installations 10 gb disc space recommended
+
+  instance_type          = "t3.large"
   subnet_id              = aws_subnet.main.id
   vpc_security_group_ids = [aws_security_group.airflow_sg.id]
   associate_public_ip_address = true
+  user_data = file("./airflow/setup_airflow.sh")
 
   tags = {
     Name = "AirflowTestInstance"
@@ -74,7 +78,7 @@ resource "aws_instance" "airflow_ec2" {
 # Manage the instance state, TODO: trigger with Lambda, Eventbridge
 resource "aws_ec2_instance_state" "airflow_instance_state" {
   instance_id = aws_instance.airflow_ec2.id
-  state       = "stopped" # switch to "running"
+  state       = "running" # switch to "running"
 }
 
 # instances that stop don't get a free eip
