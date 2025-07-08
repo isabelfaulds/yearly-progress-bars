@@ -37,3 +37,8 @@ variable "milestone_event_queue" {
   description = "Milestone event queue"
   type = string
 }
+
+variable "if_ip_address" {
+  description = "if ip address"
+  type = string
+}
