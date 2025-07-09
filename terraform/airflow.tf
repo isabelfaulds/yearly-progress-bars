@@ -125,13 +125,7 @@ resource "aws_instance" "airflow_ec2" {
   }
 }
 
-# Manage the instance state, TODO: trigger with Lambda, Eventbridge
-resource "aws_ec2_instance_state" "airflow_instance_state" {
-  instance_id = aws_instance.airflow_ec2.id
-  state       = "stopped" # switch to "running"
-}
-
-# instances that stop don't get a free eip
+# instances that stop don't get a eip by default
 output "instance_public_ip" {
   value = aws_instance.airflow_ec2.public_ip
   description = "Public IP of the Airflow EC2 instance"
@@ -174,4 +168,99 @@ resource "aws_route_table" "public" {
 resource "aws_route_table_association" "public_subnet_association" {
   subnet_id      = aws_subnet.main.id
   route_table_id = aws_route_table.public.id
+}
+
+### Schedule
+resource "aws_ec2_instance_state" "airflow_instance_state" {
+  instance_id = aws_instance.airflow_ec2.id
+  state       = "stopped" # "running" to start
+}
+
+resource "aws_iam_policy" "scheduler_ec2_policy" {
+  name = "scheduler_ec2_policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ec2:StartInstances",
+          "ec2:StopInstances"
+        ],
+        Resource = [
+          "${aws_instance.airflow_ec2.arn}:*",
+          "${aws_instance.airflow_ec2.arn}"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role" "scheduler_ec2_role" {
+  name = "scheduler-ec2-role"
+  managed_policy_arns = [aws_iam_policy.scheduler_ec2_policy.arn]
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "scheduler.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_scheduler_schedule" "airflow_instance_start_schedule" {
+  name       = "airflow-start-scheduler"
+  group_name = "default"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+  schedule_expression = "cron(0 0 * * ? *)" # 12 am
+  schedule_expression_timezone = "US/Pacific"
+  description = "daily start airflow instance"
+
+  target {
+    # ec2 api target , startInstances triggered
+    arn      = "arn:aws:scheduler:::aws-sdk:ec2:startInstances"
+    role_arn = aws_iam_role.scheduler_ec2_role.arn
+    
+    # target instance
+    input = jsonencode({
+      InstanceIds = [
+        "${aws_instance.airflow_ec2.id}"
+      ]
+    })
+  }
+}
+
+resource "aws_scheduler_schedule" "airflow_instance_stop_schedule" {
+  name       = "airflow-stop-scheduler"
+  group_name = "default"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+  schedule_expression = "cron(0 20 * * ? *)" # 12:20 am
+  schedule_expression_timezone = "US/Pacific"
+  description = "daily stop airflow instance"
+
+  target {
+    # ec2 api target , stopInstances triggered
+    arn      = "arn:aws:scheduler:::aws-sdk:ec2:stopInstances"
+    role_arn = aws_iam_role.scheduler_ec2_role.arn
+    
+    # target instance
+    input = jsonencode({
+      InstanceIds = [
+        "${aws_instance.airflow_ec2.id}"
+      ]
+    })
+  }
 }
