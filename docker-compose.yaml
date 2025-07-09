@@ -179,7 +179,7 @@ services:
       <<: *airflow-common-env
       # Required to handle warm shutdown of the celery workers properly
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
-      _PIP_ADDITIONAL_REQUIREMENTS: "boto3 pandas"
+      _PIP_ADDITIONAL_REQUIREMENTS: "boto3 pandas awscli"
       DUMB_INIT_SETSID: "0"
     restart: always
     depends_on:
@@ -297,7 +297,7 @@ services:
       _AIRFLOW_WWW_USER_CREATE: "true"
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
-      _PIP_ADDITIONAL_REQUIREMENTS: "boto3 pandas"
+      _PIP_ADDITIONAL_REQUIREMENTS: "boto3 pandas awscli"
     user: "0:0"
 
   airflow-cli:
@@ -307,7 +307,7 @@ services:
     environment:
       <<: *airflow-common-env
       CONNECTION_CHECK_MAX_COUNT: "0"
-      _PIP_ADDITIONAL_REQUIREMENTS: "boto3 pandas"
+      _PIP_ADDITIONAL_REQUIREMENTS: "boto3 pandas awscli"
     # Workaround for entrypoint issue. See: https://github.com/apache/airflow/issues/16252
     command:
       - bash
