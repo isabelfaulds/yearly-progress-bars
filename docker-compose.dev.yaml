@@ -1,0 +1,34 @@
+x-airflow-common: &airflow-common
+  image: apache/airflow:3.0.2
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__LOAD_EXAMPLES: "true"
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+
+services:
+  airflow-worker:
+    <<: *airflow-common
+    environment:
+      <<: *airflow-common-env
+      AWS_PROFILE: default
+    volumes:
+      - /Users/isabelfaulds/.aws:/home/airflow/.aws:ro
+
+  webserver:
+    <<: *airflow-common
+    environment:
+      <<: *airflow-common-env
+      AWS_PROFILE: default
+    volumes:
+      - /Users/isabelfaulds/.aws:/home/airflow/.aws:ro
+
+  airflow-scheduler:
+    <<: *airflow-common
+    environment:
+      <<: *airflow-common-env
+      AWS_PROFILE: default
+    volumes:
+      - /Users/isabelfaulds/.aws:/home/airflow/.aws:ro

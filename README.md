@@ -55,3 +55,23 @@ terraform replace --target=aws_s3_bucket_object.function_name
 aws lambda delete-function --function-name function-name
 terraform apply --target=aws_lambda_function.function_name
 ```
+
+##### Airflow
+
+- docker-compose.yaml prebuilt image in root folder
+
+Local setup
+
+```
+echo "AIRFLOW_UID=$(id -u)" > .env
+docker compose up airflow-init
+docker compose up -d
+docker compose down --volumes --remove-orphans
+```
+
+Force reload of scripts
+
+```
+docker compose exec airflow-scheduler airflow dags reload
+docker compose exec airflow-webserver airflow dags reload
+```
