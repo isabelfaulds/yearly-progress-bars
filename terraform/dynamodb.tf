@@ -71,6 +71,12 @@ resource "aws_dynamodb_table" "calendar_events" {
     projection_type = "ALL"
   }
 
+  global_secondary_index {
+    name            = "DateIndex"
+    hash_key        = "event_startdate"
+    projection_type = "ALL"
+  }
+
   server_side_encryption {
     enabled = true
   }
