@@ -12,10 +12,11 @@ import { useCategories } from "../hooks/useCategories.jsx";
 import { useQueryClient } from "@tanstack/react-query";
 import CatIconComponent from "../assets/cat.svg?react";
 import { CubeIcon } from "@heroicons/react/24/outline";
+import { Button } from "@/components/ui/button.jsx";
 
 const baseContainerClasses = `bg-[#000000] bg-cover bg-center 
     w-screen min-h-screen m-0 flex flex-col
-    pt-10 pl-1 px-4
+    pt-10 px-3 pb-10
     sm:pt-12  sm:px-20`;
 
 function titleCase(str) {
@@ -249,26 +250,28 @@ const CategorySettings = () => {
   return (
     <div className={baseContainerClasses}>
       {/* Header */}
-      <div className="flex flex-row items-center justify-between w-full pr-2">
-        <div className="text-white pl-8 text-2xl sm:text-2xl py-4">
+      <div className="flex flex-row items-center justify-between w-full pr-2 gap-x-3">
+        <div className="text-white pl-6 text-base sm:text-2xl py-4 font-lexend">
           Category Settings
         </div>
         <button
           onClick={handleSaveAndNavigate}
-          className="p-2
+          className="p-1 sm:p-2
           text-white rounded-full rounded-full
           outline-1 
           outline-gray-400
           shadow-lg
-          bg-gray-700
-        hover:bg-gradient-to-r hover:from-gray-600 hover:to-gray-700
+          bg-gray-800
+        hover:bg-gradient-to-r hover:from-gray-700 hover:to-gray-900
           hover:shadow-xl
           hover:ring-1
-          hover:ring-gray-600
+          hover:ring-gray-900
           flex items-center
+          pl-6 sm:pl-7 pr-3
+          text-sm sm:text-base
           "
         >
-          <span className="mr-2">Save</span>
+          <span className="mr-2 font-lexend">Save</span>
           <ChevronRightIcon
             className="text-gray-00 h-6 w-6
           hover:shadow-xl "
@@ -281,7 +284,9 @@ const CategorySettings = () => {
 
       {/* Navigation Icon */}
       <div className="flex items-center gap-3 pl-8">
-        <span className="text-gray-300 font-medium">Nav Icon Style</span>
+        <span className="text-gray-300 text-sm sm:text-base font-lexend">
+          Nav Icon Style
+        </span>
         <button
           onClick={handleCategoryIconToggle}
           className={`relative w-24 h-12 rounded-full p-0 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
@@ -321,7 +326,7 @@ const CategorySettings = () => {
       </div>
 
       {/* Saved Categories */}
-      <div className="flex flex-col pl-4 mt-1 items-center">
+      <div className="flex flex-col test mt-1 items-center text-sm">
         <ul className="pt-3 px-4 mb-4 w-full">
           {categories.map((item, index) => (
             <li
@@ -363,7 +368,7 @@ const CategorySettings = () => {
                   {item.totalHours}
                 </div>
               )}
-              <span className="sm:px-1 px-1">hrs</span>
+              <span className="text-xs sm:text-sm sm:px-1">hr</span>
 
               {/* Editable Minutes */}
               {editingCell.index === index &&
@@ -393,7 +398,7 @@ const CategorySettings = () => {
                   {item.remainderMinutes}
                 </div>
               )}
-              <span className="sm:px-1 px-1">min</span>
+              <span className="text-xs sm:text-sm sm:px-1">min</span>
               <button
                 aria-label="Delete Category"
                 onClick={() => deleteCategory(item.category)}
@@ -416,7 +421,7 @@ const CategorySettings = () => {
                 <MinusCircleIcon
                   className="
                 text-gray-700
-                h-6 w-6
+                w-5 sm:w-6
                 hover:border-2
                 rounded-full
                 hover:outline-white"
