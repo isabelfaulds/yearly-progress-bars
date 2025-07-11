@@ -40,7 +40,10 @@ const LoginStep1 = ({ onNext }) => {
         </p>
       </div>
       <div className="m-3 flex flex-col gap-3 mx-auto">
-        <Button onClick={handleSignedIn} className="mx-auto p-2 max-w-1/3">
+        <Button
+          onClick={handleSignedIn}
+          className="mx-auto p-2 sm:max-w-1/2 md:max-w-1/3"
+        >
           Continue with Google Calendar
         </Button>
       </div>
