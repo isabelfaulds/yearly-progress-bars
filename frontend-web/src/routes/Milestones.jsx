@@ -177,8 +177,9 @@ const Milestones = () => {
             />
           </div>
           {/* Table Header & Rows Container */}
-          <ScrollArea className="h-[100px] rounded-md w-full overflow-x-auto relative">
-            <div className="overflow-x-scroll relative min-w-full">
+          <ScrollArea className="h-[150px] rounded-md w-full overflow-x-auto relative">
+            {/* overflow-x-auto causes bottom margin */}
+            <div className="relative min-w-full">
               <Table className="min-w-full">
                 {/* fix scroll sticky top-0 , doesnt work if overflow property set*/}
                 <TableHeader className="bg-coolgray sticky top-0 z-10">
