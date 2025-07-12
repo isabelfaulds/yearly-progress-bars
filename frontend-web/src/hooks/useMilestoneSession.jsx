@@ -6,7 +6,7 @@ export const fetchMilestoneSessions = async (
   let fetchUrl = import.meta.env.VITE_CLOUDFRONT_MILESONE_SESSIONS;
 
   if (milestone_user_datetime_uid) {
-    fetchUrl = `${fetchUrl}/?milestone_uid=${String(
+    fetchUrl = `${fetchUrl}/?milestone_user_datetime_uid=${String(
       milestone_user_datetime_uid
     )}`;
   }

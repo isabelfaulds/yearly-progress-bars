@@ -2,7 +2,7 @@ import NavButton from "../components/NavButton.jsx";
 import { useCategories } from "../hooks/useCategories.jsx";
 import { useMilestones, useCreateMilestone } from "../hooks/useMilestones.jsx";
 import { useMilestoneSessions } from "@/hooks/useMilestoneSession.jsx";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -36,12 +36,7 @@ const baseContainerClasses = `
 
 const Milestones = () => {
   const { data: categories, isLoading, error } = useCategories();
-  const {
-    data: milestones,
-    isLoading: isMilestoneLoading,
-    isError: isMilestoneError,
-    error: milestoneError,
-  } = useMilestones(null);
+  const { data: milestones } = useMilestones(null);
   const { mutate: addNewMilestone } = useCreateMilestone();
 
   const [globalFilter, setGlobalFilter] = useState("");
@@ -96,22 +91,38 @@ const Milestones = () => {
     setSelectedMilestoneID(rowData.milestone_user_datetime_uid);
   };
 
-  useEffect(() => {
-    console.log(milestoneSessions);
-
-    if (milestoneSessions !== undefined) {
-      console.log(milestoneSessions);
-      setNumberSessions(String(milestoneSessions.length));
-
-      const totalMinutes = milestoneSessions.reduce((sum, currentItem) => {
-        // Add the 'minutes' from the current item to the running sum
-        return sum + currentItem.minutes;
-      }, 0);
-      setTotalHours(Math.floor(totalMinutes / 60));
-      setReaminderMinutes(totalMinutes % 60);
+  // Sessions
+  const selectedSessions = useMemo(() => {
+    if (!milestoneSessions || !selectedMilestoneID) {
+      return []; // no data, nothing selected
     }
-  }, [milestoneSessions]);
+    var selectedSessions = milestoneSessions.filter(
+      (session) => session.milestone_user_datetime_uid === selectedMilestoneID
+    );
+    // setNumberSessions(String(selectedSessions.length));
+    // const totalMinutes = milestoneSessions
+    //   .filter(
+    //     (session) => session.milestone_user_datetime_uid === selectedMilestoneID
+    //   )
+    //   .reduce((sum, currentItem) => {
+    //     // Add the 'minutes' from the current item to the running sum
+    //     return sum + currentItem.minutes;
+    //   }, 0);
+    // setTotalHours(Math.floor(totalMinutes / 60));
+    // setReaminderMinutes(totalMinutes % 60);
+    return selectedSessions;
+  }, [milestoneSessions, selectedMilestoneID]);
 
+  const milestoneMinutes = useMemo(() => {
+    return selectedSessions.reduce((sum, currentItem) => {
+      return sum + currentItem.minutes;
+    }, 0);
+  }, [selectedSessions]);
+  const milestoneNumberSessions = selectedSessions.length;
+  const milestoneHours = Math.floor(milestoneMinutes / 60);
+  const milestoneMinutesRemainder = milestoneMinutes % 60;
+
+  // Adding new one
   const submitAddMilestone = () => {
     if (typeof newMilestone.category === "string") {
       newMilestone.category = newMilestone.category.toLowerCase();
@@ -304,16 +315,19 @@ const Milestones = () => {
             </div>
           )}
         </div>
-        {/* TODO: Bubble Stats: Time , Sessions */}
         <div className="mt-5 flex flex-row gap-5 md:gap-30 justify-center items-center w-full md:pl-10 md:pr-10 mb-3">
           <div className="bg-coolgray rounded-full flex flex-col justify-center font-lexend md:min-w-40 md:min-h-24 p-4 md:p-6">
             <span className="font-extralight text-sm md:text-lg">
               Total Time
             </span>
             <span className="md:text-2xl">
-              {totalHours > 0 && <span>{totalHours} hrs</span>}
-              {totalHours > 0 && remainderMinutes > 0 && <span> </span>}
-              {remainderMinutes > 0 && <span>{remainderMinutes} hrs</span>}
+              {milestoneHours > 0 && <span>{milestoneHours} hrs</span>}
+              {milestoneHours > 0 && milestoneMinutesRemainder > 0 && (
+                <span> </span>
+              )}
+              {milestoneMinutesRemainder > 0 && (
+                <span>{milestoneMinutesRemainder} min</span>
+              )}
             </span>
           </div>
           <div className="font-lexend md:text-2xl mb-2">
@@ -321,9 +335,11 @@ const Milestones = () => {
           </div>
           <div className="bg-coolgray rounded-full flex flex-col justify-center font-lexend md:min-w-40 md:min-h-24 p-4 md:p-6">
             <span className="font-extralight text-sm md:text-lg">
-              Number Sessions
+              Number Sessions{" "}
             </span>
-            <span className="md:text-2xl">{numberSessions}</span>
+            <span className="md:text-2xl">
+              {milestoneNumberSessions != 0 && milestoneNumberSessions}
+            </span>
           </div>
         </div>
         {/* TODO: Little Chart - with forecasting */}
@@ -333,9 +349,9 @@ const Milestones = () => {
             <span className="border-b border-gray-400 pb-1 "> Sessions</span>
           </div>
           <div className=" pt-2 pb-4 pr-4 pl-4 text-sm">
-            {milestoneSessions ? (
-              milestoneSessions.map((item) => (
-                <div ClassName="text-white">
+            {selectedSessions ? (
+              selectedSessions.map((item) => (
+                <div className="pb-3">
                   {item.event_startdate} - {item.event_name} - {item.minutes}{" "}
                   min
                 </div>
