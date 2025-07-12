@@ -247,7 +247,7 @@ resource "aws_scheduler_schedule" "airflow_instance_stop_schedule" {
   flexible_time_window {
     mode = "OFF"
   }
-  schedule_expression = "cron(0 20 * * ? *)" # 12:20 am
+  schedule_expression = "cron(20 0 * * ? *)" # 12:20 am , minute hour month-day month week-day year
   schedule_expression_timezone = "US/Pacific"
   description = "daily stop airflow instance"
 
