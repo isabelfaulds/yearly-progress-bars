@@ -644,3 +644,39 @@ resource "aws_lambda_permission" "allow_apigateway_gcal_list" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/GET/calendar/sync/gcal/list"
 }
+
+### list tasklists
+resource "aws_s3_bucket_object" "sync_gcal_tasklist" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/cal-sync/gapi-tasklists/gapi-tasklists.zip"
+  etag = filemd5("../backend/cal-sync/gapi-tasklists/gapi-tasklists.zip")
+  key    = "gapi-tasklists.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "sync_gcal_tasklist" {
+  function_name = "go-gtasks-list"
+  s3_bucket     = aws_s3_bucket_object.sync_gcal_tasklist.bucket
+  s3_key        = aws_s3_bucket_object.sync_gcal_tasklist.key
+
+  handler = "bootstrap"
+  runtime = "provided.al2"  
+  depends_on = [aws_s3_bucket_object.sync_gcal_tasklist]
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+  environment {
+    variables = {
+        CLIENT_ID = var.client_id
+        CLIENT_SECRET = var.client_secret
+    }
+  }
+}
+
+resource "aws_lambda_permission" "allow_apigateway_gcal_tasklist" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.sync_gcal_tasklist.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/GET/calendar/sync/gtasks/list"
+}
