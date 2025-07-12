@@ -2,7 +2,7 @@ import NavButton from "../components/NavButton.jsx";
 import { useCategories } from "../hooks/useCategories.jsx";
 import { useMilestones, useCreateMilestone } from "../hooks/useMilestones.jsx";
 import { useMilestoneSessions } from "@/hooks/useMilestoneSession.jsx";
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -54,9 +54,20 @@ const Milestones = () => {
       className: "w-[200px] sm:min-w-[400px]",
     },
     {
-      accessorKey: "minutes_invested",
-      header: "Time Invested",
-      className: "w-[100px]",
+      accessorKey: "category",
+      header: "Category",
+      className: "w-[50px]",
+    },
+    // TODO: add minutes invested agg to milestones table
+    // {
+    //   accessorKey: "minutes_invested",
+    //   header: "Time Invested",
+    //   className: "w-[100px]",
+    // },
+    {
+      accessorKey: "target_date",
+      header: "Target Date",
+      className: "w-[50px]",
     },
     {
       accessorKey: "timeframe_weeks",
@@ -64,8 +75,8 @@ const Milestones = () => {
       className: "w-[50px]",
     },
     {
-      accessorKey: "category",
-      header: "Category",
+      accessorKey: "created_timestamp",
+      header: "Created Date",
       className: "w-[50px]",
     },
   ];
@@ -79,11 +90,7 @@ const Milestones = () => {
 
   // Selected Milestone Stats
   const [selectedMilestoneID, setSelectedMilestoneID] = useState(null);
-  const { data: milestoneSessions, isLoading: milestoneSessionsLoading } =
-    useMilestoneSessions(selectedMilestoneID);
-  const [numberSessions, setNumberSessions] = useState("");
-  const [totalHours, setTotalHours] = useState(0);
-  const [remainderMinutes, setReaminderMinutes] = useState(0);
+  const { data: milestoneSessions } = useMilestoneSessions(selectedMilestoneID);
   const [selectedMilestone, setSelectedMilestone] = useState("");
 
   const handleRowClick = (rowData) => {
@@ -99,17 +106,6 @@ const Milestones = () => {
     var selectedSessions = milestoneSessions.filter(
       (session) => session.milestone_user_datetime_uid === selectedMilestoneID
     );
-    // setNumberSessions(String(selectedSessions.length));
-    // const totalMinutes = milestoneSessions
-    //   .filter(
-    //     (session) => session.milestone_user_datetime_uid === selectedMilestoneID
-    //   )
-    //   .reduce((sum, currentItem) => {
-    //     // Add the 'minutes' from the current item to the running sum
-    //     return sum + currentItem.minutes;
-    //   }, 0);
-    // setTotalHours(Math.floor(totalMinutes / 60));
-    // setReaminderMinutes(totalMinutes % 60);
     return selectedSessions;
   }, [milestoneSessions, selectedMilestoneID]);
 
