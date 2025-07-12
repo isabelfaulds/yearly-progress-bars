@@ -14,10 +14,23 @@ export const fetchMilestones = async (category = null) => {
   try {
     const responseData = await response.json();
     return (
-      responseData.milestones.map((item) => ({
-        ...item,
-        category: item.category_uid.split(":").slice(1).join(":"),
-      })) || []
+      responseData.milestones.map((item) => {
+        let targetDate = null;
+        const createdDate = new Date(item.created_timestamp);
+        if (item.timeframe_weeks) {
+          createdDate.setUTCDate(
+            createdDate.getUTCDate() + item.timeframe_weeks * 7
+          );
+          targetDate = createdDate.toISOString().slice(0, 10);
+        }
+
+        return {
+          ...item,
+          category: item.category_uid.split(":").slice(1).join(":"),
+          target_date: targetDate,
+          created_timestamp: item.created_timestamp.slice(0, 10),
+        };
+      }) || []
     );
   } catch (err) {
     console.error("Failed to parse JSON from milestones response", err);
