@@ -52,10 +52,14 @@ type APIToken struct {
 	RefreshToken string    `dynamodbav:"refreshToken,omitempty"`
 }
 
+
 type TaskInfo struct {
+	Event_UID string `json:"event_uid"`
 	User_ID string `json:"user_id"`
-	Title    string `json:"title"`
-	Event_date string `json:"event_date"`
+	Event_Name    string `json:"event_name"`
+	Event_StartDate string `json:"event_startdate"`
+	Event_EndDate string `json:"event_enddate"`
+	Type string `json:"type"`
 	TaskList_UID    string `json:"tasklist_uid"`
 }
 
@@ -273,13 +277,43 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 			fmt.Println("No tasks for today.")
 		} else if (len(tasksResp.Items) > 0 ) {
 			for _, task := range tasksResp.Items {
+				event_uid := fmt.Sprintf("%s#task#%s", user_id, task.Id)
+
 				tasks = append(tasks, TaskInfo{
+					Event_UID: event_uid,
 					User_ID: user_id,
-					Title: task.Title,
-					Event_date: task.Due,
+					Event_Name: task.Title,
+					Event_StartDate: task.Due,
+					Event_EndDate: task.Due,
+					Type: "task",
 					TaskList_UID: taskList.TaskList_UID,
 				});
+
 				fmt.Printf("Task ID: %s, Title %s\n", task.Id, task.Title)
+
+				// Construct event_uid
+
+				// Create item for pb_events table
+				eventItem := map[string]types.AttributeValue{
+					"event_uid":   &types.AttributeValueMemberS{Value: event_uid},
+					"user_id":     &types.AttributeValueMemberS{Value: user_id},
+					"event_name":  &types.AttributeValueMemberS{Value: task.Title},
+					"event_startdate": &types.AttributeValueMemberS{Value: task.Due},
+					"event_enddate":   &types.AttributeValueMemberS{Value: task.Due},
+					"type": &types.AttributeValueMemberS{Value: "task"},
+					"tasklist_uid": &types.AttributeValueMemberS{Value: taskList.TaskList_UID,},
+
+				}
+
+				// PutItem request
+				_, err := svc.PutItem(context.TODO(), &dynamodb.PutItemInput{
+					TableName: aws.String("pb_events"),
+					Item:      eventItem,
+				})
+				if err != nil {
+					log.Printf("ERROR: Failed to put event %s into pb_events: %v", event_uid, err)
+				}
+				log.Printf("Inserted task event: %s", event_uid)
 
 			}
 		} 

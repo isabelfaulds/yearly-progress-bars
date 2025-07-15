@@ -283,3 +283,29 @@ resource "aws_dynamodb_table" "day_metrics" {
     enabled = true
   }
 }
+
+resource "aws_dynamodb_table" "gtask_lists" {
+  name = "pb_gtasklists"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "tasklist_uid"
+
+  attribute {
+    name = "tasklist_uid"
+    type = "S"
+  }
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "UserIndex"
+    hash_key        = "user_id"
+    projection_type = "ALL"
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+}
