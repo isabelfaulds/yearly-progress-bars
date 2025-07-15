@@ -5,17 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-
 	"os"
 	"time"
 
-	// "strings"
+	"strings"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
@@ -55,6 +56,12 @@ type TaskInfo struct {
 	User_ID string `json:"user_id"`
 	Title    string `json:"title"`
 	Event_date string `json:"event_date"`
+	TaskList_UID    string `json:"tasklist_uid"`
+}
+
+type TaskList struct {
+	User_ID string `json:"user_id"`
+	TaskList_UID    string `json:"tasklist_uid"`
 }
 
 type ResponseBody struct {
@@ -63,7 +70,7 @@ type ResponseBody struct {
 
 func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	user_id := event.Headers["user-id"] // Partition key value
-	// Set response headers
+// Set response headers
 	accessControlAllowOrigin := allowedOrigins[0]
 	origin, ok := event.Headers["origin"]
 	if !ok {
@@ -76,10 +83,10 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 	for k, v := range corsHeaders {
 		returnHeaders[k] = v
 	}
-	returnHeaders["Access-Control-Allow-Origin"] = accessControlAllowOrigin
+	returnHeaders["Access-Control-Allow-Origin"] = accessControlAllowOrigin;
 
-// Get Auth Token
-	// Setup dynamo
+
+// Setup dynamo
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion("us-west-1"),
 	)
@@ -93,7 +100,52 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 		}, nil
 	}
 	svc := dynamodb.NewFromConfig(cfg)
-	tableName := "pb_user_tokens"
+
+// Get Task lists
+	queryInput := &dynamodb.QueryInput{
+		TableName: aws.String("pb_tasklists"),
+		IndexName: aws.String("UserIndex"),
+		KeyConditionExpression: aws.String("#uid = :uid_val"),
+		ExpressionAttributeNames: map[string]string{
+			"#uid": "user_id",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":uid_val": &types.AttributeValueMemberS{Value: user_id},
+		},
+	}
+    queryResult, err := svc.Query(context.TODO(), queryInput)
+    if err != nil {
+        log.Printf("ERROR: failed to query tasks from DynamoDB: %v", err)
+        return events.APIGatewayProxyResponse{
+            StatusCode: 500,
+            Headers:    returnHeaders,
+            Body:       `{"message": "Internal server error: Failed to query tasklist from database"}`,
+        }, nil
+    }
+
+	var taskLists []TaskList
+	err = attributevalue.UnmarshalListOfMaps(queryResult.Items, &taskLists)
+	if err != nil {
+		log.Printf("ERROR: failed to unmarshal query results: %v", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: 500,
+			Headers:    returnHeaders,
+			Body:       `{"message": "Internal server error: Failed to parse tasklist from database"}`,
+		}, nil
+	}
+
+	if len(taskLists) == 0 {
+		// taskLists is empty
+		log.Println("No task lists found for user, no tasks fetched.")
+		return events.APIGatewayProxyResponse{
+				StatusCode: 200,
+				Headers: returnHeaders,
+				Body: string("jsonResponse"),
+			}, nil
+	}
+
+// Get Auth Token
+	tokenTable := "pb_user_tokens"
 	// Marshal user id
 	key, err := attributevalue.MarshalMap(map[string]string{"user_id": user_id})
 	if err != nil {
@@ -106,7 +158,7 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 	}
 	// Get Token
 	getItemInput := &dynamodb.GetItemInput{
-		TableName: aws.String(tableName), 
+		TableName: aws.String(tokenTable), 
 		Key:       key,                
 	}
 	result, err := svc.GetItem(context.TODO(), getItemInput)
@@ -119,7 +171,7 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 		}, nil
 	}
 	if result.Item == nil {
-		fmt.Printf("Item with ID '%s' not found in table '%s'\n", user_id, tableName)
+		fmt.Printf("Item with ID '%s' not found in table '%s'\n", user_id, tokenTable)
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Headers: returnHeaders,
@@ -139,82 +191,107 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 	}
 	fmt.Printf("User: %s \n accessToken %s \n refreshToken %s", authToken.User_ID, authToken.AccessToken, authToken.RefreshToken)
 
-
 // Create oauth 
 	googleClientID := os.Getenv("CLIENT_ID")
 	googleClientSecret := os.Getenv("CLIENT_SECRET")
 	log.Println(googleClientID, googleClientSecret)
 
 	oauthConfig := &oauth2.Config{
-    ClientID:     googleClientID,
-    ClientSecret: googleClientSecret,
-    RedirectURL:  "urn:ietf:wg:oauth:2.0:oob", // placeholder for server-side, not doing full auth flow
-    Scopes:       []string{"https://www.googleapis.com/auth/tasks.readonly"},
-    Endpoint:     google.Endpoint, // Standard Google OAuth2 endpoint
-}
+		ClientID:     googleClientID,
+		ClientSecret: googleClientSecret,
+		RedirectURL:  "urn:ietf:wg:oauth:2.0:oob", // Placeholder, server-side token refresh
+		Scopes:       []string{"https://www.googleapis.com/auth/tasks.readonly"}, // Scope for tasks
+		Endpoint:     google.Endpoint,
+	}
 
 	token := &oauth2.Token{
 		AccessToken:  authToken.AccessToken,
 		RefreshToken: authToken.RefreshToken,
 		TokenType:    "Bearer",
-	}
-	tokenSource := oauthConfig.TokenSource(ctx, token)
+        // Expiry:       time.Now().Add(-time.Hour),
+    }
+
+    tokenSource := oauthConfig.TokenSource(ctx, token)
+
 	httpClient := oauth2.NewClient(ctx, tokenSource)
 	log.Println("Initialized HTTP client for Google API:", httpClient)
-
-// Specify Query
-	// Test ID
-	var testTaskListID = user_id; // fauldisabel@gmail.com, switch to dynamodb get task ids
-	now := time.Now()
-	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	tomorrowStart := todayStart.Add(24 * time.Hour)
-	dueMin := todayStart.Format(time.RFC3339)
-	dueMax := tomorrowStart.Format(time.RFC3339)
-
-// Get Tasks
 	srv, err := tasks.NewService(ctx, option.WithHTTPClient(httpClient))
 	if err != nil {
-		log.Printf("ERROR: unable to marshal key: %v", err)
+		log.Printf("ERROR: unable to set up task service: %v", err)
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Headers:    returnHeaders,
 			Body:       "{\"message\": \"Internal server error: Couldn't query user tasks\"}",
 		}, nil
 	}
-	tasksResp, err := srv.Tasks.List(testTaskListID).
-	ShowCompleted(true). // Including completed tasks
-	DueMin(dueMin).
-	DueMax(dueMax).
-	Do()
-	if err != nil {
-		return events.APIGatewayProxyResponse{
-			StatusCode: 500,
-			Headers:    returnHeaders,
-			Body:       "{\"message\": \"Internal server error: Unable to query user tasks\"}",
-		}, nil
-	}
-	if len(tasksResp.Items) == 0 {
-		fmt.Println("No tasks for today.")
-	} 
-	var tasks[] TaskInfo;
-	if tasksResp.Items != nil {
-		for _, task := range tasksResp.Items {
-			tasks = append(tasks, TaskInfo{
-				User_ID: user_id,
-				Title: task.Title,
-				Event_date: task.Due,
-			});
-			fmt.Printf("Task ID: %s, Title %s\n", task.Id, task.Title)
+	log.Println("srv", srv)
 
+	var todayStart time.Time
+	now := time.Now()
+	
+	// Use UTC given
+	taskDateStr, ok := event.QueryStringParameters["task_date"];
+	if ok {
+		const dateFormat = "2006-01-02" // Represents YYYY-MM-DD
+		parsedTaskDate, err := time.Parse(dateFormat, taskDateStr)
+		if err != nil {
+			log.Printf("ERROR: Could not parse task_date '%s'. Expected format YYYY-MM-DD. Error: %v", taskDateStr, err)
+			return events.APIGatewayProxyResponse{
+				StatusCode: 400, // Bad Request due to invalid date format
+				Headers:    returnHeaders,
+				Body:       fmt.Sprintf("{\"message\": \"Bad Request: Invalid task_date format for '%s'. Expected YYYY-MM-DD\"}", taskDateStr),
+			}, nil
 		}
+		todayStart = parsedTaskDate
+		log.Printf("Using provided task_date: %s", taskDateStr)
 	} else {
-			log.Println("No tasks found for user:", user_id)
+		// Use current UTC
+		todayStart = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+		log.Println("DEBUG: 'task_date' query parameter not found, using today utc")
+	}
+	tomorrowStart := todayStart.Add(24 * time.Hour)
+	dueMin := todayStart.Format(time.RFC3339)
+	dueMax := tomorrowStart.Format(time.RFC3339)
+
+	var tasks []TaskInfo = make([]TaskInfo, 0)
+
+	for _, taskList := range taskLists {
+		log.Println("taskList", strings.SplitN(taskList.TaskList_UID, ":", 2)[1])
+		var taskListID = strings.SplitN(taskList.TaskList_UID, ":", 2)[1]
+		tasksResp, err := srv.Tasks.List(taskListID).
+		ShowCompleted(true). // Including completed tasks
+		DueMin(dueMin).
+		DueMax(dueMax).
+		Do()
+		if err != nil {
+		// Not returning 500 , continuing to any next
+			log.Printf("Could not query tasklist %s, due to %s", taskListID, err)
+			continue
+		}
+
+		if len(tasksResp.Items) == 0 {
+			fmt.Println("No tasks for today.")
+		} else if (len(tasksResp.Items) > 0 ) {
+			for _, task := range tasksResp.Items {
+				tasks = append(tasks, TaskInfo{
+					User_ID: user_id,
+					Title: task.Title,
+					Event_date: task.Due,
+					TaskList_UID: taskList.TaskList_UID,
+				});
+				fmt.Printf("Task ID: %s, Title %s\n", task.Id, task.Title)
+
+			}
 		} 
+
+
+	}
 
 	responseBody := ResponseBody{
 		Tasks: tasks,
 	}
 	jsonResponse, err := json.Marshal(responseBody)
+
 	if err != nil {
 		log.Printf("ERROR: Failed to marshal calendar list to JSON: %v", err)
 		return events.APIGatewayProxyResponse{
@@ -224,6 +301,7 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 		}, nil
 	}
 
+	
 	return events.APIGatewayProxyResponse{
 			StatusCode: 200,
 			Headers: returnHeaders,
