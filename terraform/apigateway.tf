@@ -2433,3 +2433,114 @@ resource "aws_api_gateway_integration_response" "daily_aggregates_options_integr
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
+
+
+### get today task 
+resource "aws_api_gateway_method" "sync_gtask_today" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_sync_gtask.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+  request_parameters = {}
+}
+
+resource "aws_api_gateway_integration" "sync_gtask_today_lambda_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.sync_gtask_today.resource_id
+  http_method = aws_api_gateway_method.sync_gtask_today.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  credentials             = null
+  request_templates = {}
+  request_parameters = {}
+  uri = aws_lambda_function.gapi_task_pull.invoke_arn
+  passthrough_behavior = "WHEN_NO_MATCH" 
+}
+
+resource "aws_api_gateway_integration_response" "sync_gtask_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_sync_gtask.id
+  http_method   = "POST"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.sync_gtask_today_lambda_integration,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type, Origin'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+
+resource "aws_api_gateway_method_response" "sync_gtask_today_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_method.sync_gtask_today.resource_id
+  http_method   = aws_api_gateway_method.sync_gtask_today.http_method
+  status_code   = "200"
+
+  response_parameters = {
+      "method.response.header.Access-Control-Allow-Origin": true,
+      "method.response.header.Access-Control-Allow-Headers": true,
+      "method.response.header.Access-Control-Allow-Methods": true,
+      "method.response.header.Access-Control-Allow-Credentials": true,
+
+  }
+}
+
+resource "aws_api_gateway_method" "sync_gtask_options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_sync_gtask.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "sync_gtask_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.calendar_sync_gtask.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+  passthrough_behavior = "WHEN_NO_MATCH"
+}
+
+
+resource "aws_api_gateway_integration_response" "sync_gtask_options_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_sync_gtask.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.sync_gtask_options_integration,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type, Origin'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+resource "aws_api_gateway_method_response" "sync_gtask_options_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.calendar_sync_gtask.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.sync_gcal_options]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+

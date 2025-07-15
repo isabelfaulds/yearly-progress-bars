@@ -355,6 +355,42 @@ resource "aws_lambda_permission" "allow_apigateway_gapi_pull" {
   source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/*/*"
 }
 
+### gapi-task pull
+resource "aws_s3_bucket_object" "gapi_task_pull" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/cal-sync/gapi-task-pull/gapi-task-pull.zip"
+  key    = "gapi-task-pull.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "gapi_task_pull" {
+  function_name = "go-gapi-task-pull"
+  s3_bucket     = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  s3_key        = aws_s3_bucket_object.gapi_task_pull.key
+
+  handler = "bootstrap"
+  runtime = "provided.al2"  
+  depends_on = [aws_s3_bucket_object.gapi_task_pull]
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+
+  environment {
+    variables = {
+        CLIENT_ID = var.client_id
+        CLIENT_SECRET = var.client_secret
+    }
+  }
+}
+
+resource "aws_lambda_permission" "allow_apigateway_gapi_task_pull" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.gapi_task_pull.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/POST/*/*/*"
+}
+
+
 ### get calendar events
 resource "aws_s3_bucket_object" "get_calendar_events" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
