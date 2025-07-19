@@ -372,7 +372,7 @@ const Day = () => {
       {/* Second column: button and events */}
 
       <div className="flex flex-col  md:w-1/2 md:pl-4 md:mt-80">
-        <div className="flex justify-end items-end space-x-3">
+        <div className="flex justify-end space-x-3">
           <button
             onClick={handleSync}
             className="bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
