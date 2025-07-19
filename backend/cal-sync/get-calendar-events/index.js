@@ -7,7 +7,6 @@ const corsheaders = {
   "Access-Control-Allow-Credentials": "true",
   "Content-Type": "application/json",
 };
-const { unmarshall } = require("@aws-sdk/util-dynamodb");
 
 const allowedOrigins = [
   "https://year-progress-bar.com",
@@ -68,7 +67,8 @@ exports.handler = async (event) => {
       event_uid: item.event_uid.S,
       category: item.category?.S ? titleCase(item.category.S) : "Placeholder",
       start_date: item.event_startdate.S,
-      start_time: item.event_starttime.S,
+      // tasks can be without time
+      start_time: item.event_starttime?.S ? item.event_starttime.S : null,
       event_name: item.event_name.S,
       minutes: Number(item.minutes.N),
     }));

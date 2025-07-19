@@ -24,7 +24,18 @@ const baseContainerClasses = `bg-[#000000]
 
     text-white`;
 
+function titleCase(str) {
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map(function (word) {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+
 const Day = () => {
+  // Current Date
   const currentDate = new Date();
   const day = currentDate.getDate();
   const month = currentDate.toLocaleDateString("en-US", { month: "long" });
@@ -32,16 +43,70 @@ const Day = () => {
   const year = currentDate.toLocaleDateString("en-US", { year: "numeric" });
   const isMediumScreenOrLarger = useMediaQuery("(min-width: 768px)");
 
-  function titleCase(str) {
-    return str
-      .toLowerCase()
-      .split(" ")
-      .map(function (word) {
-        return word.charAt(0).toUpperCase() + word.slice(1);
-      })
-      .join(" ");
-  }
+  // Calendar Events
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  // Trigger gcal sync
+  const handleSync = async () => {
+    try {
+      const eventResponse = await fetch(
+        import.meta.env.VITE_CLOUDFRONT_SYNC_GCAL,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      // trigger gtask sync
+      const taskResponse = await fetch(
+        import.meta.env.VITE_CLOUDFRONT_SYNC_GTASKS,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
 
+      if (eventResponse.status === 200) {
+        ("Events - refreshed");
+        getEvents();
+      }
+    } catch (error) {
+      console.error("Sync failed:", error);
+    }
+  };
+  // Get all day events
+  async function getEvents() {
+    try {
+      const todaysDate = DateTime.now().toFormat("yyyy-MM-dd");
+      const eventResponse = await fetch(
+        import.meta.env.VITE_CLOUDFRONT_CALENDAR_EVENTS +
+          `?event_date=${todaysDate}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      if (eventResponse.status === 200) {
+        const responseData = await eventResponse.json();
+        const newEvents = responseData.events.filter(
+          (newEvent) =>
+            !calendarEvents.some(
+              (existingEvent) => existingEvent.event_uid === newEvent.event_uid
+            )
+        );
+        setCalendarEvents([...calendarEvents, ...newEvents]);
+      }
+    } catch (error) {
+      console.error("Sync failed:", error);
+    }
+  }
   // Patch event category
   async function patchEvent(event_uid, category_uid, category) {
     try {
@@ -68,34 +133,9 @@ const Day = () => {
     }
   }
 
-  // Get all day events
-  async function getEvents() {
-    try {
-      const todaysDate = DateTime.now().toFormat("yyyy-MM-dd");
-      const eventResponse = await fetch(
-        import.meta.env.VITE_CLOUDFRONT_CALENDAR_EVENTS +
-          `?event_date=${todaysDate}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-      if (eventResponse.status === 200) {
-        const responseData = await eventResponse.json();
-        setCalendarEvents(responseData.events);
-      }
-    } catch (error) {
-      console.error("Sync failed:", error);
-    }
-  }
-
-  const [calendarEvents, setCalendarEvents] = useState([]);
+  // Setting categories
   const { data: categories, isLoading, error } = useCategories();
   const [todayCategories, setTodayCategories] = useState([]);
-
   useEffect(() => {
     if (categories) {
       setTodayCategories([
@@ -223,27 +263,6 @@ const Day = () => {
     setFilteredCategories(todayCategories);
     setEditingIndex(null);
     setHighlightedIndex(-1);
-  };
-
-  // Trigger gcal sync
-  const handleSync = async () => {
-    try {
-      const eventResponse = await fetch(
-        import.meta.env.VITE_CLOUDFRONT_SYNC_GCAL,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-      if (eventResponse.status === 200) {
-        getEvents();
-      }
-    } catch (error) {
-      console.error("Sync failed:", error);
-    }
   };
 
   // Trigger event categorization
