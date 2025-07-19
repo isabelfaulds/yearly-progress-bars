@@ -61,6 +61,7 @@ type TaskInfo struct {
 	Event_EndDate string `json:"event_enddate"`
 	Type string `json:"type"`
 	TaskList_UID    string `json:"tasklist_uid"`
+	Minutes int   `json:"minutes"`
 }
 
 type TaskList struct {
@@ -283,10 +284,11 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 					Event_UID: event_uid,
 					User_ID: user_id,
 					Event_Name: task.Title,
-					Event_StartDate: task.Due,
-					Event_EndDate: task.Due,
+					Event_StartDate: task.Due[0:10],
+					Event_EndDate: task.Due[0:10],
 					Type: "task",
 					TaskList_UID: taskList.TaskList_UID,
+					Minutes: 10,
 				});
 
 				fmt.Printf("Task ID: %s, Title %s\n", task.Id, task.Title)
@@ -298,8 +300,9 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 					"event_uid":   &types.AttributeValueMemberS{Value: event_uid},
 					"user_id":     &types.AttributeValueMemberS{Value: user_id},
 					"event_name":  &types.AttributeValueMemberS{Value: task.Title},
-					"event_startdate": &types.AttributeValueMemberS{Value: task.Due},
-					"event_enddate":   &types.AttributeValueMemberS{Value: task.Due},
+					"event_startdate": &types.AttributeValueMemberS{Value:  task.Due[0:10]},
+					"event_enddate":   &types.AttributeValueMemberS{Value:  task.Due[0:10]},
+					"minutes": &types.AttributeValueMemberN{Value: "10"}, // currently hardcoding task length
 					"type": &types.AttributeValueMemberS{Value: "task"},
 					"tasklist_uid": &types.AttributeValueMemberS{Value: taskList.TaskList_UID,},
 
