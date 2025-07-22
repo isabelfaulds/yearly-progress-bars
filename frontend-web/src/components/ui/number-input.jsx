@@ -4,6 +4,15 @@ import { NumericFormat } from "react-number-format";
 import { Button } from "./button";
 import { Input } from "./input";
 
+const CustomInput = forwardRef((inputProps, ref) => (
+  <Input
+    {...inputProps}
+    focus={false}
+    ref={ref}
+    className={inputProps.className}
+  />
+));
+
 export const NumberInput = forwardRef(
   (
     {
@@ -90,19 +99,13 @@ export const NumberInput = forwardRef(
           fixedDecimalScale={fixedDecimalScale}
           s
           allowNegative={min < 0}
-          valueIsNumericString
+          // valueIsNumericString
           onBlur={handleBlur}
           max={max}
           min={min}
           suffix={suffix}
           prefix={prefix}
-          customInput={(inputProps) => (
-            <Input
-              {...inputProps}
-              focus={false}
-              className={inputProps.className}
-            />
-          )}
+          customInput={CustomInput}
           placeholder={placeholder}
           className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent relative rounded-l"
           getInputRef={ref}

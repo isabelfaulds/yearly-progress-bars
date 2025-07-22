@@ -24,8 +24,8 @@ const LoginStep2 = ({ onNext }) => {
   const [categories, setNewCategories] = useState([]);
   const [newCategory, setNewCategory] = useState({
     category: "",
-    hours: "",
-    minutes: "",
+    hours: null,
+    minutes: null,
   });
 
   const columns = [
@@ -41,18 +41,31 @@ const LoginStep2 = ({ onNext }) => {
   });
 
   const handleCategorySave = () => {
-    const totalMinutes = newCategory.hours * 60 + newCategory.minutes * 1;
+    const totalMinutes = Math.min(
+      Number(newCategory.hours || 0) * 60 + Number(newCategory.minutes || 0),
+      24 * 60
+    );
+
     const totalHours = Math.floor(totalMinutes / 60);
     const remainderMinutes = totalMinutes % 60;
-    setNewCategories((prevCategories) => [
-      ...prevCategories,
-      {
-        category: newCategory.category,
-        hours: totalHours === 0 ? null : totalHours,
-        minutes: totalMinutes === 0 ? null : totalMinutes,
-        remainderMinutes: remainderMinutes === 0 ? null : remainderMinutes,
-      },
-    ]);
+
+    // new category replaces prev, case insensitive, category
+    setNewCategories((prevCategories) => {
+      const filtered = prevCategories.filter(
+        (cat) =>
+          cat.category.toLowerCase() !== newCategory.category.toLowerCase()
+      );
+
+      return [
+        ...filtered,
+        {
+          category: newCategory.category,
+          hours: totalHours === 0 ? null : totalHours,
+          minutes: totalMinutes === 0 ? null : totalMinutes,
+          remainderMinutes: remainderMinutes === 0 ? null : remainderMinutes,
+        },
+      ];
+    });
     setNewCategory({
       category: "",
       hours: "",
@@ -124,10 +137,10 @@ const LoginStep2 = ({ onNext }) => {
               placeholder="Hours"
               value={newCategory.hours}
               max={24}
-              onChange={(e) =>
-                setNewCategory((prevCategory) => ({
-                  ...prevCategory,
-                  hours: e.target.value,
+              onValueChange={(val) =>
+                setNewCategory((prev) => ({
+                  ...prev,
+                  hours: val,
                 }))
               }
             />
@@ -135,10 +148,10 @@ const LoginStep2 = ({ onNext }) => {
               placeholder="Minutes"
               value={newCategory.minutes}
               // max={60}
-              onChange={(e) =>
-                setNewCategory((prevCategory) => ({
-                  ...prevCategory,
-                  minutes: e.target.value,
+              onValueChange={(val) =>
+                setNewCategory((prev) => ({
+                  ...prev,
+                  minutes: val,
                 }))
               }
             />
