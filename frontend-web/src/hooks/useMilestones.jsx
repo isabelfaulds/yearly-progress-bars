@@ -81,11 +81,7 @@ export const useCreateMilestone = () => {
   return useMutation({
     mutationFn: createMilestone,
     onSuccess: (newMilestone) => {
-      queryClient.setQueryData(["milestones"], (oldMilestones) => {
-        return oldMilestones
-          ? [...oldMilestones, newMilestone]
-          : [newMilestone];
-      });
+      queryClient.invalidateQueries(["milestones"]);
     },
   });
 };

@@ -17,13 +17,24 @@ import {
   getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import {
+  MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
+  TrashIcon,
+  PencilIcon,
+} from "@heroicons/react/24/outline";
 import { PlusCircleIcon } from "@heroicons/react/24/solid";
 import { ScrollArea, ScrollBar } from "../components/ui/scroll-area";
 import { Input } from "@/components/ui/input.jsx";
 import { NumberInput } from "@/components/ui/number-input.jsx";
 import SearachableDropdown from "../components/Dropdown.jsx";
 import { Button } from "@/components/ui/button.jsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const baseContainerClasses = `
   // scrollable full background display
@@ -88,6 +99,10 @@ const Milestones = () => {
     }));
   };
 
+  const handleDelete = (e) => {
+    console.log(e);
+  };
+
   // Selected Milestone Stats
   const [selectedMilestoneID, setSelectedMilestoneID] = useState(null);
   const { data: milestoneSessions } = useMilestoneSessions(selectedMilestoneID);
@@ -123,7 +138,6 @@ const Milestones = () => {
     if (typeof newMilestone.category === "string") {
       newMilestone.category = newMilestone.category.toLowerCase();
     }
-    console.log("Create - new milestone", newMilestone);
     const payload = Object.fromEntries(
       Object.entries(newMilestone).filter(
         ([key, value]) => value !== null && value !== undefined
@@ -192,6 +206,7 @@ const Milestones = () => {
                 <TableHeader className="bg-coolgray sticky top-0 z-10">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
+                      <TableHead className="w-[1%] text-left"> </TableHead>
                       {headerGroup.headers.map((header) => (
                         <TableHead
                           key={header.id}
@@ -219,6 +234,30 @@ const Milestones = () => {
                         key={row.id}
                         onClick={() => handleRowClick(row.original)}
                       >
+                        {/* Edit  */}
+                        <TableCell className="px-2 text-left w-[1%]">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <EllipsisVerticalIcon className="h-5 text-white" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="start"
+                              className="bg-slate-800 text-white"
+                            >
+                              <DropdownMenuItem>
+                                <PencilIcon className="h-2 text-blue-50" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(row.original)}
+                              >
+                                <TrashIcon className="h-2 text-blue-50" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                        {/* Row Cells */}
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}

@@ -7,7 +7,6 @@ const SearachableDropdown = ({ values, placeholder = "", onSelect }) => {
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [filteredValues, setFilteredValues] = useState(values);
   const [open, setOpen] = useState(false);
-  const dropdownRef = useRef(null);
 
   const handleOptionSelection = useCallback(
     (selectedOption) => {
@@ -47,11 +46,9 @@ const SearachableDropdown = ({ values, placeholder = "", onSelect }) => {
       setHighlightedIndex((prevIndex) =>
         prevIndex < filteredValues.length - 1 ? prevIndex + 1 : prevIndex
       );
-      console.log("highlightedIndex", highlightedIndex);
     } else if (e.key === "ArrowUp") {
       // navigate up
       setHighlightedIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : -1));
-      console.log("highlightedIndex", highlightedIndex);
     }
   };
 
@@ -59,8 +56,7 @@ const SearachableDropdown = ({ values, placeholder = "", onSelect }) => {
   const handleBlur = () => {
     setFilteredValues(values);
     setHighlightedIndex(-1);
-    console.log("handleBlur", open);
-    setOpen(!open); // highlighted row reset
+    setOpen(false); // highlighted row reset
   };
 
   const handleTextChange = (e) => {
@@ -75,7 +71,6 @@ const SearachableDropdown = ({ values, placeholder = "", onSelect }) => {
   return (
     <div className="relative">
       <Input
-        // ref={editedTextRef}
         type="text"
         placeholder={placeholder}
         value={editedText}
@@ -97,6 +92,11 @@ const SearachableDropdown = ({ values, placeholder = "", onSelect }) => {
           {filteredValues.map((value, index) => (
             <div
               key={value.value}
+              onMouseDown={(e) => {
+                // onMouseDown to avoid input blur before selection
+                e.preventDefault();
+                handleOptionSelection(value);
+              }}
               className={`px-3 py-0.5  cursor-pointer hover:bg-gray-600  ${
                 index === highlightedIndex ? "bg-gray-500" : ""
               }`}

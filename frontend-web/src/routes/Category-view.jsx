@@ -372,7 +372,6 @@ const CategoryView = () => {
               />
               {itemOptionsOpen === item.saved_item_uid && (
                 <div className="absolute top-10 right-2 bg-gray-800 text-white rounded shadow-md">
-                  {/* Your dropdown menu */}
                   <button
                     ref={optionsRef}
                     className="hover:bg-gray-700 p-2"
