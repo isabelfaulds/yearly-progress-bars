@@ -15,8 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useCategories } from "@/hooks/useCategories.jsx";
 
 const LoginStep2 = ({ onNext }) => {
+  const { refetch: categoriesRefetch } = useCategories();
+
   const handleSave = () => {
     postCategories();
     onNext();
@@ -40,37 +43,39 @@ const LoginStep2 = ({ onNext }) => {
     getColumnCanResize: () => true,
   });
 
-  const handleCategorySave = () => {
-    const totalMinutes = Math.min(
-      Number(newCategory.hours || 0) * 60 + Number(newCategory.minutes || 0),
-      24 * 60
-    );
-
-    const totalHours = Math.floor(totalMinutes / 60);
-    const remainderMinutes = totalMinutes % 60;
-
-    // new category replaces prev, case insensitive, category
-    setNewCategories((prevCategories) => {
-      const filtered = prevCategories.filter(
-        (cat) =>
-          cat.category.toLowerCase() !== newCategory.category.toLowerCase()
+  const handleCategoryAdd = () => {
+    if (newCategory.category != "") {
+      const totalMinutes = Math.min(
+        Number(newCategory.hours || 0) * 60 + Number(newCategory.minutes || 0),
+        24 * 60
       );
 
-      return [
-        ...filtered,
-        {
-          category: newCategory.category,
-          hours: totalHours === 0 ? null : totalHours,
-          minutes: totalMinutes === 0 ? null : totalMinutes,
-          remainderMinutes: remainderMinutes === 0 ? null : remainderMinutes,
-        },
-      ];
-    });
-    setNewCategory({
-      category: "",
-      hours: "",
-      minutes: "",
-    });
+      const totalHours = Math.floor(totalMinutes / 60);
+      const remainderMinutes = totalMinutes % 60;
+
+      // new category replaces prev, case insensitive, category
+      setNewCategories((prevCategories) => {
+        const filtered = prevCategories.filter(
+          (cat) =>
+            cat.category.toLowerCase() !== newCategory.category.toLowerCase()
+        );
+
+        return [
+          ...filtered,
+          {
+            category: newCategory.category,
+            hours: totalHours === 0 ? null : totalHours,
+            minutes: totalMinutes === 0 ? null : totalMinutes,
+            remainderMinutes: remainderMinutes === 0 ? null : remainderMinutes,
+          },
+        ];
+      });
+      setNewCategory({
+        category: "",
+        hours: "",
+        minutes: "",
+      });
+    }
   };
 
   async function postCategories() {
@@ -96,6 +101,7 @@ const LoginStep2 = ({ onNext }) => {
         );
         if (categoryResponse.status === 200) {
           console.log("Updated - Categories");
+          await categoriesRefetch();
         }
       }
     } catch (error) {
@@ -154,8 +160,24 @@ const LoginStep2 = ({ onNext }) => {
                   minutes: val,
                 }))
               }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleCategoryAdd();
+                }
+              }}
             />
-            <Button onClick={handleCategorySave}>Add</Button>
+            <Button
+              onClick={handleCategoryAdd}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleCategoryAdd();
+                }
+              }}
+            >
+              Add
+            </Button>
           </div>
         </div>
         {/* TODO: Frequency */}
