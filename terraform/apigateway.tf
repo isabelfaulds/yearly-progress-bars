@@ -178,7 +178,7 @@ resource "aws_api_gateway_integration_response" "auth_options_integration_respon
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
-    "method.response.header.Access-Control-Allow-Origin" = "'https://year-progress-bar.com'"
+    "method.response.header.Access-Control-Allow-Origin" = "'https://localhost:5173'"
     "method.response.header.Access-Control-Allow-Credentials": "'true'"
   }
 
@@ -186,7 +186,7 @@ resource "aws_api_gateway_integration_response" "auth_options_integration_respon
     "application/json" = jsonencode({
       statusCode = 200
       headers = {
-        "Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'"
+        "Access-Control-Allow-Origin"      = "'https://localhost:5173'"
         "Access-Control-Allow-Methods"     = "POST, OPTIONS"
         "Access-Control-Allow-Headers"     = "'Content-Type'"
         "Access-Control-Allow-Credentials" = "'true'" # Client expects string
@@ -293,7 +293,7 @@ resource "aws_api_gateway_integration_response" "auth_logout_options_integration
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
@@ -397,7 +397,7 @@ resource "aws_api_gateway_integration_response" "auth_refresh_options_integratio
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
@@ -499,7 +499,7 @@ resource "aws_api_gateway_integration_response" "auth_check_options_integration_
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -634,7 +634,7 @@ resource "aws_api_gateway_integration_response" "calendar_events_options_integra
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -739,7 +739,7 @@ resource "aws_api_gateway_integration_response" "calendar_event_options_integrat
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,PATCH'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -844,7 +844,7 @@ resource "aws_api_gateway_integration_response" "sync_gcal_options_integration_r
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -941,7 +941,7 @@ resource "aws_api_gateway_integration_response" "categories_options_integration_
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1085,7 +1085,7 @@ resource "aws_api_gateway_integration_response" "labeling_categories_options_int
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1219,11 +1219,129 @@ resource "aws_api_gateway_integration_response" "user_settings_options_integrati
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,PATCH'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
 
+#### delete account
+resource "aws_api_gateway_resource" "account" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  parent_id   = aws_api_gateway_resource.settings.id
+  path_part   = "account"
+}
+
+resource "aws_api_gateway_method" "account_options" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.account.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "account_options" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_resource.account.id
+  http_method = "OPTIONS"
+  type        = "MOCK" 
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+  passthrough_behavior = "WHEN_NO_MATCH"
+  depends_on = [aws_api_gateway_method.account_options]
+}
+
+resource "aws_api_gateway_method_response" "account_options" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.account.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.account_options]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "account_options" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.account.id
+  http_method   = "OPTIONS"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.account_options,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,DELETE'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+
+resource "aws_api_gateway_method" "account_delete" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.account.id
+  http_method   = "DELETE"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+  request_parameters = {
+    "method.request.header.user-id" = true,
+  }
+}
+
+resource "aws_api_gateway_integration" "account_delete" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.account_delete.resource_id
+  http_method = aws_api_gateway_method.account_delete.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  credentials             = null
+  uri = aws_lambda_function.settings_delete_account.invoke_arn
+}
+
+resource "aws_api_gateway_method_response" "account_delete" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.account.id
+  http_method   = aws_api_gateway_method.account_delete.http_method
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.account_delete]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "account_delete" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.account.id
+  http_method   = aws_api_gateway_method.account_delete.http_method
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.account_delete,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,DELETE'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+  
+}
+
+
+#### saved items
 resource "aws_api_gateway_resource" "saved_items" {
   rest_api_id = aws_api_gateway_rest_api.user_data_api.id
   parent_id   = aws_api_gateway_rest_api.user_data_api.root_resource_id
@@ -1280,7 +1398,7 @@ resource "aws_api_gateway_integration_response" "saved_items_options_integration
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1364,7 +1482,7 @@ resource "aws_api_gateway_integration_response" "saved_items_post_integration_re
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
   response_templates = {
@@ -1473,7 +1591,7 @@ EOF
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1534,7 +1652,7 @@ resource "aws_api_gateway_integration_response" "milestones_options_integration_
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST,PATCH,DELETE'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1653,7 +1771,7 @@ resource "aws_api_gateway_integration_response" "get_milestones_by_index_integra
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST,PATCH,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1741,7 +1859,7 @@ resource "aws_api_gateway_integration_response" "post_milestone_integration_resp
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
   response_templates = {
@@ -1814,7 +1932,7 @@ resource "aws_api_gateway_integration_response" "cal_list_options_integration_re
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1872,7 +1990,7 @@ resource "aws_api_gateway_integration_response" "get_calendars_integration_respo
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
   
@@ -1942,7 +2060,7 @@ resource "aws_api_gateway_integration_response" "gtasks_list_options_integration
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -1999,7 +2117,7 @@ resource "aws_api_gateway_integration_response" "get_gtasks_integration_response
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
   
@@ -2087,7 +2205,7 @@ resource "aws_api_gateway_integration_response" "post_calendar_list_integration_
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
   response_templates = {
@@ -2217,7 +2335,7 @@ resource "aws_api_gateway_integration_response" "get_milestone_sessions_integrat
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -2271,7 +2389,7 @@ resource "aws_api_gateway_integration_response" "milestone_sessions_options_inte
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -2376,7 +2494,7 @@ resource "aws_api_gateway_integration_response" "get_daily_aggregates_integratio
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -2429,7 +2547,7 @@ resource "aws_api_gateway_integration_response" "daily_aggregates_options_integr
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -2471,7 +2589,7 @@ resource "aws_api_gateway_integration_response" "sync_gtask_integration_response
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type, Origin'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
@@ -2524,7 +2642,7 @@ resource "aws_api_gateway_integration_response" "sync_gtask_options_integration_
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type, Origin'",
     "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"      = "'https://year-progress-bar.com'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }

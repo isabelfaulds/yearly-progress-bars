@@ -716,3 +716,33 @@ resource "aws_lambda_permission" "allow_apigateway_gcal_tasklist" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/GET/calendar/sync/gtasks/list"
 }
+
+
+### delete account
+resource "aws_s3_bucket_object" "settings_delete_account" {
+  bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
+  source = "../backend/settings/delete-account/settings-delete-account.zip"
+  key    = "settings-delete-account.zip"
+  content_type  = "application/zip"
+}
+
+resource "aws_lambda_function" "settings_delete_account" {
+  function_name = "go-settings-delete-account"
+  s3_bucket     = aws_s3_bucket_object.settings_delete_account.bucket
+  s3_key        = aws_s3_bucket_object.settings_delete_account.key
+
+  handler = "bootstrap"
+  runtime = "provided.al2"  
+  depends_on = [aws_s3_bucket_object.settings_delete_account]
+
+  role = aws_iam_role.lambda_execution_role.arn
+  timeout = 100
+  memory_size = 128
+}
+
+resource "aws_lambda_permission" "allow_apigateway_settings_delete_account" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.settings_delete_account.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:us-west-1:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/DELETE/settings/account"
+}
