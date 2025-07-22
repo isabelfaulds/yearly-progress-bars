@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import CalendarTable from "./CalendarTable";
 import { useCategories } from "@/hooks/useCategories";
 
-const LoginStep3 = () => {
+const LoginStep3 = ({ onPrev }) => {
   const { data: categories, isLoading, error } = useCategories();
   const navigate = useNavigate();
 
@@ -31,7 +31,6 @@ const LoginStep3 = () => {
 
   const handleFinish = async () => {
     const latestData = tableRef.current.getCurrentState();
-    console.log("Final table state", latestData);
 
     const mappedData = latestData
       .filter((item) => item.selected)
@@ -40,26 +39,18 @@ const LoginStep3 = () => {
         defaultCategory: defaultCategory?.toLowerCase() ?? null,
         sync: true,
       }));
-    console.log("mappedData", mappedData);
 
     const finish = await Promise.all(
-      latestData
-        .filter((item) => item.selected)
-        .map(({ defaultCategory, ...rest }) => ({
-          ...rest,
-          defaultCategory: defaultCategory?.toLowerCase() ?? null,
-          sync: true,
-        }))
-        .map((item) =>
-          fetch(import.meta.env.VITE_CLOUDFRONT_GCAL_LIST, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify(item),
-          })
-        )
+      mappedData.map((item) =>
+        fetch(import.meta.env.VITE_CLOUDFRONT_GCAL_LIST, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(item),
+        })
+      )
     );
     console.log("Updated - Calendar settings");
     navigate("/day-view");
@@ -76,10 +67,15 @@ const LoginStep3 = () => {
         Settings{" "}
       </div>
       <CalendarTable data={calendars} categories={categories} ref={tableRef} />
-      <div className="mt-4 m-3 flex flex-col gap-3 mx-auto">
-        <Button onClick={handleFinish} className="mx-auto p-2 max-w-1/3">
-          Finish
-        </Button>
+      <div className="mt-4 m-3 flex flex-row gap-1 mx-auto">
+        <div className="flex flex-row mx-auto gap-5">
+          <Button onClick={onPrev} className="">
+            Prev
+          </Button>
+          <Button onClick={handleFinish} className="">
+            Finish
+          </Button>
+        </div>
       </div>
     </div>
   );

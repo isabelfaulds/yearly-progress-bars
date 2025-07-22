@@ -23,6 +23,10 @@ const Login = () => {
     setCurrentStep((prevStep) => prevStep + 1);
   };
 
+  const handlePrevStep = () => {
+    setCurrentStep((prevStep) => prevStep - 1);
+  };
+
   return (
     <div className={`${baseContainerClasses} `}>
       <div className="login-container">
@@ -46,7 +50,7 @@ const Login = () => {
         {currentStep === 3 && (
           <div className="login-container">
             <div className="text-sm">Step 3 of 3</div>
-            <LoginStep3 />
+            <LoginStep3 onPrev={handlePrevStep} />
           </div>
         )}
       </div>
