@@ -4,15 +4,25 @@ import NavButton from "../components/NavButton.jsx";
 import { useCategoryIconPreference } from "../hooks/useCatIconPreference.jsx";
 
 import { ChevronRightIcon, MinusCircleIcon } from "@heroicons/react/24/solid";
-import {} from "@heroicons/react/24/solid";
 import StyledSubmitButton from "../components/SubmitButton";
 import StyledSelect from "../components/StyledSelect";
 import StyledInput from "../components/StyledSubmit";
 import { useCategories } from "../hooks/useCategories.jsx";
 import { useQueryClient } from "@tanstack/react-query";
 import CatIconComponent from "../assets/cat.svg?react";
-import { CubeIcon } from "@heroicons/react/24/outline";
-import { Button } from "@/components/ui/button.jsx";
+import { CubeIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { deleteAccount, logoutAccount } from "@/api/account";
 
 const baseContainerClasses = `bg-[#000000] bg-cover bg-center 
     w-screen min-h-screen m-0 flex flex-col
@@ -74,6 +84,18 @@ const CategorySettings = () => {
       navigate(-1);
     } catch (error) {
       console.error("Error saving categories:", error);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const deleteResponse = await deleteAccount();
+      logoutAccount().catch((e) => console.log("Auth - logout failure", e));
+      if (deleteResponse.success) {
+        navigate("/login");
+      }
+    } catch (error) {
+      console.log("Account - deletion failed");
     }
   };
 
@@ -211,13 +233,11 @@ const CategorySettings = () => {
 
   const deleteCategory = (categoryToDelete) => {
     let changeStatusToDelete = null;
-    let categoryIndexToDelete = -1;
     let categoryUIDToDelete = null;
 
     categories.forEach((cat, index) => {
       if (cat.category === categoryToDelete) {
         changeStatusToDelete = cat.changeStatus;
-        categoryIndexToDelete = index;
         categoryUIDToDelete = cat.category_uid;
       }
     });
@@ -458,6 +478,37 @@ const CategorySettings = () => {
           </StyledSelect>
           <StyledSubmitButton>Add</StyledSubmitButton>
         </form>
+      </div>
+      <div className="pt-3 px-4 w-full">
+        <hr className="border-t border-gray-500 my-4" />
+      </div>
+      <div className="flex items-center gap-3 pl-8">
+        <span className="text-gray-300 text-sm sm:text-base font-lexend">
+          Delete Account
+        </span>
+        <Dialog>
+          <form>
+            <DialogTrigger asChild>
+              <Button variant="default">
+                <TrashIcon className="text-white" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Delete Account</DialogTitle>
+                <DialogDescription className="text-gray-700">
+                  Your account and data will be deleted. This cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button>Cancel</Button>
+                </DialogClose>
+                <Button onClick={handleDeleteAccount}>Delete</Button>
+              </DialogFooter>
+            </DialogContent>
+          </form>
+        </Dialog>
       </div>
       <div className="fixed bottom-4 right-4 p-1 rounded-full ">
         <NavButton direction="up" />
