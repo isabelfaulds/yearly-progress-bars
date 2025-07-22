@@ -1,6 +1,6 @@
 # Terms of Service
 
-Last Updated: June 26, 2025
+Last Updated: July 22, 2025
 
 Welcome to Progress Bars! Access and usage of this service signifies your agreement to be bound by these terms and our Privacy Policy.
 
@@ -19,7 +19,7 @@ Usage found to be excessive or abnormal may be restricted to maintain service st
 
 ### Termination
 
-If you want to delete your account, you can do so in Settings. Your saved content within the application will be removed 30 days after account deletion. Progress Bars reserves the right to suspend or terminate accounts at will.
+If you want to delete your account, you can do so in Settings. Your saved content within the application will be removed after account deletion. Progress Bars reserves the right to suspend or terminate accounts at will.
 
 ### Disclaimer
 
