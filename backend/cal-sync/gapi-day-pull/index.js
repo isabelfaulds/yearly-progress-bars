@@ -2,6 +2,7 @@ const {
   DynamoDBClient,
   GetItemCommand,
   PutItemCommand,
+  UpdateItemCommand,
 } = require("@aws-sdk/client-dynamodb");
 const { google } = require("googleapis");
 const { OAuth2Client } = require("google-auth-library");
@@ -103,17 +104,28 @@ exports.handler = async (event) => {
     const endDateTime = event.end.dateTime;
     let minutes = calculateMinuteDifferenceWithDate(startDateTime, endDateTime);
     return dynamodb.send(
-      new PutItemCommand({
+      new UpdateItemCommand({
         TableName: "pb_events",
-        Item: {
+        Key: {
           event_uid: { S: `${userId}#cal#${event.id}@google.com` },
-          user_id: { S: userId },
-          event_name: { S: event.summary },
-          event_startdate: { S: startDateTime.substring(0, 10) },
-          event_starttime: { S: startDateTime.split("T")[1].split("-")[0] },
-          event_enddate: { S: endDateTime.substring(0, 10) },
-          event_endtime: { S: endDateTime.split("T")[1].split("-")[0] },
-          minutes: { N: minutes.toString() },
+        },
+        UpdateExpression: `
+      SET user_id = :uid,
+          event_name = :ename,
+          event_startdate = :sdate,
+          event_starttime = :stime,
+          event_enddate = :edate,
+          event_endtime = :etime,
+          minutes = :mins
+    `,
+        ExpressionAttributeValues: {
+          ":uid": { S: userId },
+          ":ename": { S: event.summary },
+          ":sdate": { S: startDateTime.substring(0, 10) },
+          ":stime": { S: startDateTime.split("T")[1].split("-")[0] },
+          ":edate": { S: endDateTime.substring(0, 10) },
+          ":etime": { S: endDateTime.split("T")[1].split("-")[0] },
+          ":mins": { N: minutes.toString() },
         },
       })
     );
