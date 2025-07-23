@@ -1,3 +1,4 @@
+################ instance
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -74,6 +75,10 @@ resource "aws_iam_role" "airflow_ec2_role" {
   })
 }
 
+resource "aws_s3_bucket" "dags" {
+  bucket = "pb-dags"
+}
+
 resource "aws_iam_policy" "airflow_dynamodb_access_policy" {
   name = "airflow-dynamodb-access"
 
@@ -86,13 +91,32 @@ resource "aws_iam_policy" "airflow_dynamodb_access_policy" {
           "dynamodb:GetItem",
           "dynamodb:PutItem",
           "dynamodb:Scan",
-          "dynamodb:Query"
+          "dynamodb:Query",
+          "dynamodb:BatchWriteItem" 
         ],
         Resource = [
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events/index/DateIndex",
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events",
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_categories",
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_day_metrics"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:ListBucket"
+        ],
+        Resource = [
+          "arn:aws:s3:::pb-dags"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject"
+        ],
+        Resource = [
+          "arn:aws:s3:::pb-dags/*"
         ]
       }
     ]
@@ -112,13 +136,19 @@ resource "aws_iam_instance_profile" "airflow_ec2_profile" {
 resource "aws_instance" "airflow_ec2" {
   ami                    = data.aws_ami.amazon_linux_2.id
   # docker recommended 2 vcpus
-  # 4 gb disc space after installations 10 gb disc space recommended
   instance_type          = "t3.large"
   subnet_id              = aws_subnet.main.id
   vpc_security_group_ids = [aws_security_group.airflow_sg.id]
   associate_public_ip_address = true
   iam_instance_profile   = aws_iam_instance_profile.airflow_ec2_profile.name
   user_data = file("./airflow/setup_airflow.sh")
+
+  # 4 gb disc space after installations 10 gb disc space recommended
+  root_block_device {
+    volume_size           = 8
+    volume_type           = "gp3"
+    delete_on_termination = false  # preserve across terminate/recreate
+  }
 
   tags = {
     Name = "AirflowTestInstance"
@@ -137,7 +167,7 @@ resource "aws_ec2_instance_connect_endpoint" "connect_endpoint" {
   security_group_ids = [aws_security_group.airflow_sg.id]
 
   tags = {
-    Name = "test-airflow"  # Tag as requested
+    Name = "test-airflow"
   }
 }
 
@@ -170,11 +200,11 @@ resource "aws_route_table_association" "public_subnet_association" {
   route_table_id = aws_route_table.public.id
 }
 
-### Schedule
-resource "aws_ec2_instance_state" "airflow_instance_state" {
-  instance_id = aws_instance.airflow_ec2.id
-  state       = "stopped" # "running" to start
-}
+######## schedule
+# resource "aws_ec2_instance_state" "airflow_instance_state" {
+#   instance_id = aws_instance.airflow_ec2.id
+#   state       = "stopped" # "running" to start
+# }
 
 resource "aws_iam_policy" "scheduler_ec2_policy" {
   name = "scheduler_ec2_policy"
@@ -263,4 +293,26 @@ resource "aws_scheduler_schedule" "airflow_instance_stop_schedule" {
       ]
     })
   }
+}
+
+resource "aws_s3_bucket_object" "start_airflow" {
+  bucket = aws_s3_bucket.dags.bucket
+  source = "./airflow/start_airflow.sh"
+  key    = "start_airflow.sh"
+  content_type = "text/x-sh"
+}
+
+resource "aws_s3_bucket_object" "airflow_docker_yaml" {
+  bucket = aws_s3_bucket.dags.bucket
+  source = "../docker-compose.yaml"
+  key    = "docker-compose.yaml"
+  content_type = "text/x-yaml"
+}
+
+################ dags
+resource "aws_s3_bucket_object" "day_metrics_dag" {
+  bucket = aws_s3_bucket.dags.bucket
+  source = "../dags/day_metrics.py"
+  key    = "day_metrics.py"
+  content_type = "text/x-python"
 }

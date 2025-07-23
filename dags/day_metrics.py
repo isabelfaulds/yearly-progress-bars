@@ -82,7 +82,7 @@ def extract_transform_load():
 with DAG(
     dag_id="day_metrics",
     start_date=datetime(2025, 7, 1),
-    schedule="5 8 * * *",  # 12:05 AM PST = 8:05 UTC
+    schedule="10 8 * * *",  # UTC for PST = 12:10 am
     catchup=False,
     tags=["example"]
 ) as dag:
