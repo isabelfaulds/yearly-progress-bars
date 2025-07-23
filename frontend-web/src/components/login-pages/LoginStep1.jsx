@@ -1,22 +1,13 @@
 import { useAuthContext } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button.jsx";
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 const LoginStep1 = ({ onNext }) => {
-  const { isSignedIn, handleGoogleSignIn } = useAuthContext();
-
-  // useEffect(() => {
-  //   console.log("isSignedIn", isSignedIn);
-  //   if (isSignedIn === true) {
-  //     // onNext();
-  //   }
-  // }, [isSignedIn, onNext]);
+  const { handleGoogleSignIn } = useAuthContext();
 
   const handleSignedIn = async () => {
     const success = await handleGoogleSignIn();
     if (success === true) {
-      console.log("onNext();");
       onNext();
     }
   };

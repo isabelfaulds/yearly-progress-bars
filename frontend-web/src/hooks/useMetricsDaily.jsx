@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 
 export const fetchDailyMetrics = async () => {
   let fetchUrl = import.meta.env.VITE_CLOUDFRONT_AGGREGATES_DAILY;
-  console.log("fetching daily metrics", fetchUrl);
   const response = await fetch(fetchUrl, {
     method: "GET",
     headers: { "Content-Type": "application/json" },

@@ -20,7 +20,6 @@ const baseContainerClasses = `
 
 // array of all days
 function getDaysBetweenDates(startDate, endDate) {
-  console.log("days between", startDate, endDate);
   const dates = [];
   let currentDate = new Date(startDate);
   while (isBefore(currentDate, endDate) || isEqual(currentDate, endDate)) {
@@ -82,8 +81,6 @@ const RangeView = () => {
 
   // Update Start & End on changes from DayPicker
   const handleRangeUpdate = (newRange) => {
-    console.log("Parent received new range - From:", newRange?.from);
-    console.log("Parent received new range - To:", newRange?.to);
     setCurrentSelectedRange(newRange);
 
     if (newRange.from) {

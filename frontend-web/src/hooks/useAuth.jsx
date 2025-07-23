@@ -99,7 +99,6 @@ export function AuthProvider({ children }) {
           }
         );
         if (authResponse.status === 200) {
-          console.log("auth response result");
           setIsSignedIn(true);
           checkLoginCookie();
           return true;

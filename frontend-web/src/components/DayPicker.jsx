@@ -5,7 +5,6 @@ import { addDays } from "date-fns";
 const CustomDayPicker = ({ onRangeChange, initialRange }) => {
   const [range, setRange] = useState(initialRange);
   const defaultClassNames = getDefaultClassNames();
-  console.log("defaultclassnames", defaultClassNames);
 
   // Default 7 days before today
   const defaultSelected = {
