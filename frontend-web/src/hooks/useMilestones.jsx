@@ -81,11 +81,31 @@ export const useCreateMilestone = () => {
   return useMutation({
     mutationFn: createMilestone,
     onSuccess: (newMilestone) => {
-      queryClient.setQueryData(["milestones"], (oldMilestones) => {
-        return oldMilestones
-          ? [...oldMilestones, newMilestone]
-          : [newMilestone];
-      });
+      queryClient.invalidateQueries(["milestones"]);
+    },
+  });
+};
+
+const deleteMilestone = async (milestone_uid) => {
+  const url = new URL(import.meta.env.VITE_CLOUDFRONT_MILESTONES);
+  url.searchParams.set("milestone_uid", milestone_uid);
+
+  const response = await fetch(url.toString(), {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  if (!response.ok) throw new Error("Failed to delete milestone");
+
+  return { success: true, message: "Milestone deleted successfully." };
+};
+
+export const useDeleteMilestone = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteMilestone,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["milestones"]);
     },
   });
 };
