@@ -1,6 +1,10 @@
 import NavButton from "../components/NavButton.jsx";
 import { useCategories } from "../hooks/useCategories.jsx";
-import { useMilestones, useCreateMilestone } from "../hooks/useMilestones.jsx";
+import {
+  useMilestones,
+  useCreateMilestone,
+  useDeleteMilestone,
+} from "../hooks/useMilestones.jsx";
 import { useMilestoneSessions } from "@/hooks/useMilestoneSession.jsx";
 import { useState, useMemo } from "react";
 import {
@@ -49,6 +53,7 @@ const Milestones = () => {
   const { data: categories, isLoading, error } = useCategories();
   const { data: milestones } = useMilestones(null);
   const { mutate: addNewMilestone } = useCreateMilestone();
+  const { mutate: deleteMilestone } = useDeleteMilestone();
 
   const [globalFilter, setGlobalFilter] = useState("");
   const [isAddMilestoneOpen, setIsAddMilestoneOpen] = useState(false);
@@ -100,7 +105,8 @@ const Milestones = () => {
   };
 
   const handleDelete = (e) => {
-    console.log(e);
+    deleteMilestone(e.milestone_user_datetime_uid);
+    console.log("Milestone - deleted");
   };
 
   // Selected Milestone Stats
@@ -244,10 +250,11 @@ const Milestones = () => {
                               align="start"
                               className="bg-slate-800 text-white"
                             >
-                              <DropdownMenuItem>
+                              {/* TODO: Edit */}
+                              {/* <DropdownMenuItem>
                                 <PencilIcon className="h-2 text-blue-50" />
                                 Edit
-                              </DropdownMenuItem>
+                              </DropdownMenuItem> */}
                               <DropdownMenuItem
                                 onClick={() => handleDelete(row.original)}
                               >
