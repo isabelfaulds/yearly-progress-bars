@@ -55,7 +55,6 @@ function calculateDatasets(events, categories, daysArray) {
       }
     }
   }
-  console.log("finalCategoryPercentages", finalCategoryPercentages);
   return finalCategoryPercentages;
 }
 
@@ -95,7 +94,6 @@ function chartjsDatasets(categoryDatasets) {
 const LineChart = ({ events, categories, daysArray, showLegend = true }) => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
-  console.log("daysArray", daysArray);
 
   useEffect(() => {
     const results = calculateDatasets(events, categories, daysArray);
@@ -103,7 +101,6 @@ const LineChart = ({ events, categories, daysArray, showLegend = true }) => {
       labels: daysArray,
       datasets: chartjsDatasets(results),
     };
-    console.log(data);
 
     if (chartInstance.current) {
       chartInstance.current.destroy();

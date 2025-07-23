@@ -54,7 +54,6 @@ export const createMilestone = async (newMilestoneData) => {
     dateTime: currentDateTime,
     interestScore: 5,
   };
-  console.log("updatedMilestoneData", updatedMilestoneData);
   const response = await fetch(
     `${import.meta.env.VITE_CLOUDFRONT_MILESTONES}`,
     {

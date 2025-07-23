@@ -25,7 +25,6 @@ const baseContainerClasses = `
 
 // array of all days
 function getDaysBetweenDates(startDate, endDate) {
-  console.log("days between", startDate, endDate);
   const dates = [];
   let currentDate = new Date(startDate);
   while (isBefore(currentDate, endDate) || isEqual(currentDate, endDate)) {
@@ -95,8 +94,6 @@ const CategoryView = () => {
 
   // Update Start & End from DayPicker
   const handleRangeUpdate = (newRange) => {
-    console.log("Update - From:", newRange?.from);
-    console.log("Update - To:", newRange?.to);
     setCurrentSelectedRange(newRange);
 
     if (newRange.from) {
@@ -158,7 +155,6 @@ const CategoryView = () => {
 
   // Navigate categories
   const handleCategoryToggle = (clickedCategory) => {
-    console.log("navigating to ", categoryToSlug(clickedCategory.category));
     navigate(`/categories/${categoryToSlug(clickedCategory.category)}`);
   };
 
@@ -219,10 +215,6 @@ const CategoryView = () => {
   const filteredEventsForVisuals = getAllEventsInDateRange().filter(
     (event) => event.category === titleCaseCategory
   );
-
-  useEffect(() => {
-    console.log(filteredEventsForVisuals);
-  }, [filteredEventsForVisuals]);
 
   if (isLoading) {
     return (

@@ -21,8 +21,6 @@ export const useEventsForRange = (startDate, endDate) => {
       queryKey: ["events", day],
       queryFn: () => fetchEventsForDay(day),
       staleTime: 5 * 60 * 1000,
-      onSuccess: (data) => console.log(`Success for ${day}:`, data),
-      onError: (error) => console.error(`Error for ${day}:`, error),
     })),
   });
 

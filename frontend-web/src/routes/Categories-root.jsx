@@ -16,10 +16,6 @@ const CategoriesRoot = () => {
   const { data: categories, isLoading, error } = useCategories();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log("categories", categories);
-  }, [categories]);
-
   if (isLoading) {
     return (
       <div className={baseContainerClasses}>
@@ -29,7 +25,6 @@ const CategoriesRoot = () => {
   }
 
   const handleCategorySelect = (selectedCategory) => {
-    console.log("navigating", selectedCategory.category.toLowerCase());
     navigate(selectedCategory.category.toLowerCase());
   };
 

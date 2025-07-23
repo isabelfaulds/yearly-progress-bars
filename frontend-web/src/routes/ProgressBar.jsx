@@ -124,7 +124,6 @@ const ProgressBar = () => {
   };
   useEffect(() => {
     const interval = setInterval(calculateYearProgress, 1);
-    console.log("dayStartHourSetting update:", dayStartHourSetting);
     window.onload = calculateYearProgress;
     return () => clearInterval(interval);
   }, [dayStartHourSetting, dayEndHourSetting]);
