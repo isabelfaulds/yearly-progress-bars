@@ -37,12 +37,14 @@ resource "aws_iam_policy" "apigateway_logging_dynamo_policy" {
       {
         Action = ["dynamodb:PutItem",
         "dynamodb:GetItem",
-        "dynamodb:Query"
+        "dynamodb:Query",
+        "dynamodb:DeleteItem"
         ]
         Effect   = "Allow",
         Resource =[
         aws_dynamodb_table.user_tokens.arn,
         aws_dynamodb_table.calendar_events.arn,
+        aws_dynamodb_table.milestones.arn,
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events/index/UserIdDateIndex",
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestones/index/UserIndex",
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestone_sessions/index/MilestoneIndex",
@@ -1776,6 +1778,7 @@ resource "aws_api_gateway_integration_response" "get_milestones_by_index_integra
   }
 }
 
+# milestone insertions
 
 resource "aws_api_gateway_method" "post_milestone_method" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
@@ -1789,7 +1792,6 @@ resource "aws_api_gateway_method" "post_milestone_method" {
   }
 }
 
-# ddb insertions
 resource "aws_api_gateway_integration" "post_milestone_integration" {
   rest_api_id = aws_api_gateway_rest_api.user_data_api.id
   resource_id = aws_api_gateway_method.post_milestone_method.resource_id
@@ -1801,7 +1803,7 @@ resource "aws_api_gateway_integration" "post_milestone_integration" {
   passthrough_behavior = "WHEN_NO_MATCH"
 
 
-# 400 if improper template
+  # 400 if improper template
   request_templates = {
     "application/json" = <<EOF
     #set($inputRoot = $input.path('$'))
@@ -1873,6 +1875,86 @@ resource "aws_api_gateway_integration_response" "post_milestone_integration_resp
       EOF
         }
 }
+
+# milestone deletes
+resource "aws_api_gateway_method" "delete_milestone" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method   = "DELETE"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+   "method.request.querystring.milestone_uid"       = true
+  }
+}
+
+resource "aws_api_gateway_integration" "delete_milestone" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.delete_milestone.resource_id
+  http_method = aws_api_gateway_method.delete_milestone.http_method
+  integration_http_method = "POST"
+  type                    = "AWS" 
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  uri = "arn:aws:apigateway:us-west-1:dynamodb:action/DeleteItem"
+  passthrough_behavior = "WHEN_NO_MATCH"
+
+  request_templates = {
+    "application/json" = <<EOF
+     #set($uid = $input.params().querystring.get('milestone_uid'))
+    {
+      "TableName": "pb_milestones",
+      "Key": {
+        "milestone_user_datetime_uid": {
+          "S": "$uid"
+        }
+      }
+    }
+    EOF
+      }
+}
+
+resource "aws_api_gateway_method_response" "delete_milestone" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method = aws_api_gateway_method.delete_milestone.http_method
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.delete_milestone]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "delete_milestone" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.milestones.id
+  http_method = aws_api_gateway_method.delete_milestone.http_method
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.delete_milestone,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST,DELETE'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+  response_templates = {
+          "application/json" = <<EOF
+      {
+        "message": "Milestone deleted"
+      }
+      EOF
+        }
+}
+
 
 ### list calendars
 
