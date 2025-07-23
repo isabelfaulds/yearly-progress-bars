@@ -8,11 +8,12 @@ import Login from "./routes/Login";
 import TermsService from "./routes/about/Terms-Service";
 import PrivacyPolicy from "./routes/about/Privacy-Policy";
 import CategoriesRoot from "./routes/Categories-root";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Milestones from "./routes/Milestones";
 
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./hooks/useAuth";
-import Milestones from "./routes/Milestones";
+import { Toaster } from "@/components/ui/sonner.jsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,6 +56,7 @@ function App() {
             <Route path="/about/privacy-policy" element={<PrivacyPolicy />} />
           </Routes>
         </Router>
+        <Toaster richColors theme="dark" position="top-right" />
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -8,6 +8,7 @@ import useMediaQuery from "../hooks/useMediaQuery";
 import { useCategories } from "../hooks/useCategories.jsx";
 import StreakChart from "@/components/charts/StreakChart.jsx";
 import { useMetricsDaily } from "../hooks/useMetricsDaily.jsx";
+import { toast } from "sonner";
 
 const baseContainerClasses = `bg-[#000000]
     /* Layout */
@@ -293,7 +294,7 @@ const Day = () => {
       );
       if (eventResponse.status === 200) {
         const responseData = await eventResponse.json();
-        const labeledEvents = responseData.LabeledEvents;
+        const labeledEvents = responseData.LabeledEvents ?? [];
         setCalendarEvents((prevEvents) =>
           prevEvents.map((event) => {
             const labeledMatch = labeledEvents.find(
@@ -374,14 +375,26 @@ const Day = () => {
       <div className="flex flex-col  md:w-1/2 md:pl-4 md:mt-80">
         <div className="flex justify-end space-x-3">
           <button
-            onClick={handleSync}
+            onClick={() => {
+              handleSync();
+              toast("Sync Started", {
+                description: "Events being fetched...",
+                className: "text-left text-white font-lexend",
+              });
+            }}
             className="bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
           >
             Sync Events
             <ArrowPathRoundedSquareIcon className="h-6 w-6 text-blue-500 ml-2" />
           </button>
           <button
-            onClick={handleCategorize}
+            onClick={() => {
+              handleCategorize();
+              toast("Categorization Started", {
+                description: "Events being sorted...",
+                className: "text-left text-white font-lexend",
+              });
+            }}
             className="bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
           >
             Categorize
