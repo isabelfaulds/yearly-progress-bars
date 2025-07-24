@@ -382,7 +382,7 @@ const Day = () => {
                 className: "text-left text-white font-lexend",
               });
             }}
-            className="bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
+            className="bg-gradient-to-tl from-black-300 to-gray-700 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
           >
             Sync Events
             <ArrowPathRoundedSquareIcon className="h-6 w-6 text-blue-500 ml-2" />
@@ -395,14 +395,14 @@ const Day = () => {
                 className: "text-left text-white font-lexend",
               });
             }}
-            className="bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
+            className="bg-gradient-to-tl from-black-300 to-gray-700 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
           >
             Categorize
             <SparklesIcon className="h-6 w-6 text-blue-500 ml-2" />
           </button>
         </div>
         {/* events */}
-        <div className="flex flex-col flex-grow mt-2 space-y-2 p-1">
+        <div className="flex flex-col flex-grow mt-2 space-y-2 p-3 bg-coolgray rounded-lg">
           {calendarEvents.map((event, index) => (
             <div key={index} className="flex items-center">
               {editingIndex === index ? (
@@ -415,7 +415,7 @@ const Day = () => {
                     onChange={handleTextChange}
                     onBlur={() => handleBlur()}
                     onKeyDown={(e) => handleKeyDown(e, index)}
-                    className="bg-gray-700 rounded-full px-3 py-1 mr-2 outline-none focus:ring-2 focus:ring-blue-500"
+                    className=" rounded-full px-3 py-1 mr-2 outline-none focus:ring-2 focus:ring-blue-500"
                     style={{
                       width: `${Math.max(editedText.length * 8, 80)}px`,
                     }}
@@ -456,7 +456,7 @@ const Day = () => {
               ) : (
                 <div
                   onClick={() => handleCategoryClick(index)}
-                  className="bg-gray-800 rounded-full px-3 py-1 mr-6 mb-1 cursor-pointer hover:bg-gray-700 transition-colors"
+                  className="bg-gray-700 rounded-full px-3 py-1 mr-6 mb-1 cursor-pointer hover:bg-gray-600 transition-colors"
                 >
                   {event.category || "No Category"}
                 </div>

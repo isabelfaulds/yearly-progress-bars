@@ -7,36 +7,39 @@ function GradientDefs() {
   return (
     <svg style={{ position: "absolute", width: 0, height: 0 }}>
       <defs>
-        <radialGradient id="circleGradient3" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#93a6ba" />
-          <stop offset="100%" stopColor="#446677" />
-        </radialGradient>
-
-        <radialGradient id="circleGradient2" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#8C9EB1" />
-          <stop offset="100%" stopColor="#525d69" />
+        <radialGradient id="circleGradient4" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="100%" stopColor="#c9eeff" />
         </radialGradient>
 
         <radialGradient id="circleGradient1" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#e3f6ff" />
+          <stop offset="100%" stopColor="#5e93ab" />
+        </radialGradient>
+
+        <radialGradient id="circleGradient2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#99afba" />
+          <stop offset="100%" stopColor="#4e7e94" />
+        </radialGradient>
+
+        {/* 93a6ba 446677  6A7785*/}
+        <radialGradient id="circleGradient3" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#6A7785" />
-          <stop offset="100%" stopColor="#2E3841" />
+          <stop offset="100%" stopColor="#4a5866" />
         </radialGradient>
       </defs>
     </svg>
   );
 }
 
-const values = [
-  { calendar_date: "2025-01-02", avg_category_score: 0.9 },
-  { calendar_date: "2025-01-03", avg_category_score: 0.4 },
-  { calendar_date: "2025-01-05", avg_category_score: 0.2 },
-];
-
 function StreakChart({ data = values }) {
-  // Get first day of current year
+  const isMobile = window.innerWidth < 768;
+  const today = new Date();
+
+  // Streak day range
   const currentYear = new Date().getFullYear();
-  const startDate = new Date(currentYear, 0, 1); // January 1st of current year
-  const endDate = new Date(currentYear, 11, 31); // December 31st of current year
+  const startDate = new Date(currentYear, 0, 1);
+  const endDate = isMobile ? today : new Date(currentYear, 11, 31);
 
   // Default library fields
   const heatmapData = data.map((item) => ({
@@ -45,7 +48,7 @@ function StreakChart({ data = values }) {
   }));
 
   return (
-    <div>
+    <div className="">
       <GradientDefs />
       <CalendarHeatmap
         startDate={startDate}
@@ -53,9 +56,10 @@ function StreakChart({ data = values }) {
         values={heatmapData}
         classForValue={(value) => {
           if (!value) return "color-empty";
-          if (value.count < 0.3) return "color-scale-1";
-          if (value.count < 0.6) return "color-scale-2";
-          return "color-scale-3"; // Top tier
+          if (value.count < 0.25) return "color-scale-1";
+          if (value.count < 0.5) return "color-scale-2";
+          if (value.count < 0.75) return "color-scale-3";
+          return "color-scale-4"; // Top tier
         }}
         showWeekdayLabels
       />
