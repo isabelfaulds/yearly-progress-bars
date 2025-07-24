@@ -32,7 +32,8 @@ function GradientDefs() {
   );
 }
 
-function StreakChart({ data = values }) {
+function StreakChart({ data }) {
+  if (!data) return null;
   const isMobile = window.innerWidth < 768;
   const today = new Date();
 

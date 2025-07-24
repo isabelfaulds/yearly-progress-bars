@@ -1,14 +1,16 @@
-import { useRef, useEffect } from "react";
-import Chart from "chart.js/auto";
-
-Chart.defaults.font.family = "Inter";
+import React from "react";
+import ReactECharts from "echarts-for-react"; // Or ReactEChartsCore for more control
+import * as echarts from "echarts";
+import useMediaQuery from "@/hooks/useMediaQuery";
 
 function calculateCategoryPercentages(graphEvents, eventCategories, days) {
   const categoryTotals = {};
-  const categoryPercentages = [];
+  const categoryLabels = [];
+  const categoryValues = [];
 
   eventCategories.forEach((category) => {
     categoryTotals[category.category] = 0;
+    categoryLabels.push(category.category);
   });
 
   graphEvents.forEach((event) => {
@@ -20,87 +22,223 @@ function calculateCategoryPercentages(graphEvents, eventCategories, days) {
   eventCategories.forEach((category) => {
     const totalTime = categoryTotals[category.category] || 0;
     const categoryTimeLimit = category.minutes * days;
-    const percentage = Math.min((totalTime / categoryTimeLimit) * 100, 100);
-    categoryPercentages[category.category] = percentage;
+    const percentage = Math.min(
+      Math.round((totalTime / categoryTimeLimit) * 100),
+      100
+    );
+    categoryValues.push(percentage);
   });
 
-  return categoryPercentages;
+  return { labels: categoryLabels, values: categoryValues };
 }
 
-const RadarChart = ({ events, categories, days = 1 }) => {
-  const chartRef = useRef(null);
-  const chartInstance = useRef(null);
+const RadarChart = ({
+  events,
+  categories,
+  days = 1,
+  compact = false,
+  muted = false,
+}) => {
+  var isScreenLarge = useMediaQuery("(min-width: 460px)");
+  if (compact) {
+    isScreenLarge = false;
+  }
 
-  useEffect(() => {
-    const todayResult = calculateCategoryPercentages(events, categories, days);
-    const categoryKeys = Object.keys(todayResult);
-    const categoryValues = Object.values(todayResult);
+  if (!events || !categories || categories.length === 0) return null;
+  const { labels: categoryKeys, values: categoryValues } =
+    calculateCategoryPercentages(events, categories, days);
 
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
+  const getOption = () => {
+    const indicators = categoryKeys.map((key) => ({
+      name: key,
+      max: 100, // Set maximum value for each indicator
+      min: 0, // Set minimum value for each indicator
+    }));
 
-    const ctx = chartRef.current.getContext("2d");
-
-    chartInstance.current = new Chart(ctx, {
-      type: "radar",
-      data: {
-        labels: categoryKeys,
-        datasets: [
-          {
-            label: "",
-            data: categoryValues,
-            backgroundColor: "rgba(255, 99, 132, 0.2)",
-            borderColor: "rgb(255, 99, 132)",
-            pointBackgroundColor: "rgb(255, 99, 132)",
-            pointBorderColor: "#fff",
-            pointHoverBackgroundColor: "#fff",
-            pointHoverBorderColor: "rgb(255, 99, 132)",
-            fill: true,
-          },
-        ],
-      },
-      options: {
-        plugins: {
-          legend: { display: false },
+    return {
+      tooltip: {
+        trigger: "item", // Show tooltip on hover
+        backgroundColor: "#49585e", // Dark background
+        borderColor: "#333", // Optional border
+        borderWidth: 1,
+        textStyle: {
+          color: "#fff", // White text
+          fontSize: 12,
+          fontFamily: "Inter",
         },
-        scales: {
-          r: {
-            angleLines: {
-              display: true,
-              color: "rgba(255, 255, 255, 0.9)",
+        padding: 10,
+        extraCssText:
+          "box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); border-radius: 5px;",
+      },
+      legend: {
+        show: false,
+      },
+      // Radar chart configuration
+      radar: {
+        indicator: indicators, // axes
+        center: ["50%", "50%"], // Center of the radar chart
+        radius: isScreenLarge ? "62%" : "50%",
+        shape: "circle",
+        startAngle: 90, // Starting angle of the first axis
+        splitNumber: 4, // concentric circles
+        // labels
+        name: {
+          formatter: (name) =>
+            name.length > 8 ? name.replace(" ", "\n") : name,
+          color: "#FFFFFF",
+          backgroundColor: "#3b4652",
+          fontSize: isScreenLarge ? 13 : 10,
+          fontFamily: "Lexend",
+          borderRadius: 8,
+          padding: [5, 7],
+        },
+        axisLine: {
+          lineStyle: {
+            color: "rgba(255, 255, 255, 0.8)", // angle lines
+          },
+        },
+        splitLine: {
+          lineStyle: {
+            color: "rgba(255, 255, 255, 0.5)", // concentric circle lines
+          },
+        },
+        splitArea: {
+          show: true,
+          areaStyle: {
+            color: [
+              // same color option commented out
+              new echarts.graphic.RadialGradient(0.1, 0.9, 1, [
+                {
+                  offset: 0,
+                  color: "rgba(73, 88, 94, 0.8)", // Center
+                },
+                {
+                  offset: 1,
+                  color: "rgba(73, 88, 94, 1)", // Outer edge
+                },
+              ]),
+              // new echarts.graphic.RadialGradient(0.5, 0.5, 0.1, [
+              //   {
+              //     offset: 0,
+              //     color: "rgba(73, 88, 94, 0.8)", // Center
+              //   },
+              //   {
+              //     offset: 1,
+              //     color: "rgba(201, 238, 255, 1)", // Outer edge
+              //   },
+              // ]),
+              new echarts.graphic.RadialGradient(0.5, 0.5, 0.38, [
+                {
+                  offset: 0,
+                  color: "rgba(73, 88, 94, 0.8)", // Center
+                },
+                {
+                  offset: 1,
+                  color: "rgba(99, 119, 128, 1)", // Outer edge
+                },
+              ]),
+              // new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+              //   {
+              //     offset: 0,
+              //     color: "rgba(73, 88, 94, 0.8)", // Center
+              //   },
+              //   {
+              //     offset: 1,
+              //     color: "rgba(201, 238, 255, 1)", // Outer edge
+              //   },
+              // ]),
+              new echarts.graphic.RadialGradient(0.5, 0.5, 0.45, [
+                {
+                  offset: 0,
+                  color: "rgba(99, 119, 128, 0.8)", // Center
+                },
+                {
+                  offset: 1,
+                  color: "rgba(149, 178, 191, 1)", // Outer edge
+                },
+              ]),
+              // new echarts.graphic.RadialGradient(0.5, 0.5, 0.45, [
+              //   {
+              //     offset: 0,
+              //     color: "rgba(73, 88, 94, 0.8)", // Center
+              //   },
+              //   {
+              //     offset: 1,
+              //     color: "rgba(201, 238, 255, 1)", // Outer edge
+              //   },
+              // ]),
+              new echarts.graphic.RadialGradient(0.5, 0.5, 0.45, [
+                {
+                  offset: 0,
+                  color: "rgba(76, 197, 207, 0.8)", // Center
+                },
+                {
+                  offset: 1,
+                  color: muted
+                    ? "rgba(191,208,216, 1)"
+                    : "rgba(201, 238, 255, 1)", // Outer edge
+                },
+              ]),
+            ], // shaded areas innermost to outermost
+          },
+        },
+      },
+      series: [
+        {
+          name: "Stats",
+          type: "radar",
+          //   cant smooth radar, would have to be polar coordinates
+          smooth: false,
+          data: [
+            {
+              value: categoryValues,
+              name: "Time Amounts", // tooltip label
+              itemStyle: {
+                // Style for the data point itself (and line connecting them)
+                color: "rgba(255, 197, 71, 1)", // Point color
+              },
+              lineStyle: {
+                color: "rgba(255, 197, 71, 1)", // Line color
+                width: 2,
+              },
+              areaStyle: {
+                color: new echarts.graphic.RadialGradient(0.2, 0.2, 0.5, [
+                  {
+                    offset: 0,
+                    color: "rgba(250, 252, 174, 1)", // inner color
+                  },
+                  {
+                    offset: 1,
+                    color: "rgba(255, 197, 71, 1)", // outer color
+                  },
+                ]),
+              },
+              symbol: "pin", // Shape of the data points
+              symbolSize: 12, // Size of the data points
             },
-            suggestedMin: 0,
-            suggestedMax: 100,
-            ticks: {
-              display: false,
-              stepSize: 1,
-              color: "#FFFFFF",
-              backdropColor: "transparent",
-              showLabelBackdrop: false,
-            },
-            pointLabels: {
-              fontSize: 16,
-              color: "#FFFFFF",
-              backdropColor: "transparent",
-              font: { backgroundColor: "transparent" },
+          ],
+          // Hover effects
+          emphasis: {
+            // point
+            itemStyle: {
+              color: "#fceee8",
+              borderColor: "rgb(230, 116, 55)",
+              borderWidth: 1,
             },
           },
         },
-        responsive: true,
-        maintainAspectRatio: false,
+      ],
+      grid: {
+        containLabel: true, // Ensures labels are not cut off
       },
-    });
-
-    return () => {
-      chartInstance.current?.destroy();
     };
-  }, [events, categories, days]);
+  };
 
   return (
-    <canvas
-      ref={chartRef}
-      className="w-full h-80 sm:w-3/4 sm:h-96 md:w-2/3 md:h-96 lg:w-1/2 lg:h-96"
+    <ReactECharts
+      option={getOption()}
+      className="w-full h-96 sm:w-3/4 sm:h-96 md:w-2/3 md:h-96 lg:w-1/2 lg:h-96"
+      style={{ height: "350px", width: "100%" }}
     />
   );
 };

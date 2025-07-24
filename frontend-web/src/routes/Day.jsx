@@ -358,7 +358,7 @@ const Day = () => {
             {weekday}, {month} {year}
           </div>
         </div>
-        <div className="p-8 rounded-lg shadow-lg">
+        <div className="p-8 rounded-lg shadow-lg w-[500px]">
           <RadarChart
             events={calendarEvents}
             categories={todayCategories.filter(
