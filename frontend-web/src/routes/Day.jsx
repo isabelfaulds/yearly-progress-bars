@@ -20,7 +20,7 @@ const baseContainerClasses = `bg-[#000000]
     bg-[#000000] bg-cover bg-center
 
     /* Spacing */
-    pt-5 pl-5 pr-5 px-4 pb-5
+    pt-5 pb-5
     sm:pt-12 sm:pl-20 sm:px-20
 
     text-white`;
@@ -350,7 +350,7 @@ const Day = () => {
     <div className={baseContainerClasses}>
       <div className="flex flex-col md:w-3/4 md:pr-4 items-start mb-3">
         {/* First column: graph, title */}
-        <div className="flex flex-row">
+        <div className="pl-4 pt-2 pb-3 flex flex-row">
           <div className="bg-gradient-to-tl from-blue-300 to-orange-100 rounded-full w-12 h-12 flex items-center justify-center text-2xl font-bold text-gray-800 mr-4">
             {day}
           </div>
@@ -358,7 +358,8 @@ const Day = () => {
             {weekday}, {month} {year}
           </div>
         </div>
-        <div className="p-8 rounded-lg shadow-lg">
+        {/* pl-5 pr-5 px-4  pl-3 p-8 */}
+        <div className="pb-4 rounded-lg shadow-lg mx-auto w-7/8">
           <RadarChart
             events={calendarEvents}
             categories={todayCategories.filter(
@@ -366,14 +367,14 @@ const Day = () => {
             )}
           />
         </div>
-        <div className="w-full md:mt-10">
+        <div className="p-5 w-full md:mt-10">
           <StreakChart data={dailyTotals} />
         </div>
       </div>
       {/* Second column: button and events */}
 
       <div className="flex flex-col  md:w-1/2 md:pl-4 md:mt-80">
-        <div className="flex justify-end space-x-3">
+        <div className="flex flex-row justify-end space-x-3 mb-3 mr-3">
           <button
             onClick={() => {
               handleSync();
@@ -382,7 +383,7 @@ const Day = () => {
                 className: "text-left text-white font-lexend",
               });
             }}
-            className="bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
+            className="bg-gradient-to-tl from-black-300 to-gray-700 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
           >
             Sync Events
             <ArrowPathRoundedSquareIcon className="h-6 w-6 text-blue-500 ml-2" />
@@ -395,14 +396,14 @@ const Day = () => {
                 className: "text-left text-white font-lexend",
               });
             }}
-            className="bg-gradient-to-tl from-black-300 to-gray-800 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
+            className="bg-gradient-to-tl from-black-300 to-gray-700 p-3 rounded-full shadow-lgj focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
           >
             Categorize
             <SparklesIcon className="h-6 w-6 text-blue-500 ml-2" />
           </button>
         </div>
         {/* events */}
-        <div className="flex flex-col flex-grow mt-2 space-y-2 p-1">
+        <div className="flex flex-col flex-grow mt-2 space-y-2 p-3 bg-coolgray rounded-lg">
           {calendarEvents.map((event, index) => (
             <div key={index} className="flex items-center">
               {editingIndex === index ? (
@@ -415,7 +416,7 @@ const Day = () => {
                     onChange={handleTextChange}
                     onBlur={() => handleBlur()}
                     onKeyDown={(e) => handleKeyDown(e, index)}
-                    className="bg-gray-700 rounded-full px-3 py-1 mr-2 outline-none focus:ring-2 focus:ring-blue-500"
+                    className=" rounded-full px-3 py-1 mr-2 outline-none focus:ring-2 focus:ring-blue-500"
                     style={{
                       width: `${Math.max(editedText.length * 8, 80)}px`,
                     }}
@@ -456,7 +457,7 @@ const Day = () => {
               ) : (
                 <div
                   onClick={() => handleCategoryClick(index)}
-                  className="bg-gray-800 rounded-full px-3 py-1 mr-6 mb-1 cursor-pointer hover:bg-gray-700 transition-colors"
+                  className="bg-gray-700 rounded-full px-3 py-1 mr-6 mb-1 cursor-pointer hover:bg-gray-600 transition-colors"
                 >
                   {event.category || "No Category"}
                 </div>
@@ -468,7 +469,7 @@ const Day = () => {
         </div>
       </div>
 
-      <div className=" fixed top-4 sm:bottom-4  md:top-auto right-4 p-1 rounded-full ">
+      <div className="pr-8 fixed top-5 sm:bottom-4 md:top-auto right-0 p-1 rounded-full ">
         <NavButton direction={isMediumScreenOrLarger ? "up" : "down"} />
       </div>
     </div>

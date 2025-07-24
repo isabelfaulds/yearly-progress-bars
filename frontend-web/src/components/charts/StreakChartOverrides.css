@@ -18,8 +18,21 @@
 .color-scale-3 {
   fill: url(#circleGradient3) !important;
 }
+.color-scale-4 {
+  fill: url(#circleGradient4) !important;
+}
 
 .react-calendar-heatmap rect {
   rx: 50%; /* round corners to 50% of width/height — makes it a circle */
   ry: 50%;
+}
+
+.react-calendar-heatmap-month-label {
+  font-size: 14px !important;
+  fill: #ccc; /* optional: make the color brighter if it's too subtle */
+  font-weight: 500; /* optional: make it bolder */
+}
+
+.react-calendar-heatmap text {
+  font-size: 14px;
 }

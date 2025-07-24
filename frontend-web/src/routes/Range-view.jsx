@@ -14,7 +14,8 @@ const baseContainerClasses = `
   w-screen min-h-screen h-auto m-0
   bg-[#000000] bg-cover bg-center
   // global margins
-  pt-5 pl-5 pr-5 pb-5 sm:pt-12 sm:pl-20 text-white
+  pt-5 pl-5 pr-5 pb-5 sm:pt-12 sm:pl-20
+  text-white
   flex flex-col
 `;
 
@@ -288,8 +289,7 @@ const RangeView = () => {
         {/* Charts */}
         <div className="flex flex-col md:flex-row items-center">
           {/* Line Chart */}
-          {/* Keep chart in its own stable container, else drops */}
-          <div className="p-4 rounded-lg shadow-lg h-[350px] md:h-[400px] w-full md:w-2/3">
+          <div className="p-4 mx-auto rounded-lg shadow-lg h-[350px] md:h-[400px] w-full md:w-3/4">
             <LineChart
               events={filteredEventsForVisuals}
               categories={categories.filter((item) =>
@@ -298,29 +298,28 @@ const RangeView = () => {
               daysArray={daysInCurrentRange}
             />
           </div>
-
-          {/* Radar Chart */}
-          {/* Keep chart in its own stable container, else drops */}
-          <div className="p-4 rounded-lg shadow-lg w-full md:w-1/3 mt-4 md:mt-0 h-80 md:h-96">
-            <RadarChart
-              events={filteredEventsForVisuals}
-              categories={categories.filter((item) =>
-                selectedCategoriesMap.has(item.category)
-              )}
-              days={numberOfDays}
-            />
-          </div>
           {/* /Charts */}
         </div>
 
         {/* Totals Table  */}
-        <div className="mx-auto md:w-1/2 flex flex-row ">
+        <div className="ml-6 mr-6 sm:gap-15 sm:mx-auto md:w-3/4 flex flex-col sm:flex-row ">
           <CategoryTotals
             events={filteredEventsForVisuals}
             categories={categories.filter((item) =>
               selectedCategoriesMap.has(item.category)
             )}
           ></CategoryTotals>
+          <div className="w-full">
+            <RadarChart
+              events={filteredEventsForVisuals}
+              categories={categories.filter((item) =>
+                selectedCategoriesMap.has(item.category)
+              )}
+              days={numberOfDays}
+              compact={true}
+              muted={true}
+            />
+          </div>
         </div>
       </div>
       <div className="fixed bottom-4 right-4 p-1 rounded-full ">
