@@ -15,11 +15,7 @@ const LoginStep0 = ({ onNext }) => {
 
   return (
     <div className="initial-container">
-      <img
-        src="../../src/assets/tab-icon.svg"
-        alt="Icon"
-        className="w-8 h-8 mx-auto mb-5"
-      />
+      <img src="/tab-icon.svg" alt="Icon" className="w-8 h-8 mx-auto mb-5" />
       <div className="text-2xl mb-10 font-lexend">Personal Time Viewer</div>
 
       <div className="mb-10">
