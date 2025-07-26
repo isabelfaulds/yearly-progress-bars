@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button.jsx";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import CalendarTable from "./CalendarTable";
+import SyncTable from "./SyncTable";
 import { useCategories } from "@/hooks/useCategories";
 
-const LoginStep3 = ({ onPrev }) => {
-  const { data: categories, isLoading, error } = useCategories();
+const CreateAccountStep2 = ({ onPrev, onNext }) => {
+  const { data: categories } = useCategories();
   const navigate = useNavigate();
 
   // Get list of calendars
@@ -52,7 +52,7 @@ const LoginStep3 = ({ onPrev }) => {
       )
     );
     console.log("Updated - Calendar settings");
-    navigate("/day-view");
+    onNext();
   };
 
   return (
@@ -65,14 +65,14 @@ const LoginStep3 = ({ onPrev }) => {
         Select calendars and set any preferred defaults, make changes later in
         Settings{" "}
       </div>
-      <CalendarTable data={calendars} categories={categories} ref={tableRef} />
+      <SyncTable data={calendars} categories={categories} ref={tableRef} />
       <div className="mt-4 m-3 flex flex-row gap-1 mx-auto">
         <div className="flex flex-row mx-auto gap-5">
           <Button onClick={onPrev} className="">
             Prev
           </Button>
           <Button onClick={handleFinish} className="">
-            Finish
+            Next
           </Button>
         </div>
       </div>
@@ -80,4 +80,4 @@ const LoginStep3 = ({ onPrev }) => {
   );
 };
 
-export default LoginStep3;
+export default CreateAccountStep2;

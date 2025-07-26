@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { useCategories } from "@/hooks/useCategories.jsx";
 
-const LoginStep2 = ({ onNext }) => {
+const CreateAccountStep1 = ({ onNext }) => {
   const { refetch: categoriesRefetch } = useCategories();
 
   const handleSave = () => {
@@ -245,4 +245,4 @@ const LoginStep2 = ({ onNext }) => {
   );
 };
 
-export default LoginStep2;
+export default CreateAccountStep1;

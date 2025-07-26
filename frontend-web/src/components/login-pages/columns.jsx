@@ -7,11 +7,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export const getColumns = (categories = [], setInternalData) => {
+export const getColumns = (
+  categories = [],
+  setInternalData,
+  { nameKey = "summary", nameHeader = "Name", idKey = "id" } = {}
+) => {
   return [
-    // Checkbox Column
     {
-      id: "select", // column id
+      id: "select",
       header: ({ table }) => (
         <div className="flex items-center space-x-2">
           <Checkbox
@@ -21,14 +24,12 @@ export const getColumns = (categories = [], setInternalData) => {
             }
             onCheckedChange={(value) => {
               const checked = !!value;
-              // Update internal state
               setInternalData((prev) =>
                 prev.map((item) => ({
                   ...item,
                   selected: checked,
                 }))
               );
-              // Update table selection state
               table.toggleAllPageRowsSelected(checked);
             }}
             aria-label="Select all"
@@ -41,7 +42,7 @@ export const getColumns = (categories = [], setInternalData) => {
           row.toggleSelected(!!value);
           setInternalData((prev) =>
             prev.map((item) =>
-              item.calendarID === row.original.calendarID
+              item[idKey] === row.original[idKey]
                 ? { ...item, selected: !!value }
                 : item
             )
@@ -60,29 +61,25 @@ export const getColumns = (categories = [], setInternalData) => {
       enableHiding: false,
     },
 
-    // Name Column
     {
-      accessorKey: "summary",
-      header: "Calendar Name",
+      accessorKey: nameKey,
+      header: nameHeader,
       cell: ({ row }) => (
-        <div className="font-lexend items-cente max-w-[120px] sm:max-w-[225px] md:max-w-[400px] lg:md:max-w-[800px] break-words whitespace-normal">
-          {row.original.summary}
+        <div className="font-lexend items-center max-w-[120px] sm:max-w-[225px] md:max-w-[400px] lg:max-w-[800px] break-words whitespace-normal">
+          {row.original[nameKey]}
         </div>
       ),
     },
 
-    // Dropdown Column
     {
       id: "defaultCategory",
       header: "Default Category",
       cell: ({ row }) => {
-        const calendarItem = row.original;
+        const item = row.original;
         const handleDropdownChange = (value) => {
           setInternalData((prev) =>
-            prev.map((item) =>
-              item.calendarID === row.original.calendarID
-                ? { ...item, defaultCategory: value }
-                : item
+            prev.map((i) =>
+              i[idKey] === item[idKey] ? { ...i, defaultCategory: value } : i
             )
           );
         };
@@ -90,10 +87,8 @@ export const getColumns = (categories = [], setInternalData) => {
         return (
           <div className="flex items-center justify-center">
             <Select onValueChange={handleDropdownChange}>
-              <SelectTrigger className="w-[180px]  data-[placeholder]:text-gray-400">
-                <SelectValue
-                  placeholder={calendarItem.defaultCategory || "None set"}
-                />
+              <SelectTrigger className="w-[180px] data-[placeholder]:text-gray-400">
+                <SelectValue placeholder={item.defaultCategory || "None set"} />
               </SelectTrigger>
               <SelectContent className="bg-slate-600 text-white">
                 {categories.length > 0 ? (

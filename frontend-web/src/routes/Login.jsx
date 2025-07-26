@@ -2,10 +2,11 @@ import React from "react";
 import "firebase/auth";
 import { useState } from "react";
 
-import LoginStep0 from "@/components/login-pages/LoginStep0";
-import LoginStep1 from "@/components/login-pages/LoginStep1";
-import LoginStep2 from "@/components/login-pages/LoginStep2";
-import LoginStep3 from "@/components/login-pages/LoginStep3";
+import CreateAccountSignIn from "@/components/login-pages/CreateAccountSignIn";
+import CreateAccountStep0 from "@/components/login-pages/CreateAccountStep0";
+import CreateAccountStep1 from "@/components/login-pages/CreateAccountStep1";
+import CreateAccountStep2 from "@/components/login-pages/CreateAccountStep2";
+import CreateAccountStep3 from "@/components/login-pages/CreateAccountStep3";
 
 const baseContainerClasses = `
   // scrollable full background display
@@ -32,25 +33,34 @@ const Login = () => {
       <div className="login-container">
         {currentStep === 0 && (
           <div className="initial-container">
-            <LoginStep0 onNext={handleNextStep} />
+            <CreateAccountSignIn onNext={handleNextStep} />
           </div>
         )}
         {currentStep === 1 && (
           <div className="login-container">
-            <div className="text-sm">Step 1 of 3</div>
-            <LoginStep1 onNext={handleNextStep} />
+            {/* <div className="text-sm">Step 1 of 3</div> */}
+            <CreateAccountStep0 onNext={handleNextStep} />
           </div>
         )}
         {currentStep === 2 && (
           <div className="login-container">
-            <div className="text-sm">Step 2 of 3</div>
-            <LoginStep2 onNext={handleNextStep} />
+            <div className="text-sm">Step 1 of 3</div>
+            <CreateAccountStep1 onNext={handleNextStep} />
           </div>
         )}
         {currentStep === 3 && (
           <div className="login-container">
+            <div className="text-sm">Step 2 of 3</div>
+            <CreateAccountStep2
+              onPrev={handlePrevStep}
+              onNext={handleNextStep}
+            />
+          </div>
+        )}
+        {currentStep === 4 && (
+          <div className="login-container">
             <div className="text-sm">Step 3 of 3</div>
-            <LoginStep3 onPrev={handlePrevStep} />
+            <CreateAccountStep3 onPrev={handlePrevStep} />
           </div>
         )}
       </div>
