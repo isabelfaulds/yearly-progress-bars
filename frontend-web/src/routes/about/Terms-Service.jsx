@@ -25,6 +25,14 @@ const TermsService = () => {
             h3: ({ node, ...props }) => (
               <h3 className="text-gray-400 dark:text-blue-300" {...props} />
             ),
+            a: ({ node, ...props }) => (
+              <a
+                className="text-blue-200 no-underline hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+                {...props}
+              />
+            ),
           }}
         >
           {markdownContent}
