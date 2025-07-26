@@ -51,7 +51,10 @@ const Login = () => {
         {currentStep === 3 && (
           <div className="login-container">
             <div className="text-sm">Step 2 of 3</div>
-            <CreateAccountStep2 onPrev={handlePrevStep} />
+            <CreateAccountStep2
+              onPrev={handlePrevStep}
+              onNext={handleNextStep}
+            />
           </div>
         )}
         {currentStep === 4 && (

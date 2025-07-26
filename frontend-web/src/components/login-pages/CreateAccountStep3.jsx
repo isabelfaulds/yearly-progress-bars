@@ -4,25 +4,25 @@ import { useEffect, useState, useRef } from "react";
 import SyncTable from "./SyncTable";
 import { useCategories } from "@/hooks/useCategories";
 
-const CreateAccountStep2 = ({ onPrev, onNext }) => {
+const CreateAccountStep3 = ({ onPrev }) => {
   const { data: categories } = useCategories();
   const navigate = useNavigate();
 
   // Get list of calendars
-  const [calendars, setCalendars] = useState([]);
-  const getCalendars = async () => {
-    const response = await fetch(import.meta.env.VITE_CLOUDFRONT_GCAL_LIST, {
+  const [tasklists, setTasklists] = useState([]);
+  const getTasklists = async () => {
+    const response = await fetch(import.meta.env.VITE_CLOUDFRONT_GTASKS_LIST, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
     });
-    if (!response.ok) throw new Error("Failed to fetch categories");
+    if (!response.ok) throw new Error("Failed to fetch tasklists");
     const data = await response.json();
-    setCalendars(data.calendars);
+    setTasklists(data.task_lists);
   };
 
   useEffect(() => {
-    getCalendars();
+    getTasklists();
   }, []);
 
   // Get selections
@@ -51,28 +51,34 @@ const CreateAccountStep2 = ({ onPrev, onNext }) => {
         })
       )
     );
-    console.log("Updated - Calendar settings");
-    onNext();
+    console.log("Updated - Tasklist settings");
+    navigate("/day-view");
   };
 
   return (
     <div className="initial-container">
       <div className="mb-10 font-lexend">
-        <div className="text-xl mb-10">Set Calendar Preferences</div>
+        <div className="text-xl mb-10">Set Tasklist Preferences</div>
       </div>
-      <div className="m-3">Choose Calendars to Sync</div>
+      <div className="m-3">Choose Tasklists to Sync</div>
       <div className="m-2 mb-4">
-        Select calendars and set any preferred defaults, make changes later in
+        Select tasklists and set any preferred defaults, make changes later in
         Settings{" "}
       </div>
-      <SyncTable data={calendars} categories={categories} ref={tableRef} />
+      <SyncTable
+        data={tasklists}
+        categories={categories}
+        ref={tableRef}
+        nameKey={"title"}
+        nameHeader={"Tasklist Name"}
+      />
       <div className="mt-4 m-3 flex flex-row gap-1 mx-auto">
         <div className="flex flex-row mx-auto gap-5">
           <Button onClick={onPrev} className="">
             Prev
           </Button>
           <Button onClick={handleFinish} className="">
-            Next
+            Finish
           </Button>
         </div>
       </div>
@@ -80,4 +86,4 @@ const CreateAccountStep2 = ({ onPrev, onNext }) => {
   );
 };
 
-export default CreateAccountStep2;
+export default CreateAccountStep3;
