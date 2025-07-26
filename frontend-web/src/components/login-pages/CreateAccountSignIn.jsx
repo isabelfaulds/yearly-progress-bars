@@ -2,7 +2,7 @@ import { useAuthContext } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button.jsx";
 import { useNavigate } from "react-router-dom";
 
-const LoginStep0 = ({ onNext }) => {
+const CreateAccountSignIn = ({ onNext }) => {
   const { handleGoogleSignIn } = useAuthContext();
   const navigate = useNavigate();
 
@@ -32,4 +32,4 @@ const LoginStep0 = ({ onNext }) => {
   );
 };
 
-export default LoginStep0;
+export default CreateAccountSignIn;

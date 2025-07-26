@@ -51,7 +51,7 @@ const CalendarTable = forwardRef(({ data, categories }, ref) => {
         <Table className="rounded-md min-w-[600px]">
           <TableHeader className="bg-slate-800 px-4">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} disableHover={true}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder

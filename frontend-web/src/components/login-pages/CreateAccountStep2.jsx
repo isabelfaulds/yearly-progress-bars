@@ -4,8 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import CalendarTable from "./CalendarTable";
 import { useCategories } from "@/hooks/useCategories";
 
-const LoginStep3 = ({ onPrev }) => {
-  const { data: categories, isLoading, error } = useCategories();
+const CreateAccountStep2 = ({ onPrev }) => {
+  const { data: categories } = useCategories();
   const navigate = useNavigate();
 
   // Get list of calendars
@@ -80,4 +80,4 @@ const LoginStep3 = ({ onPrev }) => {
   );
 };
 
-export default LoginStep3;
+export default CreateAccountStep2;
