@@ -45,13 +45,13 @@ resource "aws_iam_policy" "apigateway_logging_dynamo_policy" {
         aws_dynamodb_table.user_tokens.arn,
         aws_dynamodb_table.calendar_events.arn,
         aws_dynamodb_table.milestones.arn,
+        aws_dynamodb_table.gtask_lists.arn,
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events/index/UserIdDateIndex",
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestones/index/UserIndex",
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestone_sessions/index/MilestoneIndex",
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_milestone_sessions/index/UserIndex",
-        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_day_metrics/index/UserIndex"
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_day_metrics/index/UserIndex",
 
-        
         ]
       },
     ]
@@ -2078,7 +2078,100 @@ resource "aws_api_gateway_integration_response" "get_calendars_integration_respo
   
 }
 
-### list task
+### post preferences
+
+resource "aws_api_gateway_method" "post_calendars_list_method" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
+
+  request_parameters = {
+    "method.request.header.user-id" = true,
+  }
+}
+
+resource "aws_api_gateway_integration" "post_calendar_list" {
+  rest_api_id = aws_api_gateway_rest_api.user_data_api.id
+  resource_id = aws_api_gateway_method.post_calendars_list_method.resource_id
+  http_method = aws_api_gateway_method.post_calendars_list_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS" 
+  credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
+  uri = "arn:aws:apigateway:us-west-1:dynamodb:action/PutItem"
+  passthrough_behavior = "WHEN_NO_MATCH"
+
+
+# 400 if improper template
+  request_templates = {
+    "application/json" = <<EOF
+    #set($inputRoot = $input.path('$'))
+    #set($userId = $input.params().header.get('user-id'))
+    #set($calendarID = $inputRoot.calendarID)
+    #set($defaultCategory = $inputRoot.defaultCategory)
+    #set($sync = $inputRoot.sync)
+    #set($summary = $inputRoot.summary)
+
+
+    {
+      "TableName": "pb_calendars",
+      "Item": {
+        "calendar_uid" : {"S" : "$userId:$calendarID"}
+        ,"user_id" : { "S": "$userId" }
+        ,"sync" : {"BOOL" : $sync}
+        ,"calendar_name" : { "S": "$summary" }
+        #if($inputRoot.defaultCategory && $inputRoot.defaultCategory != "")
+          , "default_category_uid" : { "S" : "$userId:$inputRoot.defaultCategory" }
+          , "default_category" : { "S" : "$inputRoot.defaultCategory" }
+        #end
+
+      }
+    }
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "post_calendar_list_method_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "POST"
+  status_code   = "200"
+  depends_on = [aws_api_gateway_method.post_calendars_list_method]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true,
+    "method.response.header.Access-Control-Allow-Methods"     = true,
+    "method.response.header.Access-Control-Allow-Origin"      = true,
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "post_calendar_list_integration_response" {
+  rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
+  resource_id   = aws_api_gateway_resource.cal_list.id
+  http_method   = "POST"
+  status_code   = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.post_calendar_list,
+  ]
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type'",
+    "method.response.header.Access-Control-Allow-Methods"     = "'OPTIONS,GET,POST'",
+    "method.response.header.Access-Control-Allow-Origin"      = "'https://localhost:5173'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+  response_templates = {
+          "application/json" = <<EOF
+      {"message": "Updated calendar settings"}
+      EOF
+        }
+}
+
+### tasklists
+### tasklist options
 
 resource "aws_api_gateway_resource" "calendar_sync_gtask" {
   rest_api_id = aws_api_gateway_rest_api.user_data_api.id
@@ -2207,9 +2300,9 @@ resource "aws_api_gateway_integration_response" "get_gtasks_integration_response
 
 ### post preferences
 
-resource "aws_api_gateway_method" "post_calendars_list_method" {
+resource "aws_api_gateway_method" "post_gtasks_lists" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
-  resource_id   = aws_api_gateway_resource.cal_list.id
+  resource_id   = aws_api_gateway_resource.gtasks_list.id
   http_method   = "POST"
   authorization = "CUSTOM"
   authorizer_id = aws_api_gateway_authorizer.login_token_gateway_authorizer.id
@@ -2219,10 +2312,10 @@ resource "aws_api_gateway_method" "post_calendars_list_method" {
   }
 }
 
-resource "aws_api_gateway_integration" "post_calendar_list" {
+resource "aws_api_gateway_integration" "post_gtasks_lists" {
   rest_api_id = aws_api_gateway_rest_api.user_data_api.id
-  resource_id = aws_api_gateway_method.post_calendars_list_method.resource_id
-  http_method = aws_api_gateway_method.post_calendars_list_method.http_method
+  resource_id = aws_api_gateway_method.post_gtasks_lists.resource_id
+  http_method = aws_api_gateway_method.post_gtasks_lists.http_method
   integration_http_method = "POST"
   type                    = "AWS" 
   credentials             = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/APIGatewayDyanmoCloudWatchRole"
@@ -2235,19 +2328,18 @@ resource "aws_api_gateway_integration" "post_calendar_list" {
     "application/json" = <<EOF
     #set($inputRoot = $input.path('$'))
     #set($userId = $input.params().header.get('user-id'))
-    #set($calendarID = $inputRoot.calendarID)
+    #set($tasklistID = $inputRoot.tasklistID)
     #set($defaultCategory = $inputRoot.defaultCategory)
     #set($sync = $inputRoot.sync)
-    #set($summary = $inputRoot.summary)
-
+    #set($title = $inputRoot.title)
 
     {
-      "TableName": "pb_calendars",
+      "TableName": "pb_gtasklists",
       "Item": {
-        "calendar_uid" : {"S" : "$userId:$calendarID"}
+        "tasklist_uid" : {"S" : "$userId:$tasklistID"}
         ,"user_id" : { "S": "$userId" }
         ,"sync" : {"BOOL" : $sync}
-        ,"calendar_name" : { "S": "$summary" }
+        ,"tasklist_name" : { "S": "$title" }
         #if($inputRoot.defaultCategory && $inputRoot.defaultCategory != "")
           , "default_category_uid" : { "S" : "$userId:$inputRoot.defaultCategory" }
           , "default_category" : { "S" : "$inputRoot.defaultCategory" }
@@ -2259,12 +2351,12 @@ EOF
   }
 }
 
-resource "aws_api_gateway_method_response" "post_calendar_list_method_response" {
+resource "aws_api_gateway_method_response" "post_gtasks_lists" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
-  resource_id   = aws_api_gateway_resource.cal_list.id
+  resource_id   = aws_api_gateway_resource.gtasks_list.id
   http_method   = "POST"
   status_code   = "200"
-  depends_on = [aws_api_gateway_method.post_calendars_list_method]
+  depends_on = [aws_api_gateway_method.post_gtasks_lists]
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = true,
@@ -2274,14 +2366,14 @@ resource "aws_api_gateway_method_response" "post_calendar_list_method_response" 
   }
 }
 
-resource "aws_api_gateway_integration_response" "post_calendar_list_integration_response" {
+resource "aws_api_gateway_integration_response" "post_gtasks_lists" {
   rest_api_id   = aws_api_gateway_rest_api.user_data_api.id
-  resource_id   = aws_api_gateway_resource.cal_list.id
+  resource_id   = aws_api_gateway_resource.gtasks_list.id
   http_method   = "POST"
   status_code   = "200"
 
   depends_on = [
-    aws_api_gateway_integration.post_calendar_list,
+    aws_api_gateway_integration.post_gtasks_lists,
   ]
 
   response_parameters = {
@@ -2292,10 +2384,11 @@ resource "aws_api_gateway_integration_response" "post_calendar_list_integration_
   }
   response_templates = {
           "application/json" = <<EOF
-      {"message": "Updated calendar settings"}
+      {"message": "Updated tasklist settings"}
       EOF
         }
 }
+
 
 # Get milestone sessions
 

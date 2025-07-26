@@ -30,18 +30,18 @@ const CreateAccountStep3 = ({ onPrev }) => {
 
   const handleFinish = async () => {
     const latestData = tableRef.current.getCurrentState();
-
     const mappedData = latestData
       .filter((item) => item.selected)
-      .map(({ defaultCategory, ...rest }) => ({
+      .map(({ defaultCategory, id, ...rest }) => ({
         ...rest,
         defaultCategory: defaultCategory?.toLowerCase() ?? null,
         sync: true,
+        tasklistID: id,
       }));
 
     const finish = await Promise.all(
       mappedData.map((item) =>
-        fetch(import.meta.env.VITE_CLOUDFRONT_GCAL_LIST, {
+        fetch(import.meta.env.VITE_CLOUDFRONT_GTASKS_LIST, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
