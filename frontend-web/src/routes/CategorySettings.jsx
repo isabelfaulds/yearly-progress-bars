@@ -3,14 +3,22 @@ import { useNavigate } from "react-router-dom";
 import NavButton from "../components/NavButton.jsx";
 import { useCategoryIconPreference } from "../hooks/useCatIconPreference.jsx";
 
-import { ChevronRightIcon, MinusCircleIcon } from "@heroicons/react/24/solid";
+import {
+  ChevronRightIcon,
+  MinusCircleIcon,
+  PlusCircleIcon,
+} from "@heroicons/react/24/solid";
 import StyledSubmitButton from "../components/SubmitButton";
 import StyledSelect from "../components/StyledSelect";
 import StyledInput from "../components/StyledSubmit";
 import { useCategories } from "../hooks/useCategories.jsx";
 import { useQueryClient } from "@tanstack/react-query";
 import CatIconComponent from "../assets/cat.svg?react";
-import { CubeIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  CubeIcon,
+  TrashIcon,
+  ArrowRightStartOnRectangleIcon,
+} from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +30,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { deleteAccount, logoutAccount } from "@/api/account";
+import { deleteAccount } from "@/api/account";
+import { useAuthContext } from "@/hooks/useAuth.jsx";
 
 const baseContainerClasses = `bg-[#000000] bg-cover bg-center 
     w-screen min-h-screen m-0 flex flex-col
@@ -46,6 +55,8 @@ const CategorySettings = () => {
   const [categories, setCategories] = useState([]);
   const { isCatIcon, toggleIcon } = useCategoryIconPreference();
   const [cubeIconSelect, setCubeIconSelect] = useState(false);
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const { handleSignOut } = useAuthContext();
 
   useEffect(() => {
     setCubeIconSelect(!isCatIcon);
@@ -96,6 +107,17 @@ const CategorySettings = () => {
       }
     } catch (error) {
       console.log("Account - deletion failed");
+    }
+  };
+
+  const handleLogoutAccount = async () => {
+    try {
+      signout = await handleSignOut();
+      if (signout) {
+        navigate("/login");
+      }
+    } catch (error) {
+      console.log("Auth - logout failed");
     }
   };
 
@@ -271,15 +293,15 @@ const CategorySettings = () => {
     <div className={baseContainerClasses}>
       {/* Header */}
       <div className="flex flex-row items-center justify-between w-full pr-2 gap-x-3">
-        <div className="text-white pl-6 text-base sm:text-2xl py-4 font-lexend">
-          Category Settings
+        <div className="text-white pl-6 text-base sm:text-2xl py-2 font-lexend">
+          Settings
         </div>
         <button
           onClick={handleSaveAndNavigate}
           className="p-1 sm:p-2
           text-white rounded-full rounded-full
           outline-1 
-          outline-gray-400
+          outline-gray-600
           shadow-lg
           bg-gray-800
         hover:bg-gradient-to-r hover:from-gray-700 hover:to-gray-900
@@ -302,52 +324,12 @@ const CategorySettings = () => {
         <hr className="border-t border-gray-300 my-4" />
       </div>
 
-      {/* Navigation Icon */}
-      <div className="flex items-center gap-3 pl-8">
-        <span className="text-gray-300 text-sm sm:text-base font-lexend">
-          Nav Icon Style
-        </span>
-        <button
-          onClick={handleCategoryIconToggle}
-          className={`relative w-24 h-12 rounded-full p-0 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
-      ${cubeIconSelect ? "bg-gray-700" : "bg-gray-700"}
-    `}
-        >
-          {/* Track */}
-          <div className="relative w-full h-full">
-            {/* Thumb with sliding animation */}
-            <div
-              className={`absolute top-1/2 transform -translate-y-1/2 h-10 w-10 rounded-full bg-blue-600 shadow-md transition-all duration-300 flex items-center justify-center
-          ${cubeIconSelect ? "left-1" : "left-[calc(100%-2.75rem)]"}
-        `}
-            >
-              {cubeIconSelect ? (
-                <CubeIcon className="w-6 h-6 text-white" />
-              ) : (
-                <CatIconComponent className="w-6 h-6 text-white" />
-              )}
-            </div>
-
-            {/* Not Selected Icon */}
-            <div className="flex justify-between w-full h-full px-2">
-              <CubeIcon
-                className={`mt-3 ml-2 w-6 h-6 transition-opacity ${
-                  cubeIconSelect ? "opacity-0" : "opacity-70"
-                }`}
-              />
-              <CatIconComponent
-                className={`mt-3 mr-2 w-6 h-6 transition-opacity ${
-                  !cubeIconSelect ? "opacity-0" : "opacity-70"
-                }`}
-              />
-            </div>
-          </div>
-        </button>
-      </div>
-
       {/* Saved Categories */}
-      <div className="flex flex-col test mt-1 items-center text-sm">
-        <ul className="pt-3 px-4 mb-4 w-full">
+      <div className="text-gray-300 sm:text-base font-lexend text-left pl-8 pb-4">
+        Categories
+      </div>
+      <div className="flex flex-col items-center text-sm">
+        <ul className="pr-4 w-full">
           {categories.map((item, index) => (
             <li
               key={index}
@@ -355,8 +337,8 @@ const CategorySettings = () => {
           grid-cols-[minmax(0,1fr)_auto_auto_auto_auto_auto]
           text-white
           items-center
-          py-5 border-b border-gray-500
           gap-2
+          mb-2.5
           "
             >
               <span className="py-1 text-gray-200 pr-5">{item.category}</span>
@@ -450,34 +432,104 @@ const CategorySettings = () => {
             </li>
           ))}
         </ul>
-        {/* New Category */}
-        <form
-          onSubmit={addCategory}
-          className="mt-2 flex flex-col md:flex-row gap-1"
-        >
-          <StyledInput
-            type="text"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            placeholder="Add Category"
-            required
-          />
-          <StyledInput
-            type="number"
-            value={timeAmount}
-            onChange={(e) => setTimeAmount(e.target.value)}
-            placeholder="Time Amount"
-            required
-          />
-          <StyledSelect
-            value={timeUnit}
-            onChange={(e) => setTimeUnit(e.target.value)}
+      </div>
+      {/* New Category */}
+      <div
+        className="text-white justify-start mt-3 ml-8 flex flex-row gap-3 text-sm"
+        onClick={() => setIsAddCategoryOpen(!isAddCategoryOpen)}
+      >
+        <PlusCircleIcon className="h-6 w-6 text-gray-400" />
+        Create New
+      </div>
+      {isAddCategoryOpen && (
+        <div className="text-sm">
+          <form
+            onSubmit={addCategory}
+            className="mt-2 flex flex-col md:flex-row gap-1 mx-auto pl-15 pr-15"
           >
-            <option value="minutes">Minutes</option>
-            <option value="hours">Hours</option>
-          </StyledSelect>
-          <StyledSubmitButton>Add</StyledSubmitButton>
-        </form>
+            <StyledInput
+              type="text"
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              placeholder="Add Category"
+              required
+            />
+            <StyledInput
+              type="number"
+              value={timeAmount}
+              onChange={(e) => setTimeAmount(e.target.value)}
+              placeholder="Time Amount"
+              required
+            />
+            <StyledSelect
+              value={timeUnit}
+              onChange={(e) => setTimeUnit(e.target.value)}
+            >
+              <option value="minutes">Minutes</option>
+              <option value="hours">Hours</option>
+            </StyledSelect>
+            <StyledSubmitButton>Add</StyledSubmitButton>
+          </form>
+        </div>
+      )}
+
+      <div className="pt-3 px-4 w-full">
+        <hr className="border-t border-gray-500 my-4" />
+      </div>
+
+      {/* Navigation Icon */}
+      <div className="flex items-center gap-3 pl-8">
+        <span className="text-gray-300 text-sm sm:text-base font-lexend">
+          Category Icon
+        </span>
+        <button
+          onClick={handleCategoryIconToggle}
+          className={`relative w-24 h-12 rounded-full p-0 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+      ${cubeIconSelect ? "bg-gray-700" : "bg-gray-700"}
+    `}
+        >
+          {/* Track */}
+          <div className="relative w-full h-full">
+            {/* Thumb with sliding animation */}
+            <div
+              className={`absolute top-1/2 transform -translate-y-1/2 h-10 w-10 rounded-full bg-blue-600 shadow-md transition-all duration-300 flex items-center justify-center
+          ${cubeIconSelect ? "left-1" : "left-[calc(100%-2.75rem)]"}
+        `}
+            >
+              {cubeIconSelect ? (
+                <CubeIcon className="w-6 h-6 text-white" />
+              ) : (
+                <CatIconComponent className="w-6 h-6 text-white" />
+              )}
+            </div>
+
+            {/* Not Selected Icon */}
+            <div className="flex justify-between w-full h-full px-2">
+              <CubeIcon
+                className={`mt-3 ml-2 w-6 h-6 transition-opacity ${
+                  cubeIconSelect ? "opacity-0" : "opacity-70"
+                }`}
+              />
+              <CatIconComponent
+                className={`mt-3 mr-2 w-6 h-6 transition-opacity ${
+                  !cubeIconSelect ? "opacity-0" : "opacity-70"
+                }`}
+              />
+            </div>
+          </div>
+        </button>
+      </div>
+      <div className="pt-2 px-4 w-full">
+        <hr className="border-t border-gray-500 my-4" />
+      </div>
+
+      <div className="flex items-center gap-3 pl-8">
+        <span className="text-gray-300 text-sm sm:text-base font-lexend">
+          Sign Out Account
+        </span>
+        <Button onClick={handleLogoutAccount}>
+          <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+        </Button>
       </div>
       <div className="pt-3 px-4 w-full">
         <hr className="border-t border-gray-500 my-4" />

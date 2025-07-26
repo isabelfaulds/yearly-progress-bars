@@ -132,7 +132,13 @@ export function AuthProvider({ children }) {
       },
       credentials: "include",
     });
-    setIsSignedIn(false);
+    if (authResponse.ok) {
+      console.log("Auth - Sign Out");
+      setIsSignedIn(false);
+      return true;
+    } else {
+      return false;
+    }
   };
 
   return (
