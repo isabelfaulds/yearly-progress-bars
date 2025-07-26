@@ -13,6 +13,7 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [user, setUser] = useState("");
 
   // accesstoken checker
   const checkLoginCookie = async () => {
@@ -29,6 +30,9 @@ export function AuthProvider({ children }) {
       );
       if (authCheckResponse.status === 200) {
         setIsSignedIn(true);
+        authCheckResponse.json().then((data) => {
+          setUser(data.user_id);
+        });
         return true;
       } else {
         setIsSignedIn(false);
@@ -134,6 +138,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider
       value={{
+        user,
         isSignedIn,
         handleGoogleSignIn,
         handleSignOut,

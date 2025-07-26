@@ -16,6 +16,8 @@ exports.handler = async (event) => {
   if (allowedOrigins.includes(origin)) {
     accessControlAllowOrigin = origin;
   }
+  let user_id = event.headers["user-id"];
+  console.log(event.headers);
 
   return {
     statusCode: 200,
@@ -25,7 +27,7 @@ exports.handler = async (event) => {
       ...corsheaders,
     },
     body: JSON.stringify({
-      message: "Validated",
+      user_id: user_id,
     }),
     isBase64Encoded: false,
   };
