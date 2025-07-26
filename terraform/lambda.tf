@@ -287,7 +287,7 @@ resource "aws_api_gateway_authorizer" "login_token_gateway_authorizer" {
 ### generic 200 endpoint
 resource "aws_s3_bucket_object" "node_success_response" {
   bucket = aws_s3_bucket.pbars_lambdas_bucket.bucket
-  source = "../backend/success-response/node-success-response.zip"
+  source = "../backend/auth/success-response/node-success-response.zip"
   key    = "node-success-response.zip"
   content_type  = "application/zip"
 }
