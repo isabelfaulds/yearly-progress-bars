@@ -18,6 +18,7 @@ import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/useAuth.jsx";
 import CatCubeToggle from "@/components/settings/CatCubeToggle.jsx";
+import CalendarSyncSettings from "@/components/settings/SyncCalendarTable.jsx";
 
 const baseContainerClasses = `bg-[#000000] bg-cover bg-center 
     w-screen min-h-screen m-0 flex flex-col
@@ -447,19 +448,21 @@ const CategorySettings = () => {
         </div>
       )}
 
-      <div className="pt-3 px-4 w-full">
-        <hr className="border-t border-gray-500 my-4" />
-      </div>
-
-      {/* Navigation Icon */}
-      <CatCubeToggle cubeIconSelect={cubeIconSelect} />
       <div className="pt-2 px-4 w-full">
         <hr className="border-t border-gray-500 my-4" />
       </div>
-
       <div className="text-gray-300 sm:text-base font-lexend text-left pl-8 pb-4">
         Sync Settings
       </div>
+      <div className="text-white">
+        <CalendarSyncSettings />
+      </div>
+
+      {/* Navigation Icon */}
+      <div className="pt-3 px-4 w-full">
+        <hr className="border-t border-gray-500 my-4" />
+      </div>
+      <CatCubeToggle cubeIconSelect={cubeIconSelect} />
 
       <div className="pt-2 px-4 w-full">
         <hr className="border-t border-gray-500 my-4" />

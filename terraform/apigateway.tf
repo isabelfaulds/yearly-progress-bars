@@ -927,8 +927,16 @@ resource "aws_api_gateway_integration_response" "get_gcal_sync" {
             {
               "calendar_uid": "$item.calendar_uid.S",
               "calendar_name" :"$item.calendar_name.S",
-              "default_category": #if($util.isNullOrEmpty($item.default_category.S)) null #else "$item.default_category.S" #end,
-              "default_category_uid": #if($util.isNullOrEmpty($item.default_category_uid.S)) null #else "$item.default_category_uid.S" #end,
+              #if ($item.default_category.S == "")
+                "default_category": null,
+              #else
+                "default_category": "$item.default_category.S",
+              #end
+               #if ($item.default_category_uid.S == "")
+                 "default_category_uid" : null,
+              #else
+                  "default_category_uid": "$item.default_category_uid.S",
+              #end
               "sync": $item.sync.BOOL
               }#if($foreach.hasNext),#end
           #end
