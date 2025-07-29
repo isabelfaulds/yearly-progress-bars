@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import NavButton from "../components/NavButton.jsx";
 import { useCategoryIconPreference } from "../hooks/useCatIconPreference.jsx";
+import DeleteAccountButton from "@/components/settings/DeleteAccount.jsx";
 
 import {
   ChevronRightIcon,
@@ -13,25 +14,11 @@ import StyledSelect from "../components/StyledSelect";
 import StyledInput from "../components/StyledSubmit";
 import { useCategories } from "../hooks/useCategories.jsx";
 import { useQueryClient } from "@tanstack/react-query";
-import CatIconComponent from "../assets/cat.svg?react";
-import {
-  CubeIcon,
-  TrashIcon,
-  ArrowRightStartOnRectangleIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { deleteAccount } from "@/api/account";
 import { useAuthContext } from "@/hooks/useAuth.jsx";
+import CatCubeToggle from "@/components/settings/CatCubeToggle.jsx";
+import CalendarSyncSettings from "@/components/settings/SyncCalendarTable.jsx";
 
 const baseContainerClasses = `bg-[#000000] bg-cover bg-center 
     w-screen min-h-screen m-0 flex flex-col
@@ -95,18 +82,6 @@ const CategorySettings = () => {
       navigate(-1);
     } catch (error) {
       console.error("Error saving categories:", error);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    try {
-      const deleteResponse = await deleteAccount();
-      logoutAccount().catch((e) => console.log("Auth - logout failure", e));
-      if (deleteResponse.success) {
-        navigate("/login");
-      }
-    } catch (error) {
-      console.log("Account - deletion failed");
     }
   };
 
@@ -473,56 +448,25 @@ const CategorySettings = () => {
         </div>
       )}
 
-      <div className="pt-3 px-4 w-full">
-        <hr className="border-t border-gray-500 my-4" />
-      </div>
-
-      {/* Navigation Icon */}
-      <div className="flex items-center gap-3 pl-8">
-        <span className="text-gray-300 text-sm sm:text-base font-lexend">
-          Category Icon
-        </span>
-        <button
-          onClick={handleCategoryIconToggle}
-          className={`relative w-24 h-12 rounded-full p-0 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
-      ${cubeIconSelect ? "bg-gray-700" : "bg-gray-700"}
-    `}
-        >
-          {/* Track */}
-          <div className="relative w-full h-full">
-            {/* Thumb with sliding animation */}
-            <div
-              className={`absolute top-1/2 transform -translate-y-1/2 h-10 w-10 rounded-full bg-blue-600 shadow-md transition-all duration-300 flex items-center justify-center
-          ${cubeIconSelect ? "left-1" : "left-[calc(100%-2.75rem)]"}
-        `}
-            >
-              {cubeIconSelect ? (
-                <CubeIcon className="w-6 h-6 text-white" />
-              ) : (
-                <CatIconComponent className="w-6 h-6 text-white" />
-              )}
-            </div>
-
-            {/* Not Selected Icon */}
-            <div className="flex justify-between w-full h-full px-2">
-              <CubeIcon
-                className={`mt-3 ml-2 w-6 h-6 transition-opacity ${
-                  cubeIconSelect ? "opacity-0" : "opacity-70"
-                }`}
-              />
-              <CatIconComponent
-                className={`mt-3 mr-2 w-6 h-6 transition-opacity ${
-                  !cubeIconSelect ? "opacity-0" : "opacity-70"
-                }`}
-              />
-            </div>
-          </div>
-        </button>
-      </div>
       <div className="pt-2 px-4 w-full">
         <hr className="border-t border-gray-500 my-4" />
       </div>
+      <div className="text-gray-300 sm:text-base font-lexend text-left pl-8 pb-4">
+        Sync Settings
+      </div>
+      <div className="text-white">
+        <CalendarSyncSettings />
+      </div>
 
+      {/* Navigation Icon */}
+      <div className="pt-3 px-4 w-full">
+        <hr className="border-t border-gray-500 my-4" />
+      </div>
+      <CatCubeToggle cubeIconSelect={cubeIconSelect} />
+
+      <div className="pt-2 px-4 w-full">
+        <hr className="border-t border-gray-500 my-4" />
+      </div>
       <div className="flex items-center gap-3 pl-8">
         <span className="text-gray-300 text-sm sm:text-base font-lexend">
           Sign Out Account
@@ -531,37 +475,12 @@ const CategorySettings = () => {
           <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
         </Button>
       </div>
+
       <div className="pt-3 px-4 w-full">
         <hr className="border-t border-gray-500 my-4" />
       </div>
-      <div className="flex items-center gap-3 pl-8">
-        <span className="text-gray-300 text-sm sm:text-base font-lexend">
-          Delete Account
-        </span>
-        <Dialog>
-          <form>
-            <DialogTrigger asChild>
-              <Button variant="default">
-                <TrashIcon className="text-white" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Delete Account</DialogTitle>
-                <DialogDescription className="text-gray-700">
-                  Your account and data will be deleted. This cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button>Cancel</Button>
-                </DialogClose>
-                <Button onClick={handleDeleteAccount}>Delete</Button>
-              </DialogFooter>
-            </DialogContent>
-          </form>
-        </Dialog>
-      </div>
+      <DeleteAccountButton handleLogoutAccount={handleLogoutAccount} />
+
       <div className="fixed bottom-4 right-4 p-1 rounded-full ">
         <NavButton direction="up" />
       </div>
