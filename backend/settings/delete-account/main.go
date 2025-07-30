@@ -35,7 +35,7 @@ var deleteTables = map[string]TableInfo{
 		GSIIndexName:   "UserIdDateIndex",
 		PartitionKeyName: "event_uid", 
 	},
-	"pb_gtasklists": {
+	"pb_tasklists": {
 		GSIIndexName:   "UserIndex",
 		PartitionKeyName: "tasklist_id",
 	},

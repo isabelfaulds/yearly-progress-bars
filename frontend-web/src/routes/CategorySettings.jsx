@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/useAuth.jsx";
 import CatCubeToggle from "@/components/settings/CatCubeToggle.jsx";
 import CalendarSyncSettings from "@/components/settings/SyncCalendarTable.jsx";
+import TasklistSyncSettings from "@/components/settings/SyncTaskTable.jsx";
 
 const baseContainerClasses = `bg-[#000000] bg-cover bg-center 
     w-screen min-h-screen m-0 flex flex-col
@@ -457,7 +458,9 @@ const CategorySettings = () => {
       <div className="text-white">
         <CalendarSyncSettings />
       </div>
-
+      <div className="text-white">
+        <TasklistSyncSettings />
+      </div>
       {/* Navigation Icon */}
       <div className="pt-3 px-4 w-full">
         <hr className="border-t border-gray-500 my-4" />

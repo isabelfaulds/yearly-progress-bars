@@ -10,60 +10,63 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const CalendarSyncSettings = () => {
+const TasklistSyncSettings = () => {
   const { data: categories } = useCategories();
-  const [calendars, setCalendars] = useState([]);
+  const [tasklists, setTasklists] = useState([]);
 
-  const fetchAndMergeCalendars = async () => {
+  const fetchAndMergeTasklists = async () => {
     try {
       // active
-      const dbRes = await fetch(import.meta.env.VITE_CLOUDFRONT_SYNC_GCAL, {
+      const dbRes = await fetch(import.meta.env.VITE_CLOUDFRONT_SYNC_GTASKS, {
         method: "GET",
         credentials: "include",
       });
       const dbData = await dbRes.json();
-      const dbCalendars = dbData.calendars || [];
+      const dbTasklists = dbData.tasklist || [];
 
       // available
-      const oauthRes = await fetch(import.meta.env.VITE_CLOUDFRONT_GCAL_LIST, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
+      const oauthRes = await fetch(
+        import.meta.env.VITE_CLOUDFRONT_GTASKS_LIST,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
       const oauthData = await oauthRes.json();
-      const oauthCalendars = oauthData.calendars || [];
+      const oauthTasklists = oauthData.task_lists || [];
 
-      const merged = oauthCalendars.map((oauthCal) => {
-        const match = dbCalendars.find(
-          (dbCal) => dbCal.calendar_uid === oauthCal.calendarID
+      const merged = oauthTasklists.map((oauthTasklist) => {
+        const match = dbTasklists.find(
+          (dbTasklist) =>
+            dbTasklist.tasklist_uid.split(":", 2)[1] === oauthTasklist.id
         );
 
         if (match) {
           return {
-            ...oauthCal,
+            ...oauthTasklist,
             ...match,
-            active: true,
+            sync: match.sync,
           };
         } else {
           return {
-            ...oauthCal,
-            calendar_name: oauthCal.summary,
-            active: false,
+            ...oauthTasklist,
+            tasklist_name: oauthTasklist.title,
             sync: false,
             default_category: "",
             default_category_uid: "",
           };
         }
       });
-      setCalendars(merged);
+      setTasklists(merged);
     } catch (error) {
       console.error("Error fetching calendars:", error);
     }
   };
 
-  const updateCalendar = async (payload) => {
+  const updateTasklist = async (payload) => {
     const updateResponse = await fetch(
-      import.meta.env.VITE_CLOUDFRONT_GCAL_LIST,
+      import.meta.env.VITE_CLOUDFRONT_GTASKS_LIST,
       {
         method: "POST",
         headers: {
@@ -75,73 +78,76 @@ const CalendarSyncSettings = () => {
     );
 
     if (updateResponse.ok) {
-      console.log("Calendar Sync - Updates");
+      console.log("Tasklist - Updates");
     }
   };
 
-  const updateCalendarCategory = (newcal, newValue) => {
-    setCalendars((prev) =>
-      prev.map((cal) =>
-        cal.calendarID === newcal.calendarID
+  const updateTasklistCategory = (newTasklist, newValue) => {
+    setTasklists((prev) =>
+      prev.map((tasklist) =>
+        tasklist.id === newTasklist.id
           ? {
-              ...cal,
+              ...tasklist,
               default_category: newValue == "" ? "" : newValue.split(":", 2)[1],
               default_category_uid: newValue,
             }
-          : cal
+          : tasklist
       )
     );
+
     const payload = {
-      calendarID: newcal.calendarID,
-      sync: newcal.sync,
-      summary: newcal.calendar_name,
+      tasklistID: newTasklist.id,
+      sync: newTasklist.sync,
+      title: newTasklist.tasklist_name,
       defaultCategory: newValue.split(":", 2)[1],
     };
-    updateCalendar(payload);
+    updateTasklist(payload);
   };
 
-  const updateCalendarSync = (newcal, newValue) => {
-    setCalendars((prev) =>
-      prev.map((cal) =>
-        cal.calendarID === newcal.calendarID ? { ...cal, sync: newValue } : cal
+  const updateTasklistSync = (newTasklist, newValue) => {
+    setTasklists((prev) =>
+      prev.map((tasklist) =>
+        tasklist.id === newTasklist.id
+          ? { ...tasklist, sync: newValue }
+          : tasklist
       )
     );
 
     const payload = {
-      calendarID: newcal.calendarID,
+      tasklistID: newTasklist.id,
       sync: newValue,
-      summary: newcal.calendar_name,
-      defaultCategory: newcal.default_category,
+      title: newTasklist.tasklist_name,
+      defaultCategory: newTasklist.default_category,
     };
-    updateCalendar(payload);
+    updateTasklist(payload);
   };
 
   useEffect(() => {
-    fetchAndMergeCalendars();
+    fetchAndMergeTasklists();
   }, []);
 
   return (
     <div>
       <div className="space-y-4 p-4 space-y-4 p-4  md:pr-20">
-        <div className="text-left pl-6">Calendars</div>
-        {calendars.map((cal) => (
+        <div className="text-left pl-6">Tasklists</div>
+        {tasklists.map((tasklist) => (
           <div
-            key={cal.calendarID}
-            className="flex items-center gap-4 sm:gap-20 rounded-md bg-gray-800 px-4 py-2 text-sm"
+            key={tasklist.id}
+            className="flex items-center justify-between gap-4 sm:gap-20  rounded-md bg-gray-800 px-4 py-2 text-sm"
           >
-            {/* Calendar name */}
-            <div className="text-white w-[200px] sm:w-[360px] md:w-[450px]  break-words line-clamp-5">
-              {cal.calendar_name}
+            {/* Tasklist name */}
+            <div className="text-white w-[200px] sm:w-[325px] break-words line-clamp-5">
+              {tasklist.tasklist_name}
             </div>
 
             {/* Category dropdown */}
             <Select
-              value={cal.default_category_uid || ""}
+              value={tasklist.default_category_uid || ""}
               onValueChange={(val) =>
-                updateCalendarCategory(cal, val === "__none__" ? "" : val)
+                updateTasklistCategory(tasklist, val === "__none__" ? "" : val)
               }
             >
-              <SelectTrigger className="w-[190px] sm:ml-16 sm:w-[220px] md:w-[250px] bg-slate-800 text-white border border-slate-600">
+              <SelectTrigger className="w-[190px] sm:w-[220px] sm:ml-16 bg-slate-800 text-white border border-slate-600 pl:ml-16">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
 
@@ -161,8 +167,8 @@ const CalendarSyncSettings = () => {
             {/* Sync switch */}
             <div className="ml-auto">
               <Switch
-                checked={cal.sync}
-                onCheckedChange={(val) => updateCalendarSync(cal, val)}
+                checked={tasklist.sync}
+                onCheckedChange={(val) => updateTasklistSync(tasklist, val)}
                 className="border border-slate-500  data-[state=unchecked]:bg-slate-600 data-[state=checked]:bg-green-600"
               />
             </div>
@@ -172,4 +178,4 @@ const CalendarSyncSettings = () => {
     </div>
   );
 };
-export default CalendarSyncSettings;
+export default TasklistSyncSettings;
