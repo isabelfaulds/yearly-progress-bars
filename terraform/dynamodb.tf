@@ -284,8 +284,8 @@ resource "aws_dynamodb_table" "day_metrics" {
   }
 }
 
-resource "aws_dynamodb_table" "gtask_lists" {
-  name = "pb_gtasklists"
+resource "aws_dynamodb_table" "task_lists" {
+  name = "pb_tasklists"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "tasklist_uid"
 
