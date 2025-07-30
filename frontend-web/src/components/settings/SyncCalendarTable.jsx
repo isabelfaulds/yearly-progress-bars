@@ -55,8 +55,6 @@ const CalendarSyncSettings = () => {
           };
         }
       });
-
-      console.log("merged", merged);
       setCalendars(merged);
     } catch (error) {
       console.error("Error fetching calendars:", error);
@@ -82,7 +80,6 @@ const CalendarSyncSettings = () => {
   };
 
   const updateCalendarCategory = (newcal, newValue) => {
-    console.log("calendar", newcal, "newValue", newValue);
     setCalendars((prev) =>
       prev.map((cal) =>
         cal.calendarID === newcal.calendarID
@@ -100,14 +97,10 @@ const CalendarSyncSettings = () => {
       summary: newcal.calendar_name,
       defaultCategory: newValue.split(":", 2)[1],
     };
-    // updateCalendar(payload);
-    console.log("payload", payload);
+    updateCalendar(payload);
   };
 
   const updateCalendarSync = (newcal, newValue) => {
-    console.log("newValue", newValue);
-    console.log("calendarId", newcal);
-
     setCalendars((prev) =>
       prev.map((cal) =>
         cal.calendarID === newcal.calendarID ? { ...cal, sync: newValue } : cal
@@ -121,7 +114,6 @@ const CalendarSyncSettings = () => {
       defaultCategory: newcal.default_category,
     };
     updateCalendar(payload);
-    console.log("payload", payload);
   };
 
   useEffect(() => {
@@ -130,15 +122,15 @@ const CalendarSyncSettings = () => {
 
   return (
     <div>
-      <div className="space-y-4 p-4">
-        <div>Synced Calendars</div>
+      <div className="space-y-4 p-4 space-y-4 p-4  md:pr-20">
+        <div className="text-left pl-6">Calendars</div>
         {calendars.map((cal) => (
           <div
-            key={cal.id}
+            key={cal.calendarID}
             className="flex items-center gap-4 sm:gap-20 rounded-md bg-gray-800 px-4 py-2 text-sm"
           >
             {/* Calendar name */}
-            <div className="text-white w-[200px] sm:w-[325px] break-words line-clamp-5">
+            <div className="text-white w-[200px] sm:w-[360px] md:w-[450px]  break-words line-clamp-5">
               {cal.calendar_name}
             </div>
 
@@ -149,7 +141,7 @@ const CalendarSyncSettings = () => {
                 updateCalendarCategory(cal, val === "__none__" ? "" : val)
               }
             >
-              <SelectTrigger className="w-[190px] sm:w-[220px] bg-slate-800 text-white border border-slate-600">
+              <SelectTrigger className="w-[190px] sm:ml-16 sm:w-[220px] md:w-[250px] bg-slate-800 text-white border border-slate-600">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
 

@@ -128,12 +128,12 @@ const TasklistSyncSettings = () => {
 
   return (
     <div>
-      <div className="space-y-4 p-4">
-        <div>Synced Tasklists</div>
+      <div className="space-y-4 p-4 space-y-4 p-4  md:pr-20">
+        <div className="text-left pl-6">Tasklists</div>
         {tasklists.map((tasklist) => (
           <div
             key={tasklist.id}
-            className="flex items-center gap-4 sm:gap-20 rounded-md bg-gray-800 px-4 py-2 text-sm"
+            className="flex items-center justify-between gap-4 sm:gap-20  rounded-md bg-gray-800 px-4 py-2 text-sm"
           >
             {/* Tasklist name */}
             <div className="text-white w-[200px] sm:w-[325px] break-words line-clamp-5">
@@ -147,7 +147,7 @@ const TasklistSyncSettings = () => {
                 updateTasklistCategory(tasklist, val === "__none__" ? "" : val)
               }
             >
-              <SelectTrigger className="w-[190px] sm:w-[220px] bg-slate-800 text-white border border-slate-600">
+              <SelectTrigger className="w-[190px] sm:w-[220px] sm:ml-16 bg-slate-800 text-white border border-slate-600 pl:ml-16">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
 
