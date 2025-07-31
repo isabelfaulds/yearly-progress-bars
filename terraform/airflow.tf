@@ -128,6 +128,11 @@ resource "aws_iam_role_policy_attachment" "attach_airflow_dynamodb_access" {
   policy_arn = aws_iam_policy.airflow_dynamodb_access_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "attach_ssm_core_policy" {
+  role       = aws_iam_role.airflow_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 resource "aws_iam_instance_profile" "airflow_ec2_profile" {
   name = "airflow-ec2-profile"
   role = aws_iam_role.airflow_ec2_role.name
@@ -201,10 +206,6 @@ resource "aws_route_table_association" "public_subnet_association" {
 }
 
 ######## schedule
-# resource "aws_ec2_instance_state" "airflow_instance_state" {
-#   instance_id = aws_instance.airflow_ec2.id
-#   state       = "stopped" # "running" to start
-# }
 
 resource "aws_iam_policy" "scheduler_ec2_policy" {
   name = "scheduler_ec2_policy"
@@ -222,6 +223,22 @@ resource "aws_iam_policy" "scheduler_ec2_policy" {
           "${aws_instance.airflow_ec2.arn}:*",
           "${aws_instance.airflow_ec2.arn}"
         ]
+      },
+            {
+        Effect = "Allow",
+        Action = [
+          "ssm:SendCommand"
+        ],
+        Resource = [
+          "arn:aws:ssm:us-west-1:${data.aws_caller_identity.current.account_id}:document/AWS-RunShellScript",
+          "arn:aws:ec2:us-west-1:${data.aws_caller_identity.current.account_id}:instance/${aws_instance.airflow_ec2.id}",
+          "arn:aws:ssm:us-west-1:*:document/AWS-RunShellScript"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = "ssm:GetCommandInvocation",
+        Resource = "*"
       }
     ]
   })
@@ -316,3 +333,34 @@ resource "aws_s3_bucket_object" "day_metrics_dag" {
   key    = "day_metrics.py"
   content_type = "text/x-python"
 }
+
+
+#### cron docker up scheduler
+
+resource "aws_scheduler_schedule" "daily_script_schedule" {
+  name       = "daily-docker-up-scheduler"
+  group_name = "default"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+  schedule_expression          = "cron(5 0 * * ? *)" # 12:05 daily
+  schedule_expression_timezone = "US/Pacific"
+  description                  = "daily run of docker up airflow up script"
+
+  target {
+    arn      = "arn:aws:scheduler:::aws-sdk:ssm:sendCommand" # ssm api
+    role_arn = aws_iam_role.scheduler_ec2_role.arn
+
+    input = jsonencode({
+      DocumentName = "AWS-RunShellScript",
+      InstanceIds  = ["${aws_instance.airflow_ec2.id}"],
+      Parameters   = {
+        commands = [
+          "sudo -iu ec2-user /home/ec2-user/start_airflow.sh >> /home/ec2-user/airflow_run.log 2>&1" 
+        ]
+      }
+    })
+  }
+}
+
