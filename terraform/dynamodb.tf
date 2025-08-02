@@ -309,3 +309,30 @@ resource "aws_dynamodb_table" "task_lists" {
     enabled = true
   }
 }
+
+
+resource "aws_dynamodb_table" "category_day_metrics" {
+  name = "pb_category_day_metrics"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "category_date_id"
+
+  attribute {
+    name = "category_date_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "UserIndex"
+    hash_key        = "user_id"
+    projection_type = "ALL"
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+}

@@ -12,13 +12,16 @@ log "Current directory: $(pwd)"
 cd airflow
 log "Current directory: $(pwd)"
 log "Copy dag"
+# todo: remove cp , only have in user data or separate job for checking
 aws s3 cp s3://pb-dags/day_metrics.py /home/ec2-user/airflow/dags/day_metrics.py >> "$LOG_FILE" 2>&1
+aws s3 cp s3://pb-dags/category_day_metrics.py /home/ec2-user/airflow/dags/category_day_metrics.py >> "$LOG_FILE" 2>&1
 
 # ensure variables
 export AIRFLOW_UID=$(id -u ec2-user)
 echo "AIRFLOW_UID=$(id -u ec2-user)" > .env
 echo "POSTGRES_USER=airflow" > .env
 echo "POSTGRES_PASSWORD=airflow" > .env
+
 log "Environment: $(env)"
 
 log "Start Docker"
@@ -32,4 +35,5 @@ sleep 30
 log "Unpause dag"
 # ensure dag unpaused
 docker exec airflow-airflow-scheduler-1 airflow dags unpause day_metrics >> "$LOG_FILE" 2>&1
+docker exec airflow-airflow-scheduler-1 airflow dags unpause category_day_metrics >> "$LOG_FILE" 2>&1
 log "Script completed"
