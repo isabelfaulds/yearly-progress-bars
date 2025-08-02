@@ -98,7 +98,8 @@ resource "aws_iam_policy" "airflow_dynamodb_access_policy" {
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events/index/DateIndex",
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_events",
         "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_categories",
-        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_day_metrics"
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_day_metrics",
+        "arn:aws:dynamodb:us-west-1:${data.aws_caller_identity.current.account_id}:table/pb_category_day_metrics",
         ]
       },
       {
@@ -334,9 +335,15 @@ resource "aws_s3_bucket_object" "day_metrics_dag" {
   content_type = "text/x-python"
 }
 
+resource "aws_s3_bucket_object" "category_day_metrics_dag" {
+  bucket = aws_s3_bucket.dags.bucket
+  source = "../dags/category_day_metrics.py"
+  key    = "category_day_metrics.py"
+  content_type = "text/x-python"
+}
+
 
 #### cron docker up scheduler
-
 resource "aws_scheduler_schedule" "daily_script_schedule" {
   name       = "daily-docker-up-scheduler"
   group_name = "default"
