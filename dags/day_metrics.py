@@ -82,9 +82,9 @@ def extract_transform_load():
 with DAG(
     dag_id="day_metrics",
     start_date=datetime(2025, 7, 1),
-    schedule="10 8 * * *",  # UTC for PST = 12:10 am
+    schedule="15 7 * * *",  # 7:15 UTC for PST = 12:15 am , will need to be changed in november
     catchup=False,
-    tags=["example"]
+    tags=["day"]
 ) as dag:
     etl_task = PythonOperator(
         task_id="run_etl",

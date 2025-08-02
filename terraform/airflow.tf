@@ -294,7 +294,7 @@ resource "aws_scheduler_schedule" "airflow_instance_stop_schedule" {
   flexible_time_window {
     mode = "OFF"
   }
-  schedule_expression = "cron(20 0 * * ? *)" # 12:20 am , minute hour month-day month week-day year
+  schedule_expression = "cron(25 0 * * ? *)" # 12:25 am pst
   schedule_expression_timezone = "US/Pacific"
   description = "daily stop airflow instance"
 
@@ -344,7 +344,7 @@ resource "aws_scheduler_schedule" "daily_script_schedule" {
   flexible_time_window {
     mode = "OFF"
   }
-  schedule_expression          = "cron(5 0 * * ? *)" # 12:05 daily
+  schedule_expression          = "cron(5 0 * * ? *)" # 12:05 daily , dags at 12:15
   schedule_expression_timezone = "US/Pacific"
   description                  = "daily run of docker up airflow up script"
 
