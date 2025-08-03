@@ -73,6 +73,7 @@ def extract_transform_load():
         + df_result["category"]
         + ":"
         + today,
+        calendar_date=today,
     )
 
     # Convert float columns to Decimal for DynamoDB
