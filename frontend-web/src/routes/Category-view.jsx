@@ -13,6 +13,7 @@ import StyledInput from "../components/StyledSubmit.jsx";
 import StyledSubmitButton from "../components/SubmitButton.jsx";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { useItems, useCreateItem } from "../hooks/useSavedItem.jsx";
+import SummaryRegion from "@/components/charts/SummaryRegion.jsx";
 
 const baseContainerClasses = `
   // scrollable full background display
@@ -275,6 +276,7 @@ const CategoryView = () => {
             </div>
           )}
         </div>
+
         {/* Date Range Display & Toggle */}
         <div className="flex flex-col">
           <div className="flex flex-row">
@@ -314,6 +316,10 @@ const CategoryView = () => {
           </div>
         </div>
       </div>
+
+      {/* Summary KPIs  */}
+      <SummaryRegion />
+
       {/* TODO: Add Milestones */}
       <div className="m-2 mt-3">
         <div className="font-lexend">Milestones</div>
@@ -348,6 +354,7 @@ const CategoryView = () => {
             </div>
           </div>
         )}
+
         {/* Saved Items Grid */}
         {/* Grid container for the cards */}
         <div
