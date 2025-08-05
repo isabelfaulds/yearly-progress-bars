@@ -13,6 +13,8 @@ import StyledInput from "../components/StyledSubmit.jsx";
 import StyledSubmitButton from "../components/SubmitButton.jsx";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { useItems, useCreateItem } from "../hooks/useSavedItem.jsx";
+import { useCategoryAggregatesByRange } from "../hooks/useCategoryMetrics.jsx";
+import SummaryRegion from "@/components/charts/SummaryRegion.jsx";
 
 const baseContainerClasses = `
   // scrollable full background display
@@ -84,6 +86,7 @@ const CategoryView = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
 
+  // Hooks
   const { data: categories, isLoading, error } = useCategories();
   const { eventsByDate, eventsIsLoading, eventsIsError } = useEventsForRange(
     startDate.date,
@@ -91,6 +94,10 @@ const CategoryView = () => {
   );
   const { data: savedItems } = useItems(categorySlug);
   const { mutate: addNewItem } = useCreateItem(categorySlug);
+  const { data: categoryMetrics, isSuccess } = useCategoryAggregatesByRange(
+    startDate.date,
+    endDate.date
+  );
 
   // Update Start & End from DayPicker
   const handleRangeUpdate = (newRange) => {
@@ -275,6 +282,7 @@ const CategoryView = () => {
             </div>
           )}
         </div>
+
         {/* Date Range Display & Toggle */}
         <div className="flex flex-col">
           <div className="flex flex-row">
@@ -314,6 +322,16 @@ const CategoryView = () => {
           </div>
         </div>
       </div>
+
+      {/* Summary KPIs  */}
+      <div className="mt-3">
+        <SummaryRegion
+          startDate={startDate.date}
+          endDate={endDate.date}
+          filterCategory={titleCaseCategory.toLowerCase()}
+        />
+      </div>
+
       {/* TODO: Add Milestones */}
       <div className="m-2 mt-3">
         <div className="font-lexend">Milestones</div>
@@ -348,6 +366,7 @@ const CategoryView = () => {
             </div>
           </div>
         )}
+
         {/* Saved Items Grid */}
         {/* Grid container for the cards */}
         <div
