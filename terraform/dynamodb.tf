@@ -326,9 +326,21 @@ resource "aws_dynamodb_table" "category_day_metrics" {
     type = "S"
   }
 
+  attribute {
+    name = "calendar_date"
+    type = "S"
+  }
+
   global_secondary_index {
     name            = "UserIndex"
     hash_key        = "user_id"
+    projection_type = "ALL"
+  }
+
+    global_secondary_index {
+    name            = "UserDateIndex"
+    hash_key        = "user_id"
+    range_key = "calendar_date"
     projection_type = "ALL"
   }
 
