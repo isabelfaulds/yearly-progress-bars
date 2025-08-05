@@ -386,7 +386,7 @@ const Day = () => {
             className="bg-gradient-to-tl from-black-300 to-gray-700 p-3 rounded-full shadow-lg focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
           >
             Sync Events
-            <ArrowPathRoundedSquareIcon className="h-6 w-6 text-blue-500 ml-2" />
+            <ArrowPathRoundedSquareIcon className="h-6 w-6 text-blue-300 ml-2" />
           </button>
           <button
             onClick={() => {
@@ -399,7 +399,7 @@ const Day = () => {
             className="bg-gradient-to-tl from-black-300 to-gray-700 p-3 rounded-full shadow-lgj focus:outline-none border-2 border-transparent hover:border-gray-800 hover:bg-gray-700 transition-colors flex items-center"
           >
             Categorize
-            <SparklesIcon className="h-6 w-6 text-blue-500 ml-2" />
+            <SparklesIcon className="h-6 w-6 text-blue-300 ml-2" />
           </button>
         </div>
         {/* events */}
