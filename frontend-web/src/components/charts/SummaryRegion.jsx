@@ -6,12 +6,29 @@ import {
 } from "@heroicons/react/24/outline";
 import { useCategoryAggregatesByRange } from "@/hooks/useCategoryMetrics.jsx";
 import { groupBy } from "lodash";
+import { subDays, parseISO, isAfter, isBefore, isEqual } from "date-fns";
 
 function MetricDisplay({ metric, score, prevScore }) {
-  const scoreOverScore = parseFloat(
-    // default 0s to prevent nulls
-    (((score ?? 0) - (prevScore ?? 0)) / (prevScore ?? 0) || 0).toFixed(2)
-  );
+  const safeScore = score ?? 0;
+  const safePrevScore = prevScore ?? 0;
+
+  let scoreChange = 0;
+
+  // Handle the edge cases where prevScore is 0
+  if (safePrevScore === 0) {
+    if (safeScore > 0) {
+      // "infinite increase" , using large value
+      scoreChange = 100;
+    } else {
+      // Both are 0. No change.
+      scoreChange = 0;
+    }
+  } else {
+    // percentage change calculation
+    scoreChange = ((safeScore - safePrevScore) / safePrevScore) * 100;
+  }
+
+  const scoreOverScore = parseFloat(scoreChange.toFixed(2));
 
   const isPositive = scoreOverScore > 0;
   const isNegative = scoreOverScore < 0;
@@ -40,83 +57,128 @@ function MetricDisplay({ metric, score, prevScore }) {
   );
 }
 
+// Linear regression coefficent
+const calculateTrend = (data, metricKey) => {
+  if (!data || data.length < 2) {
+    return 0;
+  }
+
+  let sumX = 0; // sum day indices
+  let sumY = 0; // sum metric
+  let sumXY = 0; // sum (day * metric) products
+  let sumX2 = 0; // sum of squared day indices
+  const n = data.length;
+
+  for (let i = 0; i < n; i++) {
+    const x = i; // day index
+    const y = data[i][metricKey]; // metric value
+
+    sumX += x;
+    sumY += y;
+    sumXY += x * y;
+    sumX2 += x * x;
+  }
+
+  const numerator = n * sumXY - sumX * sumY; // covariance of x & y
+  const denominator = n * sumX2 - sumX * sumX; // variance of x
+  if (denominator === 0) {
+    return 0;
+  }
+  const slope = (numerator / denominator).toFixed(2);
+  return slope;
+};
+
+// Metrics Calculations
+const calculateMetrics = (data) => {
+  let fulfillmentAvg = 0;
+  let consistencyAvg = 0;
+  let trendSlope = 0;
+
+  if (data && data.length > 0) {
+    const fulfillmentTotal = data.reduce(
+      (sum, item) => sum + (item.fulfillment_score ?? 0), // Use nullish coalescing for safety
+      0
+    );
+    fulfillmentAvg = Math.round(fulfillmentTotal / data.length);
+
+    const consistencyTotal = data.reduce(
+      (sum, item) => sum + (item.consistency_score ?? 0),
+      0
+    );
+    consistencyAvg = Math.round(consistencyTotal / data.length) * 100;
+
+    trendSlope = calculateTrend(data, "fulfillment_score");
+  }
+
+  return { fulfillmentAvg, consistencyAvg, trendSlope };
+};
+
 // 2 data arrays per metric: 2 weeks before selected region end, selected range
 const SummaryRegion = ({ startDate, endDate, filterCategory = null }) => {
+  const prevStartDate = startDate ? subDays(startDate, 14) : null;
+  const prevEndDate = startDate ? subDays(startDate, 1) : null;
+
   const {
     data: categoryMetrics,
     isSuccess,
     isLoading,
     isError,
-  } = useCategoryAggregatesByRange(startDate, endDate);
+  } = useCategoryAggregatesByRange(prevStartDate, endDate);
+
+  const renderPlaceholder = () => (
+    <div className="flex flex-col font-inter shadow-lg rounded-xl bg-slate-900 m-4 p-3">
+      <div className="grid grid-cols-2 sm:flex sm:flex-row text-sm gap-2 justify-between items-end">
+        <div> </div>
+        <div> </div>
+        <div> </div>
+        <div className="flex justify-end">
+          <InformationCircleIcon className="h-6 text-gray-400 hover:text-blue-100" />
+        </div>
+      </div>
+    </div>
+  );
 
   if (isLoading) {
-    return <div>.</div>;
+    return renderPlaceholder();
   }
   if (isError) {
-    return <div>.</div>;
+    return renderPlaceholder();
   }
   if (!isSuccess) {
-    return <div>.</div>;
+    return renderPlaceholder();
   }
 
-  // single flat array of all category metrics
+  // flatten, group, filter
   const allCategoryMetrics = Object.values(categoryMetrics).flat();
-
-  // Group the flattened data by category
   const groupedByCategory = groupBy(allCategoryMetrics, "category");
-
-  // Get the data for the specific category we want to filter by
   const categoryData = groupedByCategory[filterCategory];
 
-  let fulfillmentAvg = 0;
-  let consistencyAvg = 0;
-  let trendSlope = 0;
+  let currentMetrics = calculateMetrics([]);
+  let previousMetrics = calculateMetrics([]);
 
-  // linear regression coefficent
-  const calculateTrend = (data, metricKey) => {
-    if (!data || data.length < 2) {
-      return 0;
-    }
+  if (Array.isArray(categoryData) && categoryData.length > 0) {
+    // Filter the data into two periods
+    const currentPeriodData = categoryData.filter((item) => {
+      const itemDate = parseISO(item.calendar_date);
+      return (
+        (isAfter(itemDate, prevEndDate) ||
+          isEqual(itemDate, subDays(prevEndDate, 1))) &&
+        (isBefore(itemDate, endDate) || isEqual(itemDate, endDate))
+      );
+    });
 
-    let sumX = 0; // sum day indices
-    let sumY = 0; // sum metric
-    let sumXY = 0; // sum (day * metric) products
-    let sumX2 = 0; // sum of squared day indices
-    const n = data.length;
+    const previousPeriodData = categoryData.filter((item) => {
+      const itemDate = parseISO(item.calendar_date);
+      return (
+        (isAfter(itemDate, subDays(prevStartDate, 1)) ||
+          isEqual(itemDate, subDays(prevStartDate, 1))) &&
+        (isBefore(itemDate, prevEndDate) || isEqual(itemDate, prevEndDate))
+      );
+    });
 
-    for (let i = 0; i < n; i++) {
-      const x = i; // day index
-      const y = data[i][metricKey]; // metric value
-
-      sumX += x;
-      sumY += y;
-      sumXY += x * y;
-      sumX2 += x * x;
-    }
-
-    const numerator = n * sumXY - sumX * sumY; // covariance of x & y
-    const denominator = n * sumX2 - sumX * sumX; // variance of x
-    if (denominator === 0) {
-      return 0;
-    }
-    const slope = (numerator / denominator).toFixed(2);
-    return slope;
-  };
-
-  if (categoryData && categoryData.length > 0) {
-    const fulfillmentTotal = categoryData.reduce(
-      (sum, item) => sum + item.fulfillment_score,
-      0
-    );
-    fulfillmentAvg = Math.round(fulfillmentTotal / categoryData.length);
-
-    const consistencyTotal = categoryData.reduce(
-      (sum, item) => sum + item.consistency_score,
-      0
-    );
-    consistencyAvg = Math.round(consistencyTotal / categoryData.length) * 100;
-
-    trendSlope = calculateTrend(categoryData, "fulfillment_score");
+    // Calculate metrics for each period
+    currentMetrics = calculateMetrics(currentPeriodData);
+    previousMetrics = calculateMetrics(previousPeriodData);
   }
 
   return (
@@ -124,23 +186,20 @@ const SummaryRegion = ({ startDate, endDate, filterCategory = null }) => {
       <div className="grid grid-cols-2 sm:flex sm:flex-row text-sm gap-2 justify-between items-end">
         <MetricDisplay
           metric="Consistency"
-          score={consistencyAvg}
-          // to do get prev score
-          prevScore={consistencyAvg}
+          score={currentMetrics.consistencyAvg}
+          prevScore={previousMetrics.consistencyAvg}
         />
 
         <MetricDisplay
           metric="Fulfillment"
-          score={fulfillmentAvg}
-          // to do get prev score
-          prevScore={fulfillmentAvg}
+          score={currentMetrics.fulfillmentAvg}
+          prevScore={previousMetrics.fulfillmentAvg}
         />
 
         <MetricDisplay
           metric="Trend"
-          score={trendSlope}
-          // to do get prev score
-          prevScore={trendSlope}
+          score={currentMetrics.trendSlope}
+          prevScore={previousMetrics.trendSlope}
         />
         <div className="flex justify-end">
           <InformationCircleIcon className="h-6 text-gray-400 hover:text-blue-100" />

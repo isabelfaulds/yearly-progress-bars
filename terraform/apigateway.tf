@@ -3029,7 +3029,8 @@ resource "aws_api_gateway_integration_response" "get_daily_category_agg" {
             "category_date_id": "$item.category_date_id.S",
             "category": "$category",
             "consistency_score": $consistency_score,
-            "fulfillment_score": $fulfillment_score
+            "fulfillment_score": $fulfillment_score,
+            "calendar_date" : "$calendar_date"
           } } #if($foreach.hasNext),#end
         #end
         ]
