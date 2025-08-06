@@ -1,10 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const fetchItemsForCategory = async (category) => {
-  console.log(
-    "fetching",
-    `${import.meta.env.VITE_CLOUDFRONT_SAVED_ITEMS}?category=${category}`
-  );
   const response = await fetch(
     `${import.meta.env.VITE_CLOUDFRONT_SAVED_ITEMS}?category=${category}`,
     {
