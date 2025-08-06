@@ -4,6 +4,16 @@ import {
   ArrowRightIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useCategoryAggregatesByRange } from "@/hooks/useCategoryMetrics.jsx";
 import { groupBy } from "lodash";
 import { subDays, parseISO, isAfter, isBefore, isEqual } from "date-fns";
@@ -201,9 +211,69 @@ const SummaryRegion = ({ startDate, endDate, filterCategory = null }) => {
           score={currentMetrics.trendSlope}
           prevScore={previousMetrics.trendSlope}
         />
-        <div className="flex justify-end">
-          <InformationCircleIcon className="h-6 text-gray-400 hover:text-blue-100" />
-        </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <div className="flex justify-end">
+              <InformationCircleIcon className="h-6 text-gray-400 hover:text-blue-100" />
+            </div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-2-[800px] bg-gray-600 text-white">
+            <DialogHeader>
+              <DialogTitle className="font-lexend">Metrics</DialogTitle>
+            </DialogHeader>
+            <DialogDescription>
+              <div className="space-y-5">
+                <div className="flex justify-center items-center">
+                  <img
+                    src="/kpi-card-screenshot.png"
+                    alt="Visual representation of fulfillment score"
+                    className="mt-2 rounded-lg shadow-md"
+                  />
+                </div>
+
+                <div>
+                  <p>
+                    Direction and Change compare metric scores with the
+                    performance of 2 weeks before a filtered period
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-lg text-white text-[1.06rem]">
+                    Consistency
+                  </h4>
+                  <p className="text-gray-100">0 - 100</p>
+                  <p>
+                    Number of days with events in a category compared to the
+                    number of all days with synced events
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-lg text-white text-[1.06rem]">
+                    Fulfillment
+                  </h4>
+                  <p className="text-gray-100">0 - 100</p>
+                  <p>
+                    Average time spent on a category compared to the ideal time
+                    planned, for days with synced events
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-lg text-white text-[1.06rem]">
+                    Trend
+                  </h4>
+                  <p className="text-gray-100">-300 - 300</p>
+                  <p>
+                    The average daily change in your fulfillment score over the
+                    selected period
+                  </p>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
