@@ -13,8 +13,9 @@ import StyledInput from "../components/StyledSubmit.jsx";
 import StyledSubmitButton from "../components/SubmitButton.jsx";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { useItems, useCreateItem } from "../hooks/useSavedItem.jsx";
-import { useCategoryAggregatesByRange } from "../hooks/useCategoryMetrics.jsx";
 import SummaryRegion from "@/components/charts/SummaryRegion.jsx";
+import { useMilestones } from "../hooks/useMilestones.jsx";
+import MilestoneTable from "@/components/MilestonesTable.jsx";
 
 const baseContainerClasses = `
   // scrollable full background display
@@ -94,10 +95,11 @@ const CategoryView = () => {
   );
   const { data: savedItems } = useItems(categorySlug);
   const { mutate: addNewItem } = useCreateItem(categorySlug);
-  const { data: categoryMetrics, isSuccess } = useCategoryAggregatesByRange(
-    startDate.date,
-    endDate.date
-  );
+  const { data: milestones } = useMilestones();
+
+  useEffect(() => {
+    console.log("milestones", milestones);
+  }, [milestones]);
 
   // Update Start & End from DayPicker
   const handleRangeUpdate = (newRange) => {
@@ -332,10 +334,11 @@ const CategoryView = () => {
         />
       </div>
 
-      {/* TODO: Add Milestones */}
       <div className="m-2 mt-3">
         <div className="font-lexend">Milestones</div>
       </div>
+      <MilestoneTable categoryFilter={categorySlug} includesCategory={false} />
+
       <div className="m-2 mt-3">
         <div className="font-lexend mb-3">Saved Items</div>
         {isAddItemOpen && (
