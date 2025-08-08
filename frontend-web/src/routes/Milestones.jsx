@@ -6,7 +6,7 @@ import {
   useDeleteMilestone,
 } from "../hooks/useMilestones.jsx";
 import { useMilestoneSessions } from "@/hooks/useMilestoneSession.jsx";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -39,6 +39,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+// import LineChart from "../components/charts/LineChart.jsx";
+import SessionMinutesLineChart from "@/components/charts/MinutesLineChart.jsx";
 
 const baseContainerClasses = `
   // scrollable full background display
@@ -48,6 +50,17 @@ const baseContainerClasses = `
   p-10 md:pl-15 md:pr-15 sm:pt-12  text-white
   flex flex-col
 `;
+
+// array of all days
+function getDaysBetweenDates(startDate, endDate) {
+  const dates = [];
+  let currentDate = new Date(startDate);
+  while (isBefore(currentDate, endDate) || isEqual(currentDate, endDate)) {
+    dates.push(format(currentDate, "yyyy-MM-dd"));
+    currentDate = addDays(currentDate, 1);
+  }
+  return dates;
+}
 
 const Milestones = () => {
   const { data: categories, isLoading, error } = useCategories();
@@ -138,6 +151,11 @@ const Milestones = () => {
   const milestoneNumberSessions = selectedSessions.length;
   const milestoneHours = Math.floor(milestoneMinutes / 60);
   const milestoneMinutesRemainder = milestoneMinutes % 60;
+
+  useEffect(() => {
+    console.log(selectedSessions);
+  }, [selectedSessions]);
+  // const daysInCurrentRange = getDaysBetweenDates(startDate.date, endDate.date);
 
   // Adding new one
   const submitAddMilestone = () => {
@@ -384,7 +402,19 @@ const Milestones = () => {
             </span>
           </div>
         </div>
-        {/* TODO: Little Chart - with forecasting */}
+
+        {/* Sessions Chart */}
+        {selectedSessions.length > 0 && (
+          <div className="flex flex-row items-center justify-center">
+            <div className="p-4 mr-1 rounded-lg shadow-lg h-[200px] md:h-[225px] w-3/4 ">
+              <SessionMinutesLineChart
+                sessions={selectedSessions}
+                showLegend={false}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Sessions Log */}
         <div className="flex flex-col mt-6 md:ml-10 md:mr-10 bg-coolgray rounded-lg gap-1">
           <div className="rounded-lg pt-3 text-lg">
