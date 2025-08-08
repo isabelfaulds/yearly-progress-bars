@@ -7,6 +7,7 @@ function calculateCategoryPercentages(graphEvents, eventCategories, days) {
   const categoryTotals = {};
   const categoryLabels = [];
   const categoryValues = [];
+  const categoryMinutes = [];
 
   eventCategories.forEach((category) => {
     categoryTotals[category.category] = 0;
@@ -27,9 +28,14 @@ function calculateCategoryPercentages(graphEvents, eventCategories, days) {
       100
     );
     categoryValues.push(percentage);
+    categoryMinutes.push(totalTime);
   });
 
-  return { labels: categoryLabels, values: categoryValues };
+  return {
+    labels: categoryLabels,
+    values: categoryValues,
+    raw: categoryMinutes,
+  };
 }
 
 const RadarChart = ({
@@ -45,8 +51,11 @@ const RadarChart = ({
   }
 
   if (!events || !categories || categories.length === 0) return null;
-  const { labels: categoryKeys, values: categoryValues } =
-    calculateCategoryPercentages(events, categories, days);
+  const {
+    labels: categoryKeys,
+    values: categoryValues,
+    raw: categoryRawValues,
+  } = calculateCategoryPercentages(events, categories, days);
 
   const getOption = () => {
     const indicators = categoryKeys.map((key) => ({
@@ -69,6 +78,25 @@ const RadarChart = ({
         padding: 10,
         extraCssText:
           "box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); border-radius: 5px;",
+        formatter: function (params) {
+          const { name, value } = params; // value is array of %s
+          const raw = categoryRawValues; // you'll define this above
+
+          let tooltipHtml = `<div style="margin-bottom: 5px;">${name}<br/></div>`;
+          categoryKeys.forEach((cat, i) => {
+            tooltipHtml += `
+      <div style="display: flex; justify-content: space-between; line-height: 20px;">
+        <div style="flex: 1; text-align: center; margin-right:9px">
+          <span style="display:inline-block;margin-right:8px;border-radius:50%;width:4px;height:4px;background-color:gold;"></span>
+          ${cat}
+        </div>
+        <div>${value[i]} (${raw[i]} min)</div>
+      </div>
+    `;
+          });
+
+          return tooltipHtml;
+        },
       },
       legend: {
         show: false,
@@ -192,7 +220,7 @@ const RadarChart = ({
           data: [
             {
               value: categoryValues,
-              name: "Time Amounts", // tooltip label
+              name: "Fulfillment Score", // tooltip label
               itemStyle: {
                 // Style for the data point itself (and line connecting them)
                 color: "rgba(255, 197, 71, 1)", // Point color
