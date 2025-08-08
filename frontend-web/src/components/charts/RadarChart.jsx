@@ -90,7 +90,7 @@ const RadarChart = ({
           <span style="display:inline-block;margin-right:8px;border-radius:50%;width:4px;height:4px;background-color:gold;"></span>
           ${cat}
         </div>
-        <div>${value[i]} (${raw[i]} min)</div>
+        <div>${value[i]}&nbsp;&nbsp;(${raw[i]} min)</div>
       </div>
     `;
           });
