@@ -9,6 +9,8 @@ import { useCategories } from "../hooks/useCategories.jsx";
 import StreakChart from "@/components/charts/StreakChart.jsx";
 import { useMetricsDaily } from "../hooks/useMetricsDaily.jsx";
 import { toast } from "sonner";
+// import HalfCircleGauge from "@/components/charts/gaugeChart.jsx";
+import DayGaugeRegion from "@/components/charts/DayGaugeRegion.jsx";
 
 const baseContainerClasses = `bg-[#000000]
     /* Layout */
@@ -374,6 +376,13 @@ const Day = () => {
       {/* Second column: button and events */}
 
       <div className="flex flex-col  md:w-1/2 md:pl-4 md:mt-80">
+        <DayGaugeRegion
+          events={calendarEvents}
+          categories={todayCategories.filter(
+            (item) => item.category_uid !== "placeholder"
+          )}
+        />
+
         <div className="flex flex-row justify-end space-x-3 mb-3 mr-3">
           <button
             onClick={() => {
