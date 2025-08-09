@@ -35,7 +35,7 @@ const HalfCircleGauge = ({ metricName, score }) => {
     const isPos = pos > 0;
 
     chart.current.setOption({
-      tooltip: { formatter: (p) => `${metricName}: ${p.value}` },
+      tooltip: { show: false },
       series: [
         // Progress Line
         {
