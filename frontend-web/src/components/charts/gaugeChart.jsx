@@ -63,7 +63,7 @@ const HalfCircleGauge = ({ metricName, score }) => {
           detail: {
             valueAnimation: true,
             offsetCenter: [0, "5px"], // lower -> left center score metric , higher -> down center score metric
-            fontSize: valueFont,
+            fontSize: isPos ? valueFont : valueFont - 2,
             fontWeight: "bolder",
             formatter: `{value}\n{name|${metricName}}`,
             rich: {
@@ -72,7 +72,9 @@ const HalfCircleGauge = ({ metricName, score }) => {
                 lineHeight: Math.round(nameFont * 1.6),
                 fontWeight: "normal",
                 color: "#ffffff",
-                padding: [8, 0, 0, 0],
+                padding: [5, 0, 0, 0],
+                fontFamily: "Inter, sans-serif",
+                letterSpacing: 1.7, // in px
               },
             },
             color: isPos ? "rgba(201,238,255,1)" : "rgba(212, 149, 144, 1)",
