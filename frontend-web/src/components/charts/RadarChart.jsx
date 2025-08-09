@@ -68,8 +68,8 @@ const RadarChart = ({
       tooltip: {
         trigger: "item", // Show tooltip on hover
         backgroundColor: "#49585e", // Dark background
-        borderColor: "#333", // Optional border
-        borderWidth: 1,
+        borderColor: "rgb(137, 180, 201)",
+        borderWidth: 2,
         textStyle: {
           color: "#fff", // White text
           fontSize: 12,
@@ -80,7 +80,7 @@ const RadarChart = ({
           "box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); border-radius: 5px;",
         formatter: function (params) {
           const { name, value } = params; // value is array of %s
-          const raw = categoryRawValues; // you'll define this above
+          const raw = categoryRawValues;
 
           let tooltipHtml = `<div style="margin-bottom: 5px;">${name}<br/></div>`;
           categoryKeys.forEach((cat, i) => {

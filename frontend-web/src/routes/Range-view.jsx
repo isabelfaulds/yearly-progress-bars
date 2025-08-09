@@ -9,6 +9,7 @@ import NavButton from "../components/NavButton.jsx";
 import { useCategories } from "../hooks/useCategories.jsx";
 import { useEventsForRange } from "../hooks/useEventsForRange.jsx";
 import RangeGaugeRegion from "@/components/charts/RangeGaugeRegion.jsx";
+import LineChartECharts from "@/components/charts/multiLineChart.jsx";
 
 const baseContainerClasses = `
   // scrollable full background display
@@ -297,18 +298,14 @@ const RangeView = () => {
           daysArray={daysInCurrentRange}
         />
 
-        <div className="flex flex-col md:flex-row items-center">
-          {/* Line Chart */}
-          <div className="p-4 mx-auto rounded-lg shadow-lg h-[350px] md:h-[400px] w-full md:w-3/4">
-            <LineChart
-              events={filteredEventsForVisuals}
-              categories={categories.filter((item) =>
-                selectedCategoriesMap.has(item.category)
-              )}
-              daysArray={daysInCurrentRange}
-            />
-          </div>
-          {/* /Charts */}
+        <div className="items-center h-[400px] ">
+          <LineChartECharts
+            events={filteredEventsForVisuals}
+            categories={categories.filter((item) =>
+              selectedCategoriesMap.has(item.category)
+            )}
+            daysArray={daysInCurrentRange}
+          />
         </div>
 
         {/* Totals Table  */}
