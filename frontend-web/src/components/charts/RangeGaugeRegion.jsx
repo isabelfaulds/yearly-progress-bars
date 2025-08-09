@@ -1,12 +1,16 @@
 import HalfCircleGauge from "@/components/charts/gaugeChart.jsx";
 import { useMemo } from "react";
-
-function stdDev(arr) {
-  const mean = arr.reduce((sum, v) => sum + v, 0) / arr.length;
-  const variance =
-    arr.reduce((sum, v) => sum + (v - mean) ** 2, 0) / arr.length;
-  return Math.sqrt(variance);
-}
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 const calculateTrend = (data) => {
   if (!data || data.length < 2) {
@@ -88,15 +92,14 @@ function calculateMetrics(events, categories, daysArray) {
       }
     }
   }
-  console.log(finalCategoryPercentages);
 
   const series = Object.values(finalCategoryPercentages); // array of per-category arrays
-  const n = series.length || 1;
 
   let avgMeanRounded = 0;
   let trendSlope = 0;
-  let balance = 0;
+  let roundedBalanceScore = 0;
 
+  //   fulfillment - ratios
   const { sumByDay, countByDay } = series.reduce(
     (acc, arr) => {
       for (let i = 0; i < daysArray.length; i++) {
@@ -118,13 +121,11 @@ function calculateMetrics(events, categories, daysArray) {
     countByDay[i] ? s / countByDay[i] : 0
   );
 
-  trendSlope = calculateTrend(meanByDay);
-
   const avgMean =
     meanByDay.reduce((sum, val) => sum + val, 0) / meanByDay.length;
   avgMeanRounded = Math.round(avgMean);
 
-  // --- pass 2: variance by day (population variance) ---
+  // --- balance - standard deviation ---
   const varSumByDay = series.reduce((acc, arr) => {
     for (let i = 0; i < daysArray.length; i++) {
       const v = arr[i];
@@ -139,15 +140,15 @@ function calculateMetrics(events, categories, daysArray) {
   const varianceByDay = varSumByDay.map((s, i) =>
     countByDay[i] ? s / countByDay[i] : 0
   );
-  // If you want *sample* variance instead, use: s / Math.max(1, countByDay[i] - 1)
-
   const stdDevByDay = varianceByDay.map(Math.sqrt);
 
-  // Optional: single KPI (avg std dev across days), normalized to 0–100 where higher = more balanced
   const avgStd =
     stdDevByDay.reduce((a, b) => a + b, 0) / (stdDevByDay.length || 1);
-  const balanceScore = 100 * (1 - avgStd / 50); // same as 100 - 2*avgStd
-  const roundedBalanceScore = Math.round(balanceScore);
+  const balanceScore = 100 * (1 - avgStd / 50);
+  roundedBalanceScore = Math.round(balanceScore);
+
+  //  --- trend - linear regression coefficient
+  trendSlope = calculateTrend(meanByDay);
 
   return {
     avgFulfillment: avgMeanRounded,
@@ -178,6 +179,54 @@ const RangeGaugeRegion = ({ events, categories, daysArray }) => {
         <div className="h-full aspect-[1/1] shrink-0">
           <HalfCircleGauge metricName="Trend" score={trend} />
         </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <div className="flex justify-end">
+              <InformationCircleIcon className="h-6 text-gray-400 hover:text-blue-100" />
+            </div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-2-[800px] bg-gray-600 text-white">
+            <DialogHeader>
+              <DialogTitle className="font-lexend">Metrics</DialogTitle>
+            </DialogHeader>
+            <DialogDescription>
+              <div className="space-y-5">
+                <div>
+                  <h4 className="font-semibold text-lg text-white text-[1.06rem]">
+                    Fulfillment
+                  </h4>
+                  <p className="text-gray-100">0 - 100</p>
+                  <p>
+                    Average of all categories’ fulfillment scores, where each
+                    score is the ratio of time spent to ideal time
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-lg text-white text-[1.06rem]">
+                    Balance
+                  </h4>
+                  <p className="text-gray-100">0 - 100</p>
+                  <p>
+                    Measures how evenly fulfillment scores are distributed
+                    across categories (lower scores = less balanced)
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-lg text-white text-[1.06rem]">
+                    Trend
+                  </h4>
+                  <p className="text-gray-100">-300 - 300</p>
+                  <p>
+                    The average daily change in the average fulfillment score
+                    over the selected period
+                  </p>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
