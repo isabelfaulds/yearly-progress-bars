@@ -8,13 +8,14 @@ import CategoryTotals from "../components/charts/CategoryTotals.jsx";
 import NavButton from "../components/NavButton.jsx";
 import { useCategories } from "../hooks/useCategories.jsx";
 import { useEventsForRange } from "../hooks/useEventsForRange.jsx";
+import RangeGaugeRegion from "@/components/charts/RangeGaugeRegion.jsx";
 
 const baseContainerClasses = `
   // scrollable full background display
   w-screen min-h-screen h-auto m-0
   bg-[#000000] bg-cover bg-center
   // global margins
-  pt-5 pl-5 pr-5 pb-5 sm:pt-12 sm:pl-20
+  pt-5 pl-2 pr-5 pb-5 sm:pt-12 sm:pl-20
   text-white
   flex flex-col
 `;
@@ -286,7 +287,16 @@ const RangeView = () => {
             </div>
           </div>
         )}
+
         {/* Charts */}
+        <RangeGaugeRegion
+          events={filteredEventsForVisuals}
+          categories={categories.filter((item) =>
+            selectedCategoriesMap.has(item.category)
+          )}
+          daysArray={daysInCurrentRange}
+        />
+
         <div className="flex flex-col md:flex-row items-center">
           {/* Line Chart */}
           <div className="p-4 mx-auto rounded-lg shadow-lg h-[350px] md:h-[400px] w-full md:w-3/4">
@@ -322,6 +332,7 @@ const RangeView = () => {
           </div>
         </div>
       </div>
+
       <div className="fixed bottom-4 right-4 p-1 rounded-full ">
         <NavButton direction="up" />
       </div>
