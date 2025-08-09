@@ -11,16 +11,22 @@ import { SunIcon } from "@heroicons/react/24/solid";
 import CatIconComponent from "../assets/cat.svg?react";
 import { useNavigate } from "react-router-dom";
 import { useCategoryIconPreference } from "../hooks/useCatIconPreference.jsx";
+import { useCategories } from "@/hooks/useCategories";
 
 function NavButton({ direction = "down" }) {
   const { isCatIcon } = useCategoryIconPreference();
   const [showIcons, setShowIcons] = useState(false);
+
+  const [showCategories, setShowCategories] = useState();
+  const { data: categories, isLoading, refetch } = useCategories();
+
   const buttonRef = useRef(null);
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
   const handleClick = () => {
     setShowIcons((prev) => !prev);
+    setShowCategories(false);
   };
 
   const handleOutsideClick = (event) => {
@@ -36,8 +42,30 @@ function NavButton({ direction = "down" }) {
 
   const handleNavigation = (path) => {
     setShowIcons(false);
+    setShowCategories(false);
     navigate(path);
   };
+
+  const handleCategoriesClick = async () => {
+    if (!showCategories) {
+      await refetch(); // trigger category refetch
+    }
+    setShowCategories((prev) => !prev);
+  };
+
+  const [sortedCategories, setSortedCategories] = useState([]);
+
+  useEffect(() => {
+    if (categories) {
+      setSortedCategories(
+        [...categories].sort((a, b) => a.category.localeCompare(b.category))
+      );
+    }
+  }, [categories]);
+
+  useEffect(() => {
+    console.log(categories);
+  }, [categories]);
 
   useEffect(() => {
     document.addEventListener("mousedown", handleOutsideClick);
@@ -82,10 +110,7 @@ function NavButton({ direction = "down" }) {
           >
             <CalendarDateRangeIcon className="w-7 h-7 md:w-10 md:h-10  p-1 text-white rounded-full hover:border-2 bg-gray-800" />
           </button>
-          <button
-            onClick={() => handleNavigation("/categories")}
-            className="mb-2"
-          >
+          <button onClick={handleCategoriesClick} className="mb-2">
             {isCatIcon ? (
               <CatIconComponent className="w-7 h-7 md:w-10 md:h-10 p-1 text-white rounded-full hover:border-2 bg-gray-800" />
             ) : (
@@ -106,6 +131,31 @@ function NavButton({ direction = "down" }) {
           </button>
         </div>
       )}
+      {/* Categories */}
+      <div
+        className={`absolute ${menuPositionClasses} transform -translate-x-full pr-2 z-10`}
+      >
+        {/* expand categories nav list */}
+        {showCategories && (
+          <div className="bg-gray-800 rounded-lg p-2 border-2 border-coolgray mt-2 gap-1">
+            {isLoading ? (
+              <p className="text-white text-sm"></p>
+            ) : (
+              sortedCategories?.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() =>
+                    handleNavigation(`/categories/${cat.category}`)
+                  }
+                  className=" text-white mb-1 bg-gradient-to-tl from-coolgray-dark to-gray-700 shadow-lg  rounded-lg p-1 shadow-lg text-sm py-1 px-4 whitespace-nowrap"
+                >
+                  {cat.category}
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -10,6 +10,7 @@
 
 @theme {
   --color-coolgray: #111727;
+  --color-coolgray-dark: #1d2430;
   --font-inter: "Inter", sans-serif;
   --font-lexend: "Lexend", sans-serif;
 }
